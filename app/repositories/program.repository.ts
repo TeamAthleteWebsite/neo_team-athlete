@@ -7,7 +7,7 @@ export interface Program {
   type: 'PERSONAL' | 'SMALL_GROUP' | 'PROGRAMMING';
   title: string;
   description: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
   price: number;
   duration: number;
   active: boolean;

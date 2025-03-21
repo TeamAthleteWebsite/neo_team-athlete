@@ -44,7 +44,7 @@ export function ProgramList() {
             title={program.title}
             type={program.type}
             description={program.description}
-            imageUrl={program.imageUrl}
+            imageUrl={program.imageUrl || undefined}
           />
         ))}
       </div>
