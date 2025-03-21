@@ -1,11 +1,12 @@
 'use client';
 
+import React from 'react';
 import { useState } from 'react';
 
 interface NavItem {
   id: string;
   label: string;
-  icon: JSX.Element;
+  icon: React.ReactElement;
 }
 
 export default function Footer() {
