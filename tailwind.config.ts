@@ -8,14 +8,25 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        helvetica: ['Helvetica', 'Arial', 'sans-serif'],
+      },
       colors: {
         black: '#000000',
         white: '#ffffff',
-        gray: {
-          400: '#9ca3af',
-          500: '#6b7280',
-          600: '#4b5563',
-          800: '#1f2937',
+        custom: {
+          red: '#801d20',
+        },
+        zinc: {
+          300: '#d4d4d8',
+          400: '#a1a1aa',
+          500: '#71717a',
+          600: '#52525b',
+          800: '#27272a',
+          900: '#18181b',
+        },
+        yellow: {
+          400: '#facc15',
         },
       },
     },
