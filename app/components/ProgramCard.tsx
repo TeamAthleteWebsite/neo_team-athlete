@@ -6,14 +6,12 @@ interface ProgramCardProps {
   title: string;
   description: string;
   type: string;
-  imageUrl?: string;
 }
 
 export const ProgramCard: FC<ProgramCardProps> = ({
   title,
   description,
   type,
-  imageUrl
 }) => {
   return (
     <div className="relative overflow-hidden rounded-xl bg-zinc-900 shadow-lg group hover:bg-zinc-800/80 transition-colors duration-300">
