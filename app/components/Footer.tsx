@@ -52,7 +52,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="fixed bottom-0 w-full bg-black text-white border-t border-gray-800">
+    <footer className="fixed bottom-0 w-full bg-black text-white border-t border-gray-800 z-50">
       <nav className="max-w-screen-xl mx-auto">
         <ul className="flex justify-around items-center py-3">
           {navItems.map((item) => (
