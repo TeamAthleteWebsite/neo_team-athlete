@@ -6,11 +6,11 @@ export default function Header() {
   return (
     <header className="bg-black text-white p-4">
       <div className="flex items-center justify-between max-w-screen-xl mx-auto">
-        <div className="w-10 h-10 flex items-center justify-center">
+        <div className="w-15 h-10 flex items-center justify-center">
           <Image
             src="/logo.png"
             alt="Team Athlete Logo"
-            width={40}
+            width={60}
             height={40}
             className="object-contain"
             priority
