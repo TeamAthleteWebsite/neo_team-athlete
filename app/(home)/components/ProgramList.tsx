@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Program } from '@/app/repositories/program.repository';
-import { getPrograms } from '@/app/actions/program.actions';
-import { ProgramCard } from './ProgramCard';
+import { getPrograms } from "@/actions/program.actions";
+import { Program } from "@/repositories/program.repository";
+import { useEffect, useState } from "react";
+import { ProgramCard } from "./ProgramCard";
 
 export function ProgramList() {
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -17,7 +17,9 @@ export function ProgramList() {
         const data = await getPrograms();
         setPrograms(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load programs');
+        setError(
+          err instanceof Error ? err.message : "Failed to load programs"
+        );
       } finally {
         setLoading(false);
       }
@@ -27,7 +29,9 @@ export function ProgramList() {
   }, []);
 
   if (loading) {
-    return <div className="text-center py-8 text-zinc-400">Loading programs...</div>;
+    return (
+      <div className="text-center py-8 text-zinc-400">Loading programs...</div>
+    );
   }
 
   if (error) {
@@ -43,10 +47,9 @@ export function ProgramList() {
             title={program.title}
             type={program.type}
             description={program.description}
-           
           />
         ))}
       </div>
     </div>
   );
-} 
+}

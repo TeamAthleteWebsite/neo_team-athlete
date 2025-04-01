@@ -1,9 +1,4 @@
 ---
-description: 
-globs: 
-alwaysApply: true
----
----
 description: APPLY TypeScript best practices WHEN writing code TO ensure type safety, readability, and maintainability
 globs: *.ts
 alwaysApply: false

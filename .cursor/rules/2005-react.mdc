@@ -1,9 +1,4 @@
 ---
-description: 
-globs: 
-alwaysApply: true
----
----
 description: APPLY React best practices WHEN developing components and hooks TO ensure performant and maintainable UI code
 globs: apps/frontend/**/*.tsx,apps/frontend/**/*.hook.ts
 alwaysApply: false

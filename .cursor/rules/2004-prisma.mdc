@@ -1,9 +1,4 @@
 ---
-description: 
-globs: 
-alwaysApply: false
----
----
 description: APPLY Prisma ORM standards WHEN working with database models TO ensure efficient and type-safe database operations
 globs: schema.prisma
 alwaysApply: false
