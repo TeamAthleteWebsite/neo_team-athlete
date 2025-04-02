@@ -48,7 +48,7 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black px-4">
+    <div className="flex items-center justify-center p-12 backdrop-blur-sm rounded-lg">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <Image
