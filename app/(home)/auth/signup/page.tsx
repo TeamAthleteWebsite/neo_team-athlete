@@ -1,55 +1,71 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { signIn, signUp } from "@/lib/auth-client";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function SignUp() {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-
+  const router = useRouter();
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
 
-    try {
-      await signUp.email({
-        email,
-        password,
-        name,
-        callbackURL: "/profile",
+    signUp
+      .email(
+        {
+          email,
+          password,
+          name,
+          callbackURL: "/profile",
+        },
+        {
+          onSuccess: () => {
+            toast.success("Inscription réussie !");
+            router.push("/profile");
+          },
+          onError: (err: unknown) => {
+            console.error("Erreur d'inscription:", err);
+            toast.error(
+              "Une erreur est survenue lors de l'inscription. Veuillez réessayer.",
+            );
+          },
+        },
+      )
+      .finally(() => {
+        setIsLoading(false);
       });
-    } catch (err: unknown) {
-      console.error("Erreur d'inscription:", err);
-      setError(
-        "Une erreur est survenue lors de l'inscription. Veuillez réessayer."
-      );
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const handleGoogleSignUp = async () => {
     setIsLoading(true);
-    setError(null);
 
-    try {
-      await signIn.social({
+    signIn
+      .social({
         provider: "google",
         callbackURL: "/profile",
+      })
+      .then(() => {
+        toast.success("Connexion réussie !");
+      })
+      .catch((err: unknown) => {
+        console.error("Erreur de connexion Google:", err);
+        toast.error(
+          "Erreur lors de la connexion avec Google. Veuillez réessayer.",
+        );
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-    } catch (err: unknown) {
-      console.error("Erreur de connexion Google:", err);
-      setError("Erreur lors de la connexion avec Google. Veuillez réessayer.");
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -64,22 +80,18 @@ export default function SignUp() {
           priority
         />
         <h2 className="mt-6 text-3xl font-bold text-white">Inscription</h2>
-        <p className="mt-2 text-sm text-zinc-400">
+        <p className="mt-2 text-sm text-zinc-200">
           Rejoignez la communauté Team Athlete
         </p>
       </div>
 
       <form onSubmit={handleEmailSignUp} className="mt-8 space-y-6">
-        {error && (
-          <div className="text-red-500 text-sm text-center">{error}</div>
-        )}
-
         <div className="space-y-4">
           <div>
-            <label htmlFor="name" className="sr-only">
+            <Label htmlFor="name" className="sr-only">
               Nom complet
-            </label>
-            <input
+            </Label>
+            <Input
               id="name"
               name="name"
               type="text"

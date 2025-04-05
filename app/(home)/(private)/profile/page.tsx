@@ -1,10 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useSession } from "@/lib/auth-client";
+import { updateUserProfile } from "@/src/actions/user.actions";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function Profile() {
+  const { data } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
@@ -12,20 +16,34 @@ export default function Profile() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
 
+  useEffect(() => {
+    if (data?.user) {
+      const [first = "", last = ""] = (data.user.name || "").split(" ");
+      setFirstName(first);
+      setLastName(last);
+      setEmail(data.user.email || "");
+    }
+  }, [data]);
+
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
-      // TODO: Implement profile update logic
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulation
-      console.log("Profile updated");
+      await updateUserProfile({
+        firstName,
+        lastName,
+        email,
+        phone,
+      });
+      toast.success("Profil mis à jour avec succès");
     } catch (err: unknown) {
       console.error("Erreur de mise à jour:", err);
       setError(
-        "Une erreur est survenue lors de la mise à jour. Veuillez réessayer."
+        "Une erreur est survenue lors de la mise à jour. Veuillez réessayer.",
       );
+      toast.error("Échec de la mise à jour du profil");
     } finally {
       setIsLoading(false);
     }

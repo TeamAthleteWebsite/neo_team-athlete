@@ -14,7 +14,7 @@ export default function AuthLayout({
       }}
     >
       <div className="relative z-10 w-full max-w-md p-2">
-        <div className="flex items-center justify-center p-12 backdrop-blur-sm rounded-lg">
+        <div className="flex items-center justify-center p-6 backdrop-blur-sm rounded-lg">
           {children}
         </div>
       </div>
