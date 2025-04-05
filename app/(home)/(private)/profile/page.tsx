@@ -1,148 +1,180 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { useSession } from "@/lib/auth-client";
-import { updateUserProfile } from "@/src/actions/user.actions";
+import { authClient, useSession } from "@/lib/auth-client";
+import { getUserById } from "@/src/actions/user.actions";
+import { User, UserRole } from "@prisma/client";
+import { LogOutIcon, PencilIcon } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
-export default function Profile() {
-  const { data } = useSession();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+type ExtendedUser = User & {
+  roles?: UserRole[];
+};
+
+const ProfilePage = () => {
+  const { data: session } = useSession();
+  const [user, setUser] = useState<ExtendedUser | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    if (data?.user) {
-      const [first = "", last = ""] = (data.user.name || "").split(" ");
-      setFirstName(first);
-      setLastName(last);
-      setEmail(data.user.email || "");
-    }
-  }, [data]);
+    const fetchUser = async () => {
+      if (session?.user?.id) {
+        try {
+          const userData = await getUserById(session.user.id);
+          setUser(userData as ExtendedUser);
+        } catch (error) {
+          console.error(
+            "Erreur lors de la récupération de l'utilisateur:",
+            error,
+          );
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
 
-  const handleProfileUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+    fetchUser();
+  }, [session?.user?.id]);
 
+  const handleSignOut = async () => {
     try {
-      await updateUserProfile({
-        firstName,
-        lastName,
-        email,
-        phone,
-      });
-      toast.success("Profil mis à jour avec succès");
-    } catch (err: unknown) {
-      console.error("Erreur de mise à jour:", err);
-      setError(
-        "Une erreur est survenue lors de la mise à jour. Veuillez réessayer.",
-      );
-      toast.error("Échec de la mise à jour du profil");
-    } finally {
-      setIsLoading(false);
+      await authClient.signOut();
+      router.push("/auth/sign-in");
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
     }
   };
 
-  return (
-    <div className="w-full max-w-md space-y-8">
-      <div className="text-center">
-        <Image
-          src="/logo.png"
-          alt="Team Athlete Logo"
-          width={120}
-          height={80}
-          className="mx-auto"
-          priority
-        />
-        <h2 className="mt-6 text-3xl font-bold text-white">Mon Profil</h2>
-        <p className="mt-2 text-sm text-zinc-400">
-          Gérez vos informations personnelles
-        </p>
+  const getAvatarUrl = (name: string) => {
+    return `https://api.dicebear.com/9.x/initials/svg?radius=50&backgroundColor=e11d48&textColor=ffffff&seed=${encodeURIComponent(name)}`;
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <p className="text-center text-zinc-400">Chargement...</p>
       </div>
+    );
+  }
 
-      <form onSubmit={handleProfileUpdate} className="mt-8 space-y-6">
-        {error && (
-          <div className="text-red-500 text-sm text-center">{error}</div>
-        )}
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <p className="text-center text-zinc-400">Utilisateur non trouvé</p>
+      </div>
+    );
+  }
 
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="firstName" className="sr-only">
-              Prénom
-            </label>
-            <input
-              id="firstName"
-              name="firstName"
-              type="text"
-              required
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="w-full px-3 py-2 border border-zinc-600 rounded-md bg-zinc-900 text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-custom-red focus:border-transparent"
-              placeholder="Prénom"
-            />
-          </div>
-          <div>
-            <label htmlFor="lastName" className="sr-only">
-              Nom
-            </label>
-            <input
-              id="lastName"
-              name="lastName"
-              type="text"
-              required
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="w-full px-3 py-2 border border-zinc-600 rounded-md bg-zinc-900 text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-custom-red focus:border-transparent"
-              placeholder="Nom"
-            />
-          </div>
-          <div>
-            <label htmlFor="phone" className="sr-only">
-              Téléphone
-            </label>
-            <input
-              id="phone"
-              name="phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full px-3 py-2 border border-zinc-600 rounded-md bg-zinc-900 text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-custom-red focus:border-transparent"
-              placeholder="Téléphone"
-            />
-          </div>
-          <div>
-            <label htmlFor="email" className="sr-only">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-zinc-600 rounded-md bg-zinc-900 text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-custom-red focus:border-transparent"
-              placeholder="Email"
-            />
+  const getRoleLabel = (role: UserRole) => {
+    const labels: Record<UserRole, string> = {
+      [UserRole.COACH]: "Coach",
+      [UserRole.ADMIN]: "Administrateur",
+      [UserRole.CLIENT]: "Client",
+      [UserRole.PROSPECT]: "Prospect",
+    };
+    return labels[role] || role;
+  };
+
+  return (
+    <div className="relative z-10 w-full max-w-2xl">
+      <div className="backdrop-blur-sm bg-black/70 rounded-lg overflow-hidden border border-zinc-800">
+        <div className="relative h-32 bg-gradient-to-r from-brand/80 to-brand/40">
+          <Image
+            src={user.image ? user.image : getAvatarUrl(user.name)}
+            alt={user.name}
+            width={96}
+            height={96}
+            className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rounded-full border-4 border-zinc-900"
+            unoptimized
+          />
+          <div className="absolute top-4 right-4 flex gap-2">
+            <Link
+              href="/profile/edit"
+              className="p-2 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
+              title="Modifier le profil"
+            >
+              <PencilIcon className="w-5 h-5 text-white" />
+            </Link>
+            <button
+              onClick={handleSignOut}
+              className="p-2 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
+              title="Se déconnecter"
+            >
+              <LogOutIcon className="w-5 h-5 text-white" />
+            </button>
           </div>
         </div>
 
-        <div>
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-red-600 hover:bg-red-600/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-red disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isLoading ? "Mise à jour..." : "Mettre à jour le profil"}
-          </Button>
+        <div className="pt-16 pb-8 px-6">
+          <h1 className="text-2xl font-bold text-center text-white mb-2">
+            {user.name} {user.lastName}
+          </h1>
+
+          <div className="flex justify-center gap-2 mb-6">
+            {user.roles?.map((role, index) => (
+              <span
+                key={index}
+                className="px-3 py-1 text-sm rounded-full bg-red-500/20 text-red-500 border border-red-500/30"
+              >
+                {getRoleLabel(role)}
+              </span>
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center border-b border-zinc-700 pb-3">
+              <span className="font-medium text-zinc-400 w-32">Email:</span>
+              <span className="text-white">{user.email}</span>
+            </div>
+
+            {user.phone && (
+              <div className="flex items-center border-b border-zinc-700 pb-3">
+                <span className="font-medium text-zinc-400 w-32">
+                  Téléphone:
+                </span>
+                <span className="text-white">{user.phone}</span>
+              </div>
+            )}
+
+            {user.bio && (
+              <div className="flex items-center border-b border-zinc-700 pb-3">
+                <span className="font-medium text-zinc-400 w-32">Bio:</span>
+                <span className="text-white">{user.bio}</span>
+              </div>
+            )}
+
+            {user.height && (
+              <div className="flex items-center border-b border-zinc-700 pb-3">
+                <span className="font-medium text-zinc-400 w-32">Taille:</span>
+                <span className="text-white">{user.height} cm</span>
+              </div>
+            )}
+
+            {user.weight && (
+              <div className="flex items-center border-b border-zinc-700 pb-3">
+                <span className="font-medium text-zinc-400 w-32">Poids:</span>
+                <span className="text-white">{user.weight} kg</span>
+              </div>
+            )}
+
+            {user.goal && (
+              <div className="flex items-center border-b border-zinc-700 pb-3">
+                <span className="font-medium text-zinc-400 w-32">
+                  Objectif:
+                </span>
+                <span className="text-white">{user.goal}</span>
+              </div>
+            )}
+          </div>
         </div>
-      </form>
+      </div>
     </div>
   );
-}
+};
+
+export default ProfilePage;

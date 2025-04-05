@@ -26,6 +26,7 @@ export default function SignUp() {
           email,
           password,
           name,
+          image: `https://ui-avatars.com/api/?name=${name}&background=random`,
           callbackURL: "/profile",
         },
         {
