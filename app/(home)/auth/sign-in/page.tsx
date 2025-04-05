@@ -158,7 +158,7 @@ export default function SignIn() {
           <p className="text-sm text-zinc-200">
             Pas encore de compte ?{" "}
             <Link
-              href="/auth/signup"
+              href="/auth/sign-up"
               className="font-medium text-red-600 hover:text-red-600/90"
             >
               S&apos;inscrire

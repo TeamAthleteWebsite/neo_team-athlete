@@ -23,7 +23,7 @@ export default function ForgotPassword() {
         redirectTo: "/auth/reset-password",
       });
       setSuccess(
-        "Si un compte existe avec cette adresse email, vous recevrez un lien de réinitialisation."
+        "Si un compte existe avec cette adresse email, vous recevrez un lien de réinitialisation.",
       );
     } catch (err: unknown) {
       console.error("Erreur de réinitialisation:", err);
@@ -62,7 +62,7 @@ export default function ForgotPassword() {
               {success}
               <div className="mt-2">
                 <Link
-                  href="/auth/signin"
+                  href="/auth/sign-in"
                   className="font-medium text-custom-red hover:text-custom-red/90"
                 >
                   Retour à la connexion

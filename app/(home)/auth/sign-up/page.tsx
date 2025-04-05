@@ -89,7 +89,7 @@ export default function SignUp() {
         <div className="space-y-4">
           <div>
             <Label htmlFor="name" className="sr-only">
-              Nom complet
+              Nom
             </Label>
             <Input
               id="name"
@@ -180,7 +180,7 @@ export default function SignUp() {
         <p className="text-sm text-zinc-200">
           Déjà inscrit ?{" "}
           <Link
-            href="/auth/signin"
+            href="/auth/sign-in"
             className="font-medium text-red-600 hover:text-red-600/90"
           >
             Se connecter

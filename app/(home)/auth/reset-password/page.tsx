@@ -90,7 +90,7 @@ function ResetPasswordContent() {
               {success}
               <div className="mt-2">
                 <Link
-                  href="/auth/signin"
+                  href="/auth/sign-in"
                   className="font-medium text-custom-red hover:text-custom-red/90"
                 >
                   Aller à la page de connexion
