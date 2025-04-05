@@ -4,9 +4,17 @@ import { authClient } from "@/lib/auth-client";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 export default function ResetPassword() {
+  return (
+    <Suspense fallback={<div>Chargement...</div>}>
+      <ResetPasswordContent />
+    </Suspense>
+  );
+}
+
+function ResetPasswordContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -40,7 +48,7 @@ export default function ResetPassword() {
         token,
       });
       setSuccess(
-        "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter."
+        "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.",
       );
       setTimeout(() => {
         router.push("/auth/signin");
