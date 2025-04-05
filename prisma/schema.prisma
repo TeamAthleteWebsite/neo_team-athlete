@@ -34,16 +34,32 @@ model Program {
   @@index([type])
 }
 
+enum UserRole {
+  COACH
+  ADMIN
+  CLIENT
+  PROSPECT
+}
+
 model User {
   id            String    @id
-  name          String
   email         String
   emailVerified Boolean
   image         String?
-  createdAt     DateTime
-  updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+
+  name          String
+  lastName      String?
+  phone         String?
+  bio           String?
+  height        Int?
+  weight        Int?
+  goal          String?
+  roles         UserRole[] @default([PROSPECT])
+
+  createdAt     DateTime
+  updatedAt     DateTime
 
   @@unique([email])
   @@map("user")
