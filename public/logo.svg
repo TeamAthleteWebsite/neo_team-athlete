@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond noir -->
+  <rect width="512" height="512" fill="#000000"/>
+  
+  <!-- Cercle extérieur -->
+  <circle cx="256" cy="256" r="240" stroke="#FFFFFF" stroke-width="16" fill="none"/>
+  
+  <!-- Silhouette athlète stylisée -->
+  <path d="M256 120
+           C 280 120, 300 140, 300 164
+           C 300 188, 280 208, 256 208
+           C 232 208, 212 188, 212 164
+           C 212 140, 232 120, 256 120
+           Z
+           M 180 360
+           L 332 360
+           L 332 280
+           C 332 245, 298 216, 256 216
+           C 214 216, 180 245, 180 280
+           Z" 
+        fill="#FFFFFF"/>
+  
+  <!-- Barre d'haltère gauche -->
+  <rect x="100" y="240" width="80" height="32" rx="16" fill="#FF6B6B"/>
+  
+  <!-- Barre d'haltère droite -->
+  <rect x="332" y="240" width="80" height="32" rx="16" fill="#FF6B6B"/>
+</svg> 

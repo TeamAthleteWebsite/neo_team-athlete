@@ -5,7 +5,7 @@ export default function AuthLayout({
 }) {
   return (
     <div
-      className="min-h-screen relative flex items-center justify-center -mb-10"
+      className="min-h-[calc(100vh-140px)] relative flex items-center justify-center"
       style={{
         backgroundImage: "url('/images/athlete-background.jpg')",
         backgroundSize: "cover",
@@ -13,7 +13,11 @@ export default function AuthLayout({
         backgroundRepeat: "no-repeat",
       }}
     >
-      <div className="relative z-10 w-full max-w-md p-8">{children}</div>
+      <div className="relative z-10 w-full max-w-md p-2">
+        <div className="flex items-center justify-center p-12 backdrop-blur-sm rounded-lg">
+          {children}
+        </div>
+      </div>
     </div>
   );
 }

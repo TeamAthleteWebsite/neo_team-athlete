@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { signIn } from "@/lib/auth-client";
 import Image from "next/image";
 import Link from "next/link";
@@ -60,7 +61,7 @@ export default function SignIn() {
             priority
           />
           <h2 className="mt-6 text-3xl font-bold text-white">Connexion</h2>
-          <p className="mt-2 text-sm text-zinc-400">
+          <p className="mt-2 text-sm text-zinc-200">
             Rejoignez la communauté Team Athlete
           </p>
         </div>
@@ -113,13 +114,13 @@ export default function SignIn() {
           </div>
 
           <div>
-            <button
+            <Button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-custom-red hover:bg-custom-red/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-red disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-red-600 hover:bg-red-600/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-red disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? "Connexion..." : "Se connecter"}
-            </button>
+            </Button>
           </div>
         </form>
 
@@ -129,7 +130,7 @@ export default function SignIn() {
               <div className="w-full border-t border-zinc-600" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-black text-zinc-400">
+              <span className="px-2 bg-gray-900 rounded-sm text-zinc-200">
                 Ou continuer avec
               </span>
             </div>
@@ -154,11 +155,11 @@ export default function SignIn() {
         </div>
 
         <div className="text-center">
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-zinc-200">
             Pas encore de compte ?{" "}
             <Link
               href="/auth/signup"
-              className="font-medium text-custom-red hover:text-custom-red/90"
+              className="font-medium text-red-600 hover:text-red-600/90"
             >
               S&apos;inscrire
             </Link>

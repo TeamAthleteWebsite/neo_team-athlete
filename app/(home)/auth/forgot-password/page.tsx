@@ -105,7 +105,7 @@ export default function ForgotPassword() {
             <p className="text-sm text-zinc-400">
               <Link
                 href="/auth/signin"
-                className="font-medium text-custom-red hover:text-custom-red/90"
+                className="font-medium text-red-600 hover:text-red-600/90"
               >
                 Retour à la connexion
               </Link>
