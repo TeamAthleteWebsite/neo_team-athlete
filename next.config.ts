@@ -14,9 +14,6 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
-  // Optimisations de build
-  swcMinify: true,
-
   // Configuration du cache
   onDemandEntries: {
     maxInactiveAge: 60 * 60 * 1000, // 1 heure

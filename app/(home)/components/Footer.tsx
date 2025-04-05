@@ -42,7 +42,7 @@ export default function Footer() {
             <FooterNavItem
               id="login"
               label="Connexion"
-              href="/auth/signin"
+              href="/auth/sign-in"
               icon={<LogInIcon className="w-6 h-6" />}
               isActive={activeTab === "login"}
               onClick={setActiveTab}
