@@ -16,8 +16,6 @@ export const metadata: Metadata = {
   creator: "Team Athlete",
   publisher: "Team Athlete",
   robots: "index, follow",
-  themeColor: "#000000",
-  viewport: "width=device-width, initial-scale=1",
   openGraph: {
     type: "website",
     locale: "fr_FR",

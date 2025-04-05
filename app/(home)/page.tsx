@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ProgramList } from "./components/ProgramList";
 
 export default function Home() {
@@ -21,12 +22,13 @@ export default function Home() {
             <span className="text-white/80">ON NE NAIT PAS ATHLETE</span>
             <span className="text-white/80">ON LE DEVIENT...</span>
           </h1>
-          <button
+          <Link
+            href="/auth/signin"
             style={{ backgroundColor: "#801d20cc" }}
             className="inline-block px-6 py-3 text-white text-sm font-medium hover:opacity-90 transition-opacity duration-300 font-helvetica rounded"
           >
             REJOINDRE LA TEAM ATHLETE
-          </button>
+          </Link>
         </div>
       </section>
 
