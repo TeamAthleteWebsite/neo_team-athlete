@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "@/lib/auth-client";
-import { HomeIcon, LogInIcon, SearchIcon, UserIcon } from "lucide-react";
+import { HomeIcon, LayoutDashboard, LogInIcon, UserIcon } from "lucide-react";
 import { useState } from "react";
 import { FooterNavItem } from "./FooterNavItem";
 
@@ -24,11 +24,11 @@ export default function Footer() {
             onClick={setActiveTab}
           />
           <FooterNavItem
-            id="search"
-            label="Search"
-            href="/search"
-            icon={<SearchIcon className="w-6 h-6" />}
-            isActive={activeTab === "search"}
+            id="dashboard"
+            label="Dashboard"
+            href="/dashboard"
+            icon={<LayoutDashboard className="w-6 h-6" />}
+            isActive={activeTab === "dashboard"}
             onClick={setActiveTab}
           />
           {session?.user ? (

@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { authClient, useSession } from "@/lib/auth-client";
 import { getUserById } from "@/src/actions/user.actions";
 import { User, UserRole } from "@prisma/client";
@@ -100,13 +101,13 @@ const ProfilePage = () => {
             >
               <PencilIcon className="w-5 h-5 text-white" />
             </Link>
-            <button
+            <Button
               onClick={handleSignOut}
               className="p-2 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
               title="Se déconnecter"
             >
-              <LogOutIcon className="w-5 h-5 text-white" />
-            </button>
+              <LogOutIcon className="w-6 h-6 text-white" />
+            </Button>
           </div>
         </div>
 
