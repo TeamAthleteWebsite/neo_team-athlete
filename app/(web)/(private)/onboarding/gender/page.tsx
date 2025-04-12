@@ -1,21 +1,40 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
+import { useSession } from "@/lib/auth-client";
 import { Mars, Venus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { OnboardingLayout } from "../components/OnboardingLayout";
+import { saveOnboarding } from "../save";
 
 type Gender = "male" | "female" | null;
 
 export default function GenderPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [gender, setGender] = useState<Gender>(null);
 
-  const handleGenderSelect = () => {
-    console.log("gender", gender);
-    // TODO: Save gender to user profile
-    router.push("/onboarding/measurements");
+  const handleGenderSelect = async () => {
+    if (!gender) {
+      return router.push("/onboarding/measurements");
+    }
+
+    await saveOnboarding({
+      userId: session?.user?.id as string,
+      data: { gender },
+    })
+      .then(() => {
+        toast.success("Genre enregistré avec succès");
+        router.push("/onboarding/measurements");
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error(
+          "Une erreur est survenue lors de l'enregistrement du genre",
+        );
+      });
   };
 
   return (
@@ -27,7 +46,9 @@ export default function GenderPage() {
       <div className="grid grid-cols-2 gap-4">
         <Card
           className={`p-6 cursor-pointer hover:border-primary transition-colors ${
-            gender === "female" ? "border-primary" : "border-transparent"
+            gender === "female"
+              ? "border-primary"
+              : "border-transparent bg-accent/60"
           }`}
           onClick={() => setGender("female")}
         >
@@ -41,7 +62,9 @@ export default function GenderPage() {
 
         <Card
           className={`p-6 cursor-pointer hover:border-primary transition-colors ${
-            gender === "male" ? "border-primary" : "border-transparent"
+            gender === "male"
+              ? "border-primary"
+              : "border-transparent bg-accent/60"
           }`}
           onClick={() => setGender("male")}
         >

@@ -41,6 +41,11 @@ enum UserRole {
   PROSPECT
 }
 
+enum Gender {
+  MALE
+  FEMALE
+}
+
 model User {
   id            String    @id
   email         String
@@ -55,6 +60,8 @@ model User {
   bio           String?
   height        Int?
   weight        Int?
+  birthYear     Int?
+  gender        Gender?
   goal          String?
   roles         UserRole[] @default([PROSPECT])
 

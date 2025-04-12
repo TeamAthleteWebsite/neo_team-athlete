@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { findById } from "@/src/repositories/user.repository";
 import { headers } from "next/headers";
+import { cache } from "react";
 
 export async function updateUserProfile(data: {
   firstName: string;
@@ -45,9 +46,11 @@ export async function updateUserProfile(data: {
   }
 }
 
+const cacheUserById = cache(async (id: string) => await findById(id));
+
 export async function getUserById(id: string) {
   try {
-    const user = await findById(id);
+    const user = await cacheUserById(id);
     if (!user) {
       throw new Error("Utilisateur non trouvé");
     }

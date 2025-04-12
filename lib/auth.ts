@@ -4,6 +4,9 @@ import { nextCookies } from "better-auth/next-js";
 import { prisma } from "./prisma";
 import { resend } from "./resend";
 
+import { getUserById } from "@/src/actions/user.actions";
+import { createAuthMiddleware } from "better-auth/api";
+
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
@@ -26,4 +29,16 @@ export const auth = betterAuth({
     },
   },
   plugins: [nextCookies()],
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      if (!ctx.context.session?.user.id) {
+        return;
+      }
+
+      const user = await getUserById(ctx.context.session?.user.id);
+      if (user && !user.isOnboarded) {
+        ctx.redirect("/onboarding/gender");
+      }
+    }),
+  },
 });

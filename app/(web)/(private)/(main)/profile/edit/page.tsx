@@ -5,6 +5,7 @@ import { findById } from "@/src/repositories/user.repository";
 import { User, UserRole } from "@prisma/client";
 import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import ProfileEditForm from "./components/ProfileEditForm";
 
@@ -13,6 +14,7 @@ type ExtendedUser = User & {
 };
 
 const ProfileEditPage = () => {
+  const router = useRouter();
   const { data: session } = useSession();
   const [user, setUser] = useState<ExtendedUser | undefined>(undefined);
 
@@ -21,10 +23,14 @@ const ProfileEditPage = () => {
       if (session?.user?.id) {
         const userData = await findById(session.user.id);
         setUser(userData as ExtendedUser);
+
+        if (!userData?.isOnboarded) {
+          router.push("/profile/onboarding");
+        }
       }
     };
     fetchUser();
-  }, [session?.user?.id]);
+  }, [session?.user?.id, router]);
 
   if (!user) {
     return (
@@ -32,6 +38,10 @@ const ProfileEditPage = () => {
         <p className="text-center text-zinc-400">Chargement...</p>
       </div>
     );
+  }
+
+  if (!user.isOnboarded) {
+    router.push("/onboarding/gender");
   }
 
   return (

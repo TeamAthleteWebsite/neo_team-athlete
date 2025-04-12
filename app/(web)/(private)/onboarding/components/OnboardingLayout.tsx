@@ -3,6 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowLeft } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode } from "react";
+import { saveOnboarding } from "../save";
 
 const ONBOARDING_STEPS = [
   {
@@ -27,6 +28,7 @@ interface OnboardingLayoutProps {
   title?: string;
   subtitle?: string;
   onNext?: () => void;
+  onSkip?: () => void;
 }
 
 export function OnboardingLayout({
@@ -72,42 +74,69 @@ export function OnboardingLayout({
     }
   };
 
+  const handleSkip = () => {
+    saveOnboarding({ data: { isOnboarded: true } })
+      .then(() => {
+        router.push("/dashboard");
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
   return (
     <div className="flex flex-col relative pb-24">
-      <div className="flex justify-between items-center fixed top-5 left-0 right-0 z-10">
+      <div className="flex justify-between items-center fixed top-5 left-0 right-0 z-10 p-3 gap-3">
         <Button
           variant="ghost"
           size="icon"
           onClick={handleBack}
-          className="text-white"
+          className="text-white flex-none"
         >
           <ArrowLeft size={16} />
         </Button>
-        <Progress value={progress} className="w-full bg-white p-2 mx-2" />
+
+        <Progress value={progress} className="w-full flex-1" />
+
+        <span className="text-white text-sm flex-none">
+          {currentStep} / {totalSteps}
+        </span>
       </div>
 
       <div className="flex-1 w-full max-w-md mx-auto space-y-8 pt-20">
-        <div className="text-center">
+        <div className="text-center shadow-lg rounded-lg p-4 bg-black/50">
           <h1 className="text-3xl font-bold tracking-tigh text-white">
             {title}
           </h1>
           {subtitle && <p className="mt-2 text-sm text-gray-100">{subtitle}</p>}
         </div>
 
-        <div className="my-8">{children}</div>
+        <div className="mt-12">{children}</div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/20 backdrop-blur-sm">
-        <div className="w-full max-w-md mx-auto">
+      <div className="fixed bottom-0 left-0 right-0">
+        <div className="w-full max-w-md mx-auto px-4 mb-2">
           <Button
-            onClick={handleNext}
-            size="lg"
-            variant="destructive"
-            className="w-full"
-            disabled={currentStep === totalSteps}
+            onClick={handleSkip}
+            variant="ghost"
+            className="w-full text-white"
           >
-            {currentStep === totalSteps ? "Terminer" : "Continuer"}
+            Passer l&apos;onboarding
           </Button>
+        </div>
+
+        <div className="p-4 bg-black/20 backdrop-blur-sm">
+          <div className="w-full max-w-md mx-auto">
+            <Button
+              onClick={handleNext}
+              size="lg"
+              variant="destructive"
+              className="w-full"
+              disabled={currentStep === totalSteps}
+            >
+              {currentStep === totalSteps ? "Terminer" : "Continuer"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

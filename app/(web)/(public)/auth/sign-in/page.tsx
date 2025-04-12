@@ -6,30 +6,33 @@ import { Label } from "@/components/ui/label";
 import { signIn } from "@/lib/auth-client";
 import Link from "next/link";
 import { useState } from "react";
+import { toast } from "sonner";
 import { AuthDivider } from "../component/AuthDivider";
 import { AuthHeader } from "../component/AuthHeader";
 import { GoogleButton } from "../component/GoogleButton";
-
 export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
 
     try {
-      await signIn.email({
-        email,
-        password,
-        callbackURL: "/dashboard",
-      });
-    } catch (err: unknown) {
-      console.error("Erreur de connexion:", err);
-      setError("Identifiants invalides. Veuillez réessayer.");
+      await signIn.email(
+        {
+          email,
+          password,
+          callbackURL: "/dashboard",
+        },
+        {
+          onError: (error) => {
+            console.error("Erreur de connexion:", error);
+            toast.error("Identifiants invalides. Veuillez réessayer.");
+          },
+        },
+      );
     } finally {
       setIsLoading(false);
     }
@@ -43,10 +46,6 @@ export default function SignIn() {
       />
 
       <form onSubmit={handleEmailSignIn} className="mt-8 space-y-6">
-        {error && (
-          <div className="text-red-500 text-sm text-center">{error}</div>
-        )}
-
         <div className="space-y-4">
           <div>
             <Label htmlFor="email" className="sr-only">
