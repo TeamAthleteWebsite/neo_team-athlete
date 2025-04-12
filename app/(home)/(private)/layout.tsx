@@ -7,7 +7,7 @@ export default function PrivateLayout({
     <div
       className="min-h-[calc(100vh-140px)] relative flex items-center justify-center py-8 px-4"
       style={{
-        backgroundImage: "url('/images/athlete-background.jpg')",
+        backgroundImage: "url('/images/athlete-background.webp')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",

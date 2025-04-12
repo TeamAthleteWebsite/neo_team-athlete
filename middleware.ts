@@ -46,6 +46,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|images|favicon.ico|manifest.json|icon-192x192.png|icon-256x256.png|icon-384x384.png|icon-512x512.png).*)",
+    "/((?!api|_next/static|_next/image|icons|images|favicon.ico|manifest.json|icon-192x192.png|icon-256x256.png|icon-384x384.png|icon-512x512.png).*)",
   ],
 };

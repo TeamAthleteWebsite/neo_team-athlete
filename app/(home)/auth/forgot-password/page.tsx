@@ -93,7 +93,7 @@ export default function ForgotPassword() {
         <div className="text-center">
           <p className="text-sm text-zinc-400">
             <Link
-              href="/auth/signin"
+              href="/auth/sign-in"
               className="font-medium text-red-600 hover:text-red-600/90"
             >
               Retour à la connexion

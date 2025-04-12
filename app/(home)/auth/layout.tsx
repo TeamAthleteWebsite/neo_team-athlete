@@ -7,7 +7,7 @@ export default function AuthLayout({
     <div
       className="min-h-[calc(100vh-140px)] relative flex items-center justify-center"
       style={{
-        backgroundImage: "url('/images/athlete-background.jpg')",
+        backgroundImage: "url('/images/athlete-background.webp')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",

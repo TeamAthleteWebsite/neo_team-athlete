@@ -10,10 +10,10 @@ export const AuthHeader = ({
   return (
     <div className="text-center">
       <Image
-        src="/images/logo.webp"
+        src="/images/logo_team_athlete.webp"
         alt="Team Athlete Logo"
-        width={120}
-        height={80}
+        width={320}
+        height={320}
         className="mx-auto"
         priority
       />

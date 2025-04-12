@@ -1,21 +1,22 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Header() {
   return (
     <header className="bg-black text-white p-4">
       <div className="flex items-center justify-between max-w-screen-xl mx-auto">
-        <div className="w-15 h-10 flex items-center justify-center">
+        <Link href="/" className="w-15 h-10 flex items-center justify-center">
           <Image
-            src="/images/logo.webp"
+            src="/images/logo_body.webp"
             alt="Team Athlete Logo"
             width={60}
             height={40}
             className="object-contain"
             priority
           />
-        </div>
+        </Link>
         <button className="p-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
