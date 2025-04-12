@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
+import Image from "next/image";
 
 export default function Header() {
   return (
@@ -8,7 +8,7 @@ export default function Header() {
       <div className="flex items-center justify-between max-w-screen-xl mx-auto">
         <div className="w-15 h-10 flex items-center justify-center">
           <Image
-            src="/logo.png"
+            src="/images/logo.webp"
             alt="Team Athlete Logo"
             width={60}
             height={40}
@@ -35,4 +35,4 @@ export default function Header() {
       </div>
     </header>
   );
-} 
+}

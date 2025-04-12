@@ -8,17 +8,19 @@ const nextConfig: NextConfig = {
 
   // Optimisations d'images
   images: {
-    domains: ["ui-avatars.com", "api.dicebear.com"], // Ajoutez vos domaines d'images autorisés ici
-    formats: ["image/avif", "image/webp"],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "ui-avatars.com",
+      },
       {
         protocol: "https",
         hostname: "api.dicebear.com",
         pathname: "/9.x/**",
       },
     ],
+    formats: ["image/avif", "image/webp"],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },

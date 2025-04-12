@@ -74,8 +74,6 @@ alwaysApply: true
 | Package | Version | Application | Description |
 |---------|---------|-------------|-------------|
 | React | 19.0.0 | Frontend | Main UI library |
-| Remix | 2.16.0 | Frontend | Fullstack React framework |
-| MobX | 6.13.6 | Frontend | Reactive state management |
 | Tailwind CSS | 4.0.12 | Frontend | Utility-first CSS framework |
 | NestJS | 11.0.11 | Backend | Node.js backend framework |
 | Prisma | 6.4.1 | Backend | ORM and database client |

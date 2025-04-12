@@ -9,6 +9,8 @@ export default function Footer() {
   const [activeTab, setActiveTab] = useState("home");
   const { data: session } = useSession();
 
+  console.log(session);
+
   return (
     <footer className="fixed bottom-0 w-full bg-black text-white border-t border-gray-800 z-50">
       <nav className="max-w-screen-xl mx-auto">
@@ -29,7 +31,7 @@ export default function Footer() {
             isActive={activeTab === "search"}
             onClick={setActiveTab}
           />
-          {session ? (
+          {session?.user ? (
             <FooterNavItem
               id="profile"
               label="Profile"
