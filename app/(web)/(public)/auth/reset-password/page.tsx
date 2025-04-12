@@ -54,7 +54,7 @@ function ResetPasswordContent() {
         "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.",
       );
       setTimeout(() => {
-        router.push("/auth/signin");
+        router.push("/auth/sign-in");
       }, 2000);
     } catch (err: unknown) {
       console.error("Erreur de réinitialisation:", err);

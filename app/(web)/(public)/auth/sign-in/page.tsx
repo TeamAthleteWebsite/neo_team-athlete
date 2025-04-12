@@ -25,7 +25,7 @@ export default function SignIn() {
       await signIn.email({
         email,
         password,
-        callbackURL: "/profile",
+        callbackURL: "/dashboard",
       });
     } catch (err: unknown) {
       console.error("Erreur de connexion:", err);

@@ -1,7 +1,21 @@
-import Link from "next/link";
+"use client";
+
+import { useSession } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 import { ProgramList } from "./components/ProgramList";
 
 export default function Home() {
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  const handleJoinClick = () => {
+    if (session?.user) {
+      router.push("/dashboard");
+    } else {
+      router.push("/auth/sign-in");
+    }
+  };
+
   return (
     <div className="relative">
       <section className="relative h-screen flex items-center justify-center">
@@ -20,13 +34,13 @@ export default function Home() {
             <span className="text-white/80">ON NE NAIT PAS ATHLETE</span>
             <span className="text-white/80">ON LE DEVIENT...</span>
           </h1>
-          <Link
-            href="/auth/sign-in"
+          <button
+            onClick={handleJoinClick}
             style={{ backgroundColor: "#801d20cc" }}
             className="inline-block px-6 py-3 text-white text-sm font-medium hover:opacity-90 transition-opacity duration-300 font-helvetica rounded"
           >
             REJOINDRE LA TEAM ATHLETE
-          </Link>
+          </button>
         </div>
       </section>
 

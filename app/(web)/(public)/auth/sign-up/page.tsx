@@ -29,12 +29,12 @@ export default function SignUp() {
           password,
           name,
           image: `https://ui-avatars.com/api/?name=${name}&background=random`,
-          callbackURL: "/profile",
+          callbackURL: "/dashboard",
         },
         {
           onSuccess: () => {
             toast.success("Inscription réussie !");
-            router.push("/profile");
+            router.push("/dashboard");
           },
           onError: (err: unknown) => {
             console.error("Erreur d'inscription:", err);

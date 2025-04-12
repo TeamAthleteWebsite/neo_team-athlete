@@ -68,7 +68,7 @@ export function OnboardingLayout({
     if (currentStep > 1) {
       router.push(ONBOARDING_STEPS[currentStepIndex - 1].path);
     } else {
-      router.back();
+      router.push("/");
     }
   };
 

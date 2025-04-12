@@ -1,9 +1,9 @@
-import { PrismaClient } from "@prisma/client";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
+import { prisma } from "./prisma";
+import { resend } from "./resend";
 
-const prisma = new PrismaClient();
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
@@ -11,10 +11,12 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {
-      // TODO: Implement email sending
-      console.log(`Reset password URL for ${user.email}: ${url}`);
-      // Pour l'instant, nous allons juste logger l'URL
-      // Dans une implémentation réelle, vous devrez configurer un service d'envoi d'emails
+      await resend.emails.send({
+        from: "noreply@example.com",
+        to: user.email,
+        subject: "Reset your password",
+        html: `<p>Click <a href="${url}">here</a> to reset your password</p>`,
+      });
     },
   },
   socialProviders: {

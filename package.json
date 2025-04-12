@@ -52,6 +52,6 @@
     "typescript": "^5.8.3"
   },
   "prisma": {
-    "seed": "bunx ts-node --compiler-options {\"module\":\"CommonJS\"} ./prisma/seeds.ts"
+    "seed": "bun ./prisma/seed.ts"
   }
 }

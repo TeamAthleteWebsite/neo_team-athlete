@@ -25,7 +25,7 @@ sync: clean
 	$(MAKE) dev
 
 clean:
-	@rm -rf node_modules .next yarn.lock bun.lockb pnpm-lock.yaml package-lock.json
+	@rm -rf node_modules .next yarn.lock bun.lockb pnpm-lock.yaml package-lock.json next-env.d.ts
 
 install: ## Install dependencies
 	@test -f .env.local || cp .env .env.local

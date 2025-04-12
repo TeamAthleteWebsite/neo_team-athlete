@@ -34,6 +34,10 @@ const nextConfig: NextConfig = {
   // Optimisations de production
   productionBrowserSourceMaps: false,
 
+  experimental: {
+    authInterrupts: true,
+  },
+
   // Configuration des en-têtes HTTP
   async headers() {
     return [

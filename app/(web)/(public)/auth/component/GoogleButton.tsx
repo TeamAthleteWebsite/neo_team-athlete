@@ -14,7 +14,7 @@ export const GoogleButton = () => {
     try {
       await signIn.social({
         provider: "google",
-        callbackURL: "/profile",
+        callbackURL: "/dashboard",
       });
     } catch (err: unknown) {
       console.error("Erreur de connexion Google:", err);
