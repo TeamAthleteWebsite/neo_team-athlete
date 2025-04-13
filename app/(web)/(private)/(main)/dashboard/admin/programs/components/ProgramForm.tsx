@@ -5,25 +5,25 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { createProgram } from "@/src/actions/program.actions";
+
 interface ProgramFormProps {
   initialData?: Program;
-  onSubmit: (data: {
-    title: string;
-    description: string;
-    type: "PERSONAL" | "SMALL_GROUP" | "PROGRAMMING";
-    price: number;
-    duration: number;
-    imageUrl?: string;
-    active: boolean;
-  }) => Promise<void>;
-  submitLabel: string;
 }
 
-export function ProgramForm({
-  initialData,
-  onSubmit,
-  submitLabel,
-}: ProgramFormProps) {
+export function ProgramForm({ initialData }: ProgramFormProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
 
@@ -42,9 +42,9 @@ export function ProgramForm({
 
     try {
       setSubmitting(true);
-      await onSubmit(formData);
+      await createProgram(formData);
       toast.success("Programme enregistré avec succès");
-      router.push("/dashboard/admin");
+      router.push("/dashboard/admin/programs");
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Une erreur est survenue",
@@ -56,158 +56,114 @@ export function ProgramForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label
-          htmlFor="title"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Titre
-        </label>
-        <input
-          type="text"
+      <div className="space-y-2">
+        <Label htmlFor="title">Titre</Label>
+        <Input
           id="title"
           value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setFormData({ ...formData, title: e.target.value })
+          }
           required
         />
       </div>
 
-      <div>
-        <label
-          htmlFor="description"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Description
-        </label>
-        <textarea
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
           id="description"
           value={formData.description}
-          onChange={(e) =>
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
             setFormData({ ...formData, description: e.target.value })
           }
           rows={4}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           required
         />
       </div>
 
-      <div>
-        <label
-          htmlFor="type"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Type
-        </label>
-        <select
-          id="type"
+      <div className="space-y-2">
+        <Label htmlFor="type">Type</Label>
+        <Select
           value={formData.type}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              type: e.target.value as Program["type"],
-            })
+          onValueChange={(value: string) =>
+            setFormData({ ...formData, type: value as Program["type"] })
           }
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          required
         >
-          <option value="PERSONAL">Personnel</option>
-          <option value="SMALL_GROUP">Petit groupe</option>
-          <option value="PROGRAMMING">Programmation</option>
-        </select>
+          <SelectTrigger>
+            <SelectValue placeholder="Sélectionnez un type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="PERSONAL">Personnel</SelectItem>
+            <SelectItem value="SMALL_GROUP">Petit groupe</SelectItem>
+            <SelectItem value="PROGRAMMING">Programmation</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <div>
-        <label
-          htmlFor="price"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Prix (€)
-        </label>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="price">Prix (€)</Label>
+        <Input
           type="number"
           id="price"
           value={formData.price}
-          onChange={(e) =>
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setFormData({ ...formData, price: parseFloat(e.target.value) })
           }
           step="0.01"
           min="0"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           required
         />
       </div>
 
-      <div>
-        <label
-          htmlFor="duration"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Durée (minutes)
-        </label>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="duration">Durée (minutes)</Label>
+        <Input
           type="number"
           id="duration"
           value={formData.duration}
-          onChange={(e) =>
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setFormData({ ...formData, duration: parseInt(e.target.value) })
           }
           min="1"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           required
         />
       </div>
 
-      <div>
-        <label
-          htmlFor="imageUrl"
-          className="block text-sm font-medium text-gray-700"
-        >
-          URL de l'image
-        </label>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="imageUrl">URL de l&apos;image</Label>
+        <Input
           type="url"
           id="imageUrl"
           value={formData.imageUrl}
-          onChange={(e) =>
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setFormData({ ...formData, imageUrl: e.target.value })
           }
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
       </div>
 
-      <div className="flex items-center">
-        <input
-          type="checkbox"
+      <div className="flex items-center space-x-2">
+        <Checkbox
           id="active"
           checked={formData.active}
-          onChange={(e) =>
-            setFormData({ ...formData, active: e.target.checked })
+          onCheckedChange={(checked: boolean) =>
+            setFormData({ ...formData, active: checked })
           }
-          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
-        <label htmlFor="active" className="ml-2 block text-sm text-gray-700">
+        <Label
+          htmlFor="active"
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
           Programme actif
-        </label>
+        </Label>
       </div>
 
       <div className="flex justify-end gap-4">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
+        <Button type="button" variant="outline" onClick={() => router.back()}>
           Annuler
-        </button>
-        <button
-          type="submit"
-          disabled={submitting}
-          className={`px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-            submitting ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-        >
-          {submitting ? "Enregistrement..." : submitLabel}
-        </button>
+        </Button>
+        <Button type="submit" disabled={submitting}>
+          {submitting ? "Enregistrement..." : "Enregistrer"}
+        </Button>
       </div>
     </form>
   );
