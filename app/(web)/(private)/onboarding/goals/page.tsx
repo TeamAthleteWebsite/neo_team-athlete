@@ -1,12 +1,7 @@
-"use client";
-
-import { OnboardingLayout } from "@/app/(web)/(private)/onboarding/components/OnboardingLayout";
-import { Card } from "@/components/ui/card";
+import { getCurrentUser } from "@/src/actions/user.actions";
 import { BicepsFlexed, ChevronsUp, Flame } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { saveOnboarding } from "../save";
-import { toast } from "sonner";
+import { notFound } from "next/navigation";
+import GoalsBlock from "./GoalsBloack";
 
 type Goal = {
   id: string;
@@ -36,51 +31,12 @@ const goals: Goal[] = [
   },
 ];
 
-export default function GoalsPage() {
-  const router = useRouter();
-  const [goal, setGoal] = useState<string | null>(null);
+export default async function GoalsPage() {
+  const user = await getCurrentUser();
 
-  const handleGoalSelect = () => {
-    if (!goal) {
-      return;
-    }
+  if (!user) {
+    notFound();
+  }
 
-    await saveOnboarding({
-      userId: session?.user?.id as string,
-      data: { goal },
-    }).then(() => {
-      toast.success("Objectif enregistré avec succès");
-      router.push("/dashboard");
-    });
-  };
-
-  return (
-    <OnboardingLayout
-      title="Quel est votre objectif ?"
-      subtitle="Nous adapterons votre programme en fonction de votre objectif"
-      onNext={handleGoalSelect}
-    >
-      <div className="space-y-4">
-        {goals.map((goalItem) => (
-          <Card
-            key={goalItem.id}
-            className={`p-4 cursor-pointer hover:border-primary transition-colors ${
-              goalItem.id === goal
-                ? "border-primary"
-                : "border-transparent bg-accent/70"
-            }`}
-            onClick={() => setGoal(goalItem.id)}
-          >
-            <div className="flex items-center space-x-4">
-              <span className="text-4xl">{goalItem.icon}</span>
-              <div>
-                <h3 className="font-medium">{goalItem.title}</h3>
-                <p className="text-sm text-gray-600">{goalItem.description}</p>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-    </OnboardingLayout>
-  );
+  return <GoalsBlock user={user} goals={goals} />;
 }

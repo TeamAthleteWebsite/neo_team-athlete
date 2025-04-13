@@ -23,10 +23,6 @@ const ProfileEditPage = () => {
       if (session?.user?.id) {
         const userData = await findById(session.user.id);
         setUser(userData as ExtendedUser);
-
-        if (!userData?.isOnboarded) {
-          router.push("/profile/onboarding");
-        }
       }
     };
     fetchUser();
@@ -41,7 +37,7 @@ const ProfileEditPage = () => {
   }
 
   if (!user.isOnboarded) {
-    router.push("/onboarding/gender");
+    return router.push("/onboarding/gender");
   }
 
   return (

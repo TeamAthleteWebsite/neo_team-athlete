@@ -2,9 +2,10 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/src/actions/user.actions";
+import { Gender } from "@prisma/client";
 
 type OnboardingData = {
-  gender?: string;
+  gender?: Gender;
   height?: number;
   weight?: number;
   age?: number;
@@ -15,9 +16,13 @@ type OnboardingData = {
 export const saveOnboarding = async ({ data }: { data: OnboardingData }) => {
   const currentUser = await getCurrentUser();
 
+  console.log({ data });
+
   const user = await prisma.user.update({
     where: { id: currentUser.id },
-    data,
+    data: {
+      gender: "MALE",
+    },
   });
 
   return user;

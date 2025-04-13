@@ -1,19 +1,19 @@
-import { PrismaClient, ProgramType, UserRole } from "@prisma/client";
+import { Gender, PrismaClient, ProgramType, UserRole } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Création de l'utilisateur coach
-  const coach = await prisma.user.create({
+  await prisma.user.create({
     data: {
       id: "bak",
       email: "bak@team-athlete.com",
       emailVerified: true,
-      name: "John",
-      lastName: "Doe",
-      roles: [UserRole.COACH],
+      name: "Coach",
+      lastName: "Bak",
+      roles: [UserRole.COACH, UserRole.ADMIN],
       isOnboarded: true,
+      gender: Gender.MALE,
       bio: "Coach professionnel avec plus de 10 ans d'expérience",
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -22,15 +22,13 @@ async function main() {
           id: "44b1ffe7-2f27-4653-99e1-12ab294666de",
           accountId: "bak",
           providerId: "credentials",
-          password: await bcrypt.hash("Coach123!", 10),
+          password: await bcrypt.hash("Co0.ach123!", 10),
           createdAt: new Date(),
           updatedAt: new Date(),
         },
       },
     },
   });
-
-  console.log("Coach créé:", coach);
 
   const programs = [
     {

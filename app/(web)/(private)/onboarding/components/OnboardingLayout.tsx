@@ -62,7 +62,9 @@ export function OnboardingLayout({
     }
 
     if (currentStep < totalSteps) {
-      router.push(ONBOARDING_STEPS[currentStepIndex + 1].path);
+      return router.push(ONBOARDING_STEPS[currentStepIndex + 1].path);
+    } else if (currentStep === totalSteps) {
+      return terminateOnboarding();
     }
   };
 
@@ -74,14 +76,18 @@ export function OnboardingLayout({
     }
   };
 
-  const handleSkip = () => {
+  const terminateOnboarding = () => {
     saveOnboarding({ data: { isOnboarded: true } })
       .then(() => {
-        router.push("/dashboard");
+        router.push("/profile");
       })
       .catch((error) => {
         console.error(error);
       });
+  };
+
+  const handleSkip = () => {
+    terminateOnboarding();
   };
 
   return (
@@ -132,7 +138,6 @@ export function OnboardingLayout({
               size="lg"
               variant="destructive"
               className="w-full"
-              disabled={currentStep === totalSteps}
             >
               {currentStep === totalSteps ? "Terminer" : "Continuer"}
             </Button>
