@@ -3,17 +3,17 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export default async function PrivateLayout({
-  children,
+	children,
 }: {
-  children: React.ReactNode;
+	children: React.ReactNode;
 }) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
 
-  if (!session) {
-    redirect("/auth/sign-in");
-  }
+	if (!session) {
+		redirect("/auth/sign-in");
+	}
 
-  return <>{children}</>;
+	return <>{children}</>;
 }

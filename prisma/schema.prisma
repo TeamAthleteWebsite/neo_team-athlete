@@ -54,22 +54,22 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
-  name          String
-  lastName      String?
-  phone         String?
-  bio           String?
-  specialty     String?   // Spécialité du coach
-  height        Int?
-  weight        Int?
-  birthYear     Int?
-  gender        Gender?
-  goal          String?
-  roles         UserRole[] @default([PROSPECT])
+  name      String
+  lastName  String?
+  phone     String?
+  bio       String?
+  specialty String? // Spécialité du coach
+  height    Int?
+  weight    Int?
+  birthYear Int?
+  gender    Gender?
+  goal      String?
+  roles     UserRole[] @default([PROSPECT])
 
-  isOnboarded   Boolean   @default(false)
+  isOnboarded Boolean @default(false)
 
-  createdAt     DateTime
-  updatedAt     DateTime
+  createdAt DateTime
+  updatedAt DateTime
 
   @@unique([email])
   @@map("user")

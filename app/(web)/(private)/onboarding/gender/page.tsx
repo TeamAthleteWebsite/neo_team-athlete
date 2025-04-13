@@ -3,11 +3,11 @@ import { notFound } from "next/navigation";
 import GenderBlock from "./GenderBlock";
 
 export default async function GenderPage() {
-  const user = await getCurrentUser();
+	const user = await getCurrentUser();
 
-  if (!user) {
-    notFound();
-  }
+	if (!user) {
+		notFound();
+	}
 
-  return <GenderBlock user={user} />;
+	return <GenderBlock user={user} />;
 }
