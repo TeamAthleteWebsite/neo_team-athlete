@@ -2,6 +2,7 @@
 
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { CoachList } from "./components/CoachList";
 import { ProgramList } from "./components/ProgramList";
 
 export default function Home() {
@@ -54,6 +55,24 @@ export default function Home() {
             </div>
 
             <ProgramList />
+          </div>
+        </div>
+      </section>
+
+      <section className="relative bg-zinc-950">
+        <div className="relative z-10 px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl font-helvetica">
+                Nos coachs
+              </h2>
+              <p className="mt-4 text-lg text-zinc-400 max-w-2xl mx-auto">
+                Découvrez notre équipe de coachs experts qui vous accompagneront
+                dans votre transformation physique et mentale.
+              </p>
+            </div>
+
+            <CoachList />
           </div>
         </div>
       </section>

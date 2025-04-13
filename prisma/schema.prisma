@@ -58,6 +58,7 @@ model User {
   lastName      String?
   phone         String?
   bio           String?
+  specialty     String?   // Spécialité du coach
   height        Int?
   weight        Int?
   birthYear     Int?

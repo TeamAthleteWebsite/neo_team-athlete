@@ -1,7 +1,7 @@
 "use client";
 
-import { getPrograms } from "@/actions/program.actions";
-import { Program } from "@/repositories/program.repository";
+import { getPrograms } from "@/src/actions/program.actions";
+import { Program } from "@/src/repositories/program.repository";
 import { useEffect, useState } from "react";
 import { ProgramCard } from "./ProgramCard";
 
@@ -18,7 +18,7 @@ export function ProgramList() {
         setPrograms(data);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load programs"
+          err instanceof Error ? err.message : "Failed to load programs",
         );
       } finally {
         setLoading(false);
@@ -44,6 +44,7 @@ export function ProgramList() {
         {programs.map((program) => (
           <ProgramCard
             key={program.id}
+            id={program.id}
             title={program.title}
             type={program.type}
             description={program.description}

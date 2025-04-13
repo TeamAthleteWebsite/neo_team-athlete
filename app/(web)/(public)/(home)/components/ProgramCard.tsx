@@ -1,14 +1,16 @@
-import { FC } from 'react';
-import { ChevronRight } from 'lucide-react';
-import Link from 'next/link';
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { FC } from "react";
 
 interface ProgramCardProps {
+  id: string;
   title: string;
   description: string;
   type: string;
 }
 
 export const ProgramCard: FC<ProgramCardProps> = ({
+  id,
   title,
   description,
   type,
@@ -19,7 +21,7 @@ export const ProgramCard: FC<ProgramCardProps> = ({
         <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
         <p className="text-sm text-zinc-300 line-clamp-2">{description}</p>
         <Link
-          href={`/programs/${type.toLowerCase()}`}
+          href={`/program/${id}`}
           className="mt-3 inline-flex items-center gap-1 text-sm text-[#801d20] hover:text-[#801d20]/80 transition-colors"
         >
           En savoir +
@@ -28,4 +30,4 @@ export const ProgramCard: FC<ProgramCardProps> = ({
       </div>
     </div>
   );
-}; 
+};
