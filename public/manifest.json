@@ -4,7 +4,7 @@
   "description": "Application de gestion d'équipe sportive",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#000000",
   "theme_color": "#000000",
   "orientation": "portrait",
   "icons": [
@@ -63,9 +63,9 @@
   "screenshots": [],
   "shortcuts": [
     {
-      "name": "Mon Programme",
-      "url": "/programme",
-      "description": "Accéder à mon programme d'entraînement"
+      "name": "Mon Dashboard",
+      "url": "/dashboard",
+      "description": "Accéder à mon dashboard"
     },
     {
       "name": "Mon Profil",
