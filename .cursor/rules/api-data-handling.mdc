@@ -1,0 +1,63 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# API and Data Handling Guidelines
+
+## API Route Structure
+1. Use Next.js App Router API conventions
+2. Implement proper error handling
+3. Validate request data using Zod
+4. Use proper HTTP status codes
+
+Example:
+```typescript
+import { type NextRequest } from 'next/server'
+import { z } from 'zod'
+
+const userSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(2)
+})
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const data = userSchema.parse(body)
+    
+    // Process data...
+    
+    return Response.json({ success: true })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return Response.json({ error: error.errors }, { status: 400 })
+    }
+    return Response.json({ error: 'Internal Server Error' }, { status: 500 })
+  }
+}
+```
+
+## Database Operations
+1. Use Prisma for all database operations
+2. Implement proper error handling
+3. Use transactions when necessary
+4. Follow the repository pattern
+
+## Data Validation
+1. Use Zod for all data validation
+2. Implement proper type checking
+3. Validate all incoming requests
+4. Handle validation errors gracefully
+
+## Error Handling
+1. Use custom error classes
+2. Implement proper logging
+3. Return appropriate error responses
+4. Handle edge cases properly
+
+## Security
+1. Implement proper authentication
+2. Use CSRF protection
+3. Validate user permissions
+4. Sanitize user input

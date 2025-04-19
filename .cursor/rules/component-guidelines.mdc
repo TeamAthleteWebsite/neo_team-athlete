@@ -1,0 +1,57 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Component Guidelines
+
+## Component Structure
+1. Use TypeScript for all components
+2. Follow functional component pattern with arrow functions
+3. Export components as named exports
+4. Use proper type definitions for props
+
+Example:
+```tsx
+import { type FC } from 'react'
+
+interface ButtonProps {
+  label: string
+  onClick: () => void
+}
+
+export const Button: FC<ButtonProps> = ({ label, onClick }) => {
+  return (
+    <button
+      onClick={onClick}
+      className="rounded-md bg-primary px-4 py-2 text-white"
+    >
+      {label}
+    </button>
+  )
+}
+```
+
+## Styling Guidelines
+1. Use Tailwind classes exclusively
+2. Follow mobile-first responsive design
+3. Use Shadcn UI components when possible
+4. Maintain consistent spacing using Tailwind's spacing scale
+
+## Accessibility Requirements
+1. Include proper ARIA labels and roles
+2. Ensure keyboard navigation support
+3. Maintain proper heading hierarchy
+4. Use semantic HTML elements
+
+## Event Handling
+1. Prefix event handlers with "handle"
+2. Use TypeScript event types
+3. Implement proper error boundaries
+4. Use early returns for conditional rendering
+
+## State Management
+1. Use React hooks appropriately
+2. Implement proper loading states
+3. Handle error states gracefully
+4. Use proper form validation
