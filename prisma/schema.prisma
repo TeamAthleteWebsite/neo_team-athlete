@@ -53,6 +53,7 @@ model User {
   image         String?
   sessions      Session[]
   accounts      Account[]
+  notifications Notification[]
 
   name      String
   lastName  String?
@@ -118,4 +119,29 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+enum NotificationType {
+  PROGRAM_UPDATE
+  SESSION_REMINDER
+  SYSTEM_MESSAGE
+  ACHIEVEMENT
+  NEW_PROSPECT
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  title     String
+  message   String          @db.Text
+  isRead    Boolean         @default(false)
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime        @default(now())
+  expiresAt DateTime?       // Pour les notifications temporaires
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([isRead])
+  @@map("notification")
 }
