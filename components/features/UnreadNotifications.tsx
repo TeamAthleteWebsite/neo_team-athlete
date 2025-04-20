@@ -8,16 +8,17 @@ import { Badge } from "../ui/badge";
 export const UnreadNotifications = () => {
   const { data: session } = useSession();
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const userId = session?.user?.id;
 
   useEffect(() => {
     async function fetchUnreadNotifications() {
-      if (!session?.user.id) return;
-      const count = await getUnreadNotificationsCount(session.user.id);
+      if (!userId) return;
+      const count = await getUnreadNotificationsCount(userId);
       setUnreadNotifications(count);
     }
 
     fetchUnreadNotifications();
-  }, [session?.user.id]);
+  }, [userId]);
 
   return (
     <Link href="/notifications" className="p-2 cursor-pointer relative">
