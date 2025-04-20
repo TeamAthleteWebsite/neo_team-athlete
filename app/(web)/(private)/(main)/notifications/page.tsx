@@ -148,10 +148,10 @@ export default function NotificationsPage() {
 
   return (
     <div className="container mx-auto py-6">
-      <Card>
+      <Card className="bg-transparent border-none shadow-none">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-accent text-2xl font-bold">
               <Bell className="h-5 w-5" />
               Notifications
             </CardTitle>
@@ -181,7 +181,7 @@ export default function NotificationsPage() {
               </TabsTrigger>
             </TabsList>
 
-            <ScrollArea className="h-[600px]">
+            <ScrollArea>
               {loading ? (
                 <div className="flex items-center justify-center h-full">
                   <p>Chargement des notifications...</p>

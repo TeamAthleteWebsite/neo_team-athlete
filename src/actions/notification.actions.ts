@@ -1,3 +1,5 @@
+"use server";
+
 import { prisma } from "@/lib/prisma";
 
 export async function getNotifications(userId: string) {
@@ -70,4 +72,17 @@ export async function deleteNotification(notificationId: string) {
     console.error("Erreur lors de la suppression de la notification:", error);
     throw new Error("Impossible de supprimer la notification");
   }
+}
+
+export async function getUnreadNotificationsCount(
+  userId: string,
+): Promise<number> {
+  const count = await prisma.notification.count({
+    where: {
+      userId,
+      isRead: false,
+    },
+  });
+
+  return count;
 }
