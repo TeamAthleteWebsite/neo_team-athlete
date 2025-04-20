@@ -1,10 +1,6 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-client";
 import {
   deleteNotification,
@@ -12,21 +8,12 @@ import {
   markAllNotificationsAsRead,
   markNotificationAsRead,
 } from "@/src/actions/notification.actions";
-import { NotificationType } from "@prisma/client";
-import { formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
-import { Bell, Check, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: NotificationType;
-  isRead: boolean;
-  createdAt: Date;
-}
+import { NotificationHeader } from "./_components/NotificationHeader";
+import { NotificationList } from "./_components/NotificationList";
+import { NotificationTabs } from "./_components/NotificationTabs";
+import { Notification } from "./_components/types";
 
 export default function NotificationsPage() {
   const { user } = useAuth();
@@ -109,23 +96,6 @@ export default function NotificationsPage() {
     }
   };
 
-  const getBadgeVariant = (type: NotificationType) => {
-    switch (type) {
-      case NotificationType.SYSTEM_MESSAGE:
-        return "info";
-      case NotificationType.PROGRAM_UPDATE:
-        return "success";
-      case NotificationType.SESSION_REMINDER:
-        return "warning";
-      case NotificationType.ACHIEVEMENT:
-        return "success";
-      case NotificationType.NEW_PROSPECT:
-        return "info";
-      default:
-        return "default";
-    }
-  };
-
   const filteredNotifications = notifications.filter((notification) => {
     if (activeTab === "all") return true;
     if (activeTab === "unread") return !notification.isRead;
@@ -149,108 +119,18 @@ export default function NotificationsPage() {
   return (
     <div className="container mx-auto py-6">
       <Card className="bg-transparent border-none shadow-none">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-accent text-2xl font-bold">
-              <Bell className="h-5 w-5" />
-              Notifications
-            </CardTitle>
-            {notifications.some((n) => !n.isRead) && (
-              <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>
-                Tout marquer comme lu
-              </Button>
-            )}
-          </div>
-        </CardHeader>
+        <NotificationHeader
+          hasUnreadNotifications={notifications.some((n) => !n.isRead)}
+          onMarkAllAsRead={handleMarkAllAsRead}
+        />
         <CardContent>
-          <Tabs defaultValue="all" onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="all">Toutes</TabsTrigger>
-              <TabsTrigger value="unread">Non lues</TabsTrigger>
-              <TabsTrigger value={NotificationType.SYSTEM_MESSAGE}>
-                Système
-              </TabsTrigger>
-              <TabsTrigger value={NotificationType.PROGRAM_UPDATE}>
-                Programmes
-              </TabsTrigger>
-              <TabsTrigger value={NotificationType.SESSION_REMINDER}>
-                Rappels
-              </TabsTrigger>
-              <TabsTrigger value={NotificationType.ACHIEVEMENT}>
-                Réalisations
-              </TabsTrigger>
-            </TabsList>
-
-            <ScrollArea>
-              {loading ? (
-                <div className="flex items-center justify-center h-full">
-                  <p>Chargement des notifications...</p>
-                </div>
-              ) : filteredNotifications.length === 0 ? (
-                <div className="flex items-center justify-center h-full">
-                  <p>Aucune notification à afficher</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredNotifications.map((notification) => (
-                    <Card
-                      key={notification.id}
-                      className={notification.isRead ? "opacity-70" : ""}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-semibold">
-                                {notification.title}
-                              </h3>
-                              <Badge
-                                variant={getBadgeVariant(notification.type)}
-                              >
-                                {notification.type}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              {notification.message}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(
-                                new Date(notification.createdAt),
-                                {
-                                  addSuffix: true,
-                                  locale: fr,
-                                },
-                              )}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            {!notification.isRead && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  handleMarkAsRead(notification.id)
-                                }
-                              >
-                                <Check className="h-4 w-4" />
-                              </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(notification.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </Tabs>
+          <NotificationTabs activeTab={activeTab} onTabChange={setActiveTab} />
+          <NotificationList
+            notifications={filteredNotifications}
+            onMarkAsRead={handleMarkAsRead}
+            onDelete={handleDelete}
+            loading={loading}
+          />
         </CardContent>
       </Card>
     </div>
