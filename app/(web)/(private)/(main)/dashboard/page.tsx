@@ -1,27 +1,18 @@
-import { UserIcon } from "lucide-react";
-import Link from "next/link";
-
+import { DashboardNavItem } from "@/components/features/DashboardNavItem";
+import { DashboardTitle } from "@/components/features/DashboardTitle";
 export default function page() {
-	return (
-		<div className="flex flex-row items-center justify-center h-screen gap-4">
-			<Block>
-				<UserIcon className="size-10" />
+  return (
+    <div className="w-full space-y-4 sm:space-y-6">
+      <DashboardTitle title="Tableau de bord" />
 
-				<Link href="/profile">Mon compte</Link>
-			</Block>
-			<Block>
-				<UserIcon className="size-10" />
-
-				<Link href="/dashboard/admin">Admin</Link>
-			</Block>
-		</div>
-	);
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-4xl mx-auto px-2 sm:px-4">
+        <DashboardNavItem iconName="User" title="Mon compte" route="/profile" />
+        <DashboardNavItem
+          iconName="ShieldEllipsis"
+          title="Admin"
+          route="/dashboard/admin"
+        />
+      </div>
+    </div>
+  );
 }
-
-const Block = ({ children }: { children: React.ReactNode }) => {
-	return (
-		<div className="flex flex-col items-center justify-center bg-zinc-100/70 rounded-lg p-6 flex-1/2">
-			{children}
-		</div>
-	);
-};
