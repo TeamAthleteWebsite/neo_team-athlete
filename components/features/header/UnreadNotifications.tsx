@@ -1,9 +1,9 @@
+import { Badge } from "@/components/ui/badge";
 import { useSession } from "@/lib/auth-client";
 import { getUnreadNotificationsCount } from "@/src/actions/notification.actions";
 import { Bell } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Badge } from "../ui/badge";
 
 export const UnreadNotifications = () => {
   const { data: session } = useSession();

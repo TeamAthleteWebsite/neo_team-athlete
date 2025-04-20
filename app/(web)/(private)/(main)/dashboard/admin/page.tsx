@@ -1,17 +1,14 @@
 import { DashboardNavItem } from "@/components/features/DashboardNavItem";
 import { DashboardTitle } from "@/components/features/DashboardTitle";
+import { ProspectsItem } from "./_components/ProspectsItem";
+
 export default function AdminPage() {
   return (
     <div className="w-full space-y-4 sm:space-y-6">
       <DashboardTitle title="Admin" />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-4xl mx-auto px-2 sm:px-4">
-        <DashboardNavItem
-          value={24}
-          iconName="Users"
-          title="Prospects"
-          route="/prospects"
-        />
+        <ProspectsItem />
 
         {/* Clients */}
         <DashboardNavItem
@@ -51,14 +48,6 @@ export default function AdminPage() {
           iconName="Book"
           title="Programmes"
           route="/dashboard/admin/programs"
-        />
-
-        {/* Identifiants */}
-        <DashboardNavItem
-          value="--"
-          iconName="UserCog"
-          title="Identifiants"
-          route="/identifiants"
         />
       </div>
     </div>
