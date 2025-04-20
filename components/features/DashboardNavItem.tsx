@@ -3,6 +3,7 @@
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import * as LucideIcons from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 
 export const DashboardNavItem = ({
   value,
@@ -16,6 +17,7 @@ export const DashboardNavItem = ({
   route: string;
 }) => {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   // Récupération dynamique de l'icône
   // @ts-expect-error - Accès dynamique aux icônes
@@ -23,9 +25,13 @@ export const DashboardNavItem = ({
 
   return (
     <Card
-      className={`bg-zinc-400/80 hover:bg-zinc-900/90 transition-colors rounded-lg border-foreground/10 sm:rounded-xl shadow-lg cursor-pointer`}
+      className={`bg-zinc-400/80 hover:bg-zinc-900/90 transition-colors rounded-lg border-foreground/10 sm:rounded-xl shadow-lg cursor-pointer ${
+        isPending ? "opacity-70" : ""
+      }`}
       onClick={() => {
-        router.push(route);
+        startTransition(() => {
+          router.push(route);
+        });
       }}
     >
       <CardHeader className="space-y-2 sm:space-y-3 p-3 sm:p-6">

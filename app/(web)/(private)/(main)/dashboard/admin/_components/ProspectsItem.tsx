@@ -9,7 +9,7 @@ export const ProspectsItem = async () => {
       value={prospectsCount}
       iconName="Users"
       title="Prospects"
-      route="/prospects"
+      route="/dashboard/admin/prospects"
     />
   );
 };
