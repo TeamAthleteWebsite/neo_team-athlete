@@ -104,7 +104,7 @@ export default function NotificationsPage() {
 
   if (!user) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="container mx-auto pt-2">
         <Card>
           <CardContent className="p-6">
             <p className="text-center">
@@ -117,7 +117,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto pt-2">
       <Card className="bg-transparent border-none shadow-none">
         <NotificationHeader
           hasUnreadNotifications={notifications.some((n) => !n.isRead)}
