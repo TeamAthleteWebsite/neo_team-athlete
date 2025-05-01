@@ -14,12 +14,15 @@ interface ProspectsTableProps {
   onView: (id: string) => void;
   onDelete: (id: string) => void;
   onCall?: (phone: string) => void;
+  onConvert: (id: string) => Promise<void>;
 }
 
 export const ProspectsTable = ({
   prospects,
   onView,
   onDelete,
+  onCall,
+  onConvert,
 }: ProspectsTableProps) => {
   const handleCall = (phone: string) => {
     window.location.href = `tel:${phone}`;
@@ -67,6 +70,7 @@ export const ProspectsTable = ({
                   onView={onView}
                   onDelete={onDelete}
                   onCall={handleCall}
+                  onConvert={onConvert}
                 />
               </div>
               <div className="grid grid-cols-2 gap-2 text-sm">
@@ -107,6 +111,7 @@ export const ProspectsTable = ({
                   onView={onView}
                   onDelete={onDelete}
                   onCall={handleCall}
+                  onConvert={onConvert}
                 />
               </div>
             </div>
