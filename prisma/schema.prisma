@@ -139,6 +139,7 @@ model Notification {
   user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime        @default(now())
   expiresAt DateTime?       // Pour les notifications temporaires
+  metadata  Json?
 
   @@index([userId])
   @@index([createdAt])

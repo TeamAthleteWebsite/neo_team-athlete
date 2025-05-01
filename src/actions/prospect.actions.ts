@@ -1,12 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { UserRole } from "@prisma/client";
+import { NotificationType, UserRole } from "@prisma/client";
 
-/**
- * Compte le nombre total de prospects dans la base de données
- * @returns Le nombre de prospects
- */
 export async function getProspectsCount(): Promise<number> {
   try {
     const count = await prisma.user.count({
@@ -21,5 +17,50 @@ export async function getProspectsCount(): Promise<number> {
   } catch (error) {
     console.error("Erreur lors du comptage des prospects:", error);
     throw new Error("Impossible de compter les prospects");
+  }
+}
+
+export async function notifyCoaches(newUserId: string) {
+  try {
+    const newUser = await prisma.user.findUnique({
+      where: { id: newUserId },
+      select: { name: true, email: true, id: true },
+    });
+
+    if (!newUser) {
+      throw new Error("Utilisateur non trouvé");
+    }
+
+    const coaches = await prisma.user.findMany({
+      where: {
+        roles: {
+          has: UserRole.COACH,
+        },
+      },
+      select: { id: true },
+    });
+
+    const notifications = coaches.map((coach) => ({
+      userId: coach.id,
+      type: NotificationType.NEW_PROSPECT,
+      title: "Nouveau prospect inscrit !",
+      message: `${newUser.name} (${newUser.email}) vient de s'inscrire sur la plateforme. 
+      Vous pouvez lancer une discussion avec lui pour l'accompagner dans son parcours.`,
+      metadata: {
+        userId: newUser.id,
+      },
+    }));
+
+    await prisma.notification.createMany({
+      data: notifications,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error(
+      "Erreur lors de l'envoi des notifications aux coachs:",
+      error,
+    );
+    throw new Error("Impossible d'envoyer les notifications aux coachs");
   }
 }
