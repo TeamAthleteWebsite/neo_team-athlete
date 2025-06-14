@@ -22,22 +22,24 @@ enum ProgramType {
 model Program {
   id          String      @id @default(cuid())
   type        ProgramType
-  title       String
+  name        String
   description String      @db.Text
   imageUrl    String?
-  price       Float
-  duration    Int // in minutes
-  active      Boolean     @default(true)
+  
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+
+  isPublished Boolean   @default(false)
+  offers      Offer[]
+  
 
   @@index([type])
 }
 
 enum UserRole {
-  COACH
   ADMIN
   CLIENT
+  COACH
   PROSPECT
 }
 
@@ -46,33 +48,46 @@ enum Gender {
   FEMALE
 }
 
+enum ContractStatus {
+  ACTIVE
+  CANCELLED
+  COMPLETED
+}
+
+enum PlanningStatus {
+  PLANNED
+  DONE
+  CANCELLED
+}
+
 model User {
-  id            String    @id
-  email         String
+  id            String    @id @default(cuid())
+  email         String    @unique
   emailVerified Boolean
+  passwordHash  String
+  firstName     String
+  lastName      String
   image         String?
-  sessions      Session[]
+  bio           String?
+  phone         String?
+  sessions      Session[] //nombre de connexions
   accounts      Account[]
   notifications Notification[]
+  role          UserRole
 
-  name      String
-  lastName  String?
-  phone     String?
-  bio       String?
-  specialty String? // Spécialité du coach
-  height    Int?
-  weight    Int?
-  birthYear Int?
-  gender    Gender?
-  goal      String?
-  roles     UserRole[] @default([PROSPECT])
+  height        Int?
+  weight        Int?
+  birthYear     Int?
+  gender        Gender?
+  goal          String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
-  isOnboarded Boolean @default(false)
+  isOnboarded     Boolean     @default(false)
+  contracts       Contract[]  @relation("ClientContracts")
+  offers          Offer[]     @relation("CoachOffers")
+  availabilities  Availability[]
 
-  createdAt DateTime
-  updatedAt DateTime
-
-  @@unique([email])
   @@map("user")
 }
 
@@ -145,4 +160,59 @@ model Notification {
   @@index([createdAt])
   @@index([isRead])
   @@map("notification")
+}
+
+model Offer {
+  id          String   @id @default(cuid())
+  coach       User     @relation("CoachOffers", fields: [coachId], references: [id])
+  coachId     String
+  program     Program  @relation(fields: [programId], references: [id])
+  programId   String
+  sessions    Int
+  price       Float
+  duration    Int      // en mois
+  isPublished Boolean  @default(false)
+  contracts   Contract[]
+}
+
+model Contract {
+  id            String   @id @default(cuid())
+  client        User     @relation("ClientContracts", fields: [clientId], references: [id])
+  clientId      String
+  offer         Offer    @relation(fields: [offerId], references: [id])
+  offerId       String
+  startDate     DateTime
+  endDate       DateTime
+  totalSessions Int
+  isFlexible    Boolean
+  amount        Float
+  status        ContractStatus
+  plannings     Planning[]
+  payments      Payment[]
+}
+
+model Planning {
+  id         String         @id @default(cuid())
+  contract   Contract       @relation(fields: [contractId], references: [id])
+  contractId String
+  date       DateTime
+  status     PlanningStatus
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  contract    Contract @relation(fields: [contractId], references: [id])
+  contractId  String
+  amount      Float
+  paymentDate DateTime
+  comment     String?
+}
+
+model Availability {
+  id        String   @id @default(cuid())
+  client    User     @relation(fields: [clientId], references: [id])
+  clientId  String
+  date      DateTime
+  startTime DateTime
+  endTime   DateTime
 }
