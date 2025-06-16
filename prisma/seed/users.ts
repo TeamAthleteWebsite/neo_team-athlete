@@ -15,13 +15,14 @@ export async function seedUsers() {
 				id: "bak",
 				email: "bak@team-athlete.com",
 				emailVerified: true,
-				name: "Coach",
+				passwordHash: await bcrypt.hash("Co0.ach123!", 10),
+				firstName: "Coach",
 				lastName: "Bak",
-				roles: [UserRole.COACH, UserRole.ADMIN],
+				role: UserRole.ADMIN,
 				isOnboarded: true,
 				gender: Gender.MALE,
 				bio: "Coach professionnel avec plus de 10 ans d'expérience",
-				specialty: "Force et conditionnement",
+				phone: "0606060606",
 				createdAt: new Date(),
 				updatedAt: new Date(),
 				accounts: {
@@ -44,8 +45,8 @@ export async function seedUsers() {
 	// Vérifier si les coaches factices existent déjà
 	const existingCoaches = await prisma.user.findMany({
 		where: {
-			roles: {
-				has: UserRole.COACH,
+			role: {
+				equals: UserRole.COACH,
 			},
 			NOT: {
 				id: "bak",
@@ -59,9 +60,10 @@ export async function seedUsers() {
 				id: "coach1",
 				email: "thomas@team-athlete.com",
 				emailVerified: true,
-				name: "Thomas",
+				passwordHash: await bcrypt.hash("Co0.ach1!", 10),
+				firstName: "Thomas",
 				lastName: "Dubois",
-				roles: [UserRole.COACH],
+				role: UserRole.COACH,
 				isOnboarded: true,
 				gender: Gender.MALE,
 				bio: "Coach certifié avec plus de 10 ans d'expérience dans l'entraînement de haut niveau. Spécialisé dans le développement de la force et la préparation physique.",
@@ -71,54 +73,8 @@ export async function seedUsers() {
 				createdAt: new Date(),
 				updatedAt: new Date(),
 			},
-			{
-				id: "coach2",
-				email: "sophie@team-athlete.com",
-				emailVerified: true,
-				name: "Sophie",
-				lastName: "Martin",
-				roles: [UserRole.COACH],
-				isOnboarded: true,
-				gender: Gender.FEMALE,
-				bio: "Nutritionniste diplômée et ancienne athlète. Elle accompagne les sportifs dans l'optimisation de leur alimentation pour maximiser leurs performances.",
-				specialty: "Nutrition sportive",
-				image:
-					"https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1000&auto=format&fit=crop",
-				createdAt: new Date(),
-				updatedAt: new Date(),
-			},
-			{
-				id: "coach3",
-				email: "lucas@team-athlete.com",
-				emailVerified: true,
-				name: "Lucas",
-				lastName: "Bernard",
-				roles: [UserRole.COACH],
-				isOnboarded: true,
-				gender: Gender.MALE,
-				bio: "Expert en récupération et prévention des blessures. Il utilise des techniques avancées pour améliorer la mobilité et réduire les risques de blessures.",
-				specialty: "Récupération et mobilité",
-				image:
-					"https://images.unsplash.com/photo-1599058917765-a780eda07a3e?q=80&w=1000&auto=format&fit=crop",
-				createdAt: new Date(),
-				updatedAt: new Date(),
-			},
-			{
-				id: "coach4",
-				email: "emma@team-athlete.com",
-				emailVerified: true,
-				name: "Emma",
-				lastName: "Petit",
-				roles: [UserRole.COACH],
-				isOnboarded: true,
-				gender: Gender.FEMALE,
-				bio: "Marathonienne et triathlète, elle guide les athlètes vers l'amélioration de leur endurance et de leur performance cardiovasculaire.",
-				specialty: "Endurance et cardio",
-				image:
-					"https://images.unsplash.com/photo-1571019613576-2b22c76fd955?q=80&w=1000&auto=format&fit=crop",
-				createdAt: new Date(),
-				updatedAt: new Date(),
-			},
+
+		
 		];
 
 		for (const coach of coaches) {
