@@ -11,7 +11,7 @@ export interface Prospect {
   birthYear?: number | null;
   gender?: Gender | null;
   goal?: string | null;
-  roles: UserRole[];
+  role: UserRole;
   createdAt: Date;
   isOnboarded: boolean;
 }

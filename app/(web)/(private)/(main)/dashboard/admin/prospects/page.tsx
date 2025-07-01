@@ -7,8 +7,8 @@ import { ProspectsClient } from "./_components/ProspectsClient";
 async function getProspects(): Promise<Prospect[]> {
   const prospects = await prisma.user.findMany({
     where: {
-      roles: {
-        has: UserRole.PROSPECT,
+      role: {
+        equals: UserRole.PROSPECT,
       },
     },
     orderBy: {

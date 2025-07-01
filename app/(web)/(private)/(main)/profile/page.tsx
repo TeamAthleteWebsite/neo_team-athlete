@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type ExtendedUser = User & {
-  roles?: UserRole[];
+  role?: UserRole;
 };
 
 const ProfilePage = () => {
@@ -117,14 +117,12 @@ const ProfilePage = () => {
           </h1>
 
           <div className="flex justify-center gap-2 mb-6">
-            {user.roles?.map((role, index) => (
-              <span
-                key={index}
-                className="px-3 py-1 text-sm rounded-full bg-red-500/20 text-red-500 border border-red-500/30"
-              >
-                {getRoleLabel(role)}
-              </span>
-            ))}
+            <span
+              key={user.role}
+              className="px-3 py-1 text-sm rounded-full bg-red-500/20 text-red-500 border border-red-500/30"
+            >
+              {getRoleLabel(user.role)}
+            </span>
           </div>
         </div>
       </LayoutBlock>

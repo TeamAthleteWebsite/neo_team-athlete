@@ -10,9 +10,7 @@ export async function convertProspectToClient(prospectId: string) {
         id: prospectId,
       },
       data: {
-        roles: {
-          set: [UserRole.CLIENT],
-        },
+        role: UserRole.CLIENT,
       },
     });
 

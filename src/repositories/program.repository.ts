@@ -4,10 +4,11 @@ const prisma = new PrismaClient();
 
 export interface Program {
   id: string;
-  type: "PERSONAL" | "SMALL_GROUP" | "PROGRAMMING";
+  type: ProgramType;
   name: string;
   description: string;
   imageUrl?: string | null;
+  isPublished: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

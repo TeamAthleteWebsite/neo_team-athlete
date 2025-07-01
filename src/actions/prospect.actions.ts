@@ -7,8 +7,8 @@ export async function getProspectsCount(): Promise<number> {
   try {
     const count = await prisma.user.count({
       where: {
-        roles: {
-          has: UserRole.PROSPECT,
+        role: {
+          equals: UserRole.PROSPECT,
         },
       },
     });
@@ -33,14 +33,14 @@ export async function notifyCoaches(newUserId: string) {
 
     const coaches = await prisma.user.findMany({
       where: {
-        roles: {
-          has: UserRole.COACH,
+        role: {
+          equals: UserRole.COACH,
         },
       },
       select: { id: true },
     });
 
-    const notifications = coaches.map((coach) => ({
+    const notifications = coaches.map((coach: { id: string }) => ({
       userId: coach.id,
       type: NotificationType.NEW_PROSPECT,
       title: "Nouveau prospect inscrit !",
