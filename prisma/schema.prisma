@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "./generated"
 }
 
 datasource db {
@@ -13,81 +14,36 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum ProgramType {
-  PERSONAL
-  SMALL_GROUP
-  PROGRAMMING
-}
-
-model Program {
-  id          String      @id @default(cuid())
-  type        ProgramType
-  name        String
-  description String      @db.Text
-  imageUrl    String?
-  
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  isPublished Boolean   @default(false)
-  offers      Offer[]
-  
-
-  @@index([type])
-}
-
-enum UserRole {
-  ADMIN
-  CLIENT
-  COACH
-  PROSPECT
-}
-
-enum Gender {
-  MALE
-  FEMALE
-}
-
-enum ContractStatus {
-  ACTIVE
-  CANCELLED
-  COMPLETED
-}
-
-enum PlanningStatus {
-  PLANNED
-  DONE
-  CANCELLED
-}
-
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
+  id            String    @id
+  name          String
+  email         String
   emailVerified Boolean
-  passwordHash  String
-  firstName     String
-  lastName      String
   image         String?
-  bio           String?
-  phone         String?
-  sessions      Session[] //nombre de connexions
+  sessions      Session[]
   accounts      Account[]
+
   notifications Notification[]
-  role          UserRole
 
-  height        Int?
-  weight        Int?
-  birthYear     Int?
-  gender        Gender?
-  goal          String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  lastName  String?
+  phone     String?
+  bio       String?
+  height    Int?
+  weight    Int?
+  birthYear Int?
+  gender    Gender?
+  goal      String?
+  role      UserRole @default(PROSPECT)
 
-  isOnboarded     Boolean     @default(false)
+  isOnboarded Boolean @default(false)
   contracts       Contract[]  @relation("ClientContracts")
   offers          Offer[]     @relation("CoachOffers")
   availabilities  Availability[]
 
+  createdAt DateTime?  @default(now())
+  updatedAt DateTime?  @updatedAt
+
+  @@unique([email])
   @@map("user")
 }
 
@@ -136,6 +92,53 @@ model Verification {
   @@map("verification")
 }
 
+enum ProgramType {
+  PERSONAL
+  SMALL_GROUP
+  PROGRAMMING
+}
+
+model Program {
+  id          String      @id @default(cuid())
+  type        ProgramType
+  name        String
+  description String      @db.Text
+  imageUrl    String?
+  
+  createdAt   DateTime?    @default(now())
+  updatedAt   DateTime?    @updatedAt
+
+  isPublished Boolean   @default(false)
+  offers      Offer[]
+  
+
+  @@index([type])
+}
+
+enum UserRole {
+  COACH
+  ADMIN
+  CLIENT
+  PROSPECT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum ContractStatus {
+  ACTIVE
+  CANCELLED
+  COMPLETED
+}
+
+enum PlanningStatus {
+  PLANNED
+  DONE
+  CANCELLED
+}
+
 enum NotificationType {
   PROGRAM_UPDATE
   SESSION_REMINDER
@@ -152,9 +155,11 @@ model Notification {
   isRead    Boolean         @default(false)
   userId    String
   user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime        @default(now())
   expiresAt DateTime?       // Pour les notifications temporaires
   metadata  Json?
+
+  createdAt DateTime?  @default(now())
+  updatedAt DateTime?  @updatedAt
 
   @@index([userId])
   @@index([createdAt])
@@ -173,6 +178,9 @@ model Offer {
   duration    Int      // en mois
   isPublished Boolean  @default(false)
   contracts   Contract[]
+
+  createdAt DateTime?  @default(now())
+  updatedAt DateTime?  @updatedAt
 }
 
 model Contract {
@@ -189,6 +197,9 @@ model Contract {
   status        ContractStatus
   plannings     Planning[]
   payments      Payment[]
+
+  createdAt DateTime?  @default(now())
+  updatedAt DateTime?  @updatedAt
 }
 
 model Planning {
@@ -197,6 +208,9 @@ model Planning {
   contractId String
   date       DateTime
   status     PlanningStatus
+
+  createdAt DateTime?  @default(now())
+  updatedAt DateTime?  @updatedAt
 }
 
 model Payment {
@@ -206,6 +220,9 @@ model Payment {
   amount      Float
   paymentDate DateTime
   comment     String?
+
+  createdAt DateTime?  @default(now())
+  updatedAt DateTime?  @updatedAt
 }
 
 model Availability {
@@ -215,4 +232,7 @@ model Availability {
   date      DateTime
   startTime DateTime
   endTime   DateTime
+
+  createdAt DateTime?  @default(now())
+  updatedAt DateTime?  @updatedAt
 }
