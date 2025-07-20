@@ -2,8 +2,8 @@
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { UserRole } from "@/prisma/generated";
 import { getCoachById, getCoaches } from "@/repositories/coach.repository";
-import { UserRole } from "@prisma/client";
 import { headers } from "next/headers";
 
 export async function getCoachesAction() {

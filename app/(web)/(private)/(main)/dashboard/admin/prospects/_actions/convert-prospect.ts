@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/prisma/generated";
 
 export async function convertProspectToClient(prospectId: string) {
   try {

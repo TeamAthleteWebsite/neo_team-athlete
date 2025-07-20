@@ -1,4 +1,4 @@
-import { Gender, UserRole } from "@prisma/client";
+import { Gender, UserRole } from "../../prisma/generated";
 
 export interface Prospect {
   id: string;

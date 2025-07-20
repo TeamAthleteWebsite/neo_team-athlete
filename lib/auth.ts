@@ -6,8 +6,8 @@ import { resend } from "./resend";
 
 import { notifyCoaches } from "@/src/actions/prospect.actions";
 import { getUserById } from "@/src/actions/user.actions";
-import { User } from "@prisma/client";
 import { createAuthMiddleware } from "better-auth/api";
+import { User } from "../prisma/generated";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {

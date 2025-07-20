@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { NotificationType, UserRole } from "@prisma/client";
+import { NotificationType, UserRole } from "@/prisma/generated";
 
 export async function getProspectsCount(): Promise<number> {
   try {

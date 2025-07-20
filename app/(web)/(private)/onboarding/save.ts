@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/src/actions/user.actions";
-import { Gender } from "@prisma/client";
+import { Gender } from "../../../../prisma/generated";
 
 type OnboardingData = {
   gender?: Gender;

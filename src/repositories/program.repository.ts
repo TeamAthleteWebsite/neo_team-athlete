@@ -1,4 +1,4 @@
-import { PrismaClient, ProgramType } from "@prisma/client";
+import { PrismaClient, ProgramType } from "@/prisma/generated";
 
 const prisma = new PrismaClient();
 
@@ -9,8 +9,8 @@ export interface Program {
   description: string;
   imageUrl?: string | null;
   isPublished: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | null;
+  updatedAt: Date | null;
 }
 
 export class ProgramRepository {
