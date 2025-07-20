@@ -1,5 +1,5 @@
-import { NotificationType, PrismaClient } from "@prisma/client";
 import { addDays, subHours } from "date-fns";
+import { NotificationType, PrismaClient } from "../generated";
 
 const prisma = new PrismaClient();
 

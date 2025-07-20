@@ -1,6 +1,5 @@
-import { Gender, PrismaClient, UserRole } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
-
+import { Gender, PrismaClient, UserRole } from "../generated";
 const prisma = new PrismaClient();
 
 export async function seedUsers() {
