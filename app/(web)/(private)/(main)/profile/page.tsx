@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { authClient, useSession } from "@/lib/auth-client";
 import { getUserById } from "@/src/actions/user.actions";
-import { User, UserRole } from "@prisma/client";
+import { User, UserRole } from "@/prisma/generated";
 import { LogOutIcon, PencilIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";

@@ -1,7 +1,7 @@
 "use client";
 
 import { type Prospect } from "@/lib/types/prospect.types";
-import { Gender } from "@prisma/client";
+import { Gender } from "@/prisma/generated";
 import { ProspectActions } from "./ProspectActions";
 
 const genderLabels: Record<Gender, string> = {
@@ -13,7 +13,6 @@ interface ProspectsTableProps {
   prospects: Prospect[];
   onView: (id: string) => void;
   onDelete: (id: string) => void;
-  onCall?: (phone: string) => void;
   onConvert: (id: string) => Promise<void>;
 }
 
@@ -21,7 +20,6 @@ export const ProspectsTable = ({
   prospects,
   onView,
   onDelete,
-  onCall,
   onConvert,
 }: ProspectsTableProps) => {
   const handleCall = (phone: string) => {

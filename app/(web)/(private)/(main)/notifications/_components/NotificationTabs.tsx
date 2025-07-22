@@ -7,7 +7,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { NotificationType } from "@prisma/client";
+import { NotificationType } from "@/prisma/generated";
 import { Filter } from "lucide-react";
 import { useState } from "react";
 

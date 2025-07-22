@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { Gender, User } from "@prisma/client";
+import { Gender, User } from "@/prisma/generated";
 import { Mars, Venus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";

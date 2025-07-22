@@ -1,7 +1,7 @@
 import { DashboardTitle } from "@/components/features/DashboardTitle";
 import { prisma } from "@/lib/prisma";
 import { type Prospect } from "@/lib/types/prospect.types";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/prisma/generated";
 import { ProspectsClient } from "./_components/ProspectsClient";
 
 async function getProspects(): Promise<Prospect[]> {
@@ -16,7 +16,7 @@ async function getProspects(): Promise<Prospect[]> {
     },
   });
 
-  return prospects;
+  return prospects as Prospect[];
 }
 
 export default async function ProspectsPage() {

@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { NotificationType } from "@prisma/client";
+import { NotificationType } from "@/prisma/generated";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Check, Trash2 } from "lucide-react";

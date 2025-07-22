@@ -3,7 +3,7 @@
 import { OnboardingLayout } from "@/app/(web)/(private)/onboarding/_components/OnboardingLayout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User } from "@prisma/client";
+import { User } from "@/prisma/generated";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";

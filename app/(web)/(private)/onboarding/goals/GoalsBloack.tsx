@@ -2,7 +2,7 @@
 
 import { OnboardingLayout } from "@/app/(web)/(private)/onboarding/_components/OnboardingLayout";
 import { Card } from "@/components/ui/card";
-import { User } from "@prisma/client";
+import { User } from "@/prisma/generated";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { saveOnboarding } from "../save";
