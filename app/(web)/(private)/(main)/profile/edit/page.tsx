@@ -1,8 +1,8 @@
 "use client";
 
 import { useSession } from "@/lib/auth-client";
-import { findById } from "@/src/repositories/user.repository";
 import { User, UserRole } from "@/prisma/generated";
+import { findById } from "@/src/repositories/user.repository";
 import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -26,7 +26,13 @@ const ProfileEditPage = () => {
       }
     };
     fetchUser();
-  }, [session?.user?.id, router]);
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    if (user && !user.isOnboarded) {
+      router.push("/onboarding/gender");
+    }
+  }, [user, router]);
 
   if (!user) {
     return (
@@ -36,8 +42,15 @@ const ProfileEditPage = () => {
     );
   }
 
+  // Ne pas rediriger ici, laisser le useEffect s'en charger
   if (!user.isOnboarded) {
-    return router.push("/onboarding/gender");
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <p className="text-center text-zinc-400">
+          Redirection vers l&apos;onboarding...
+        </p>
+      </div>
+    );
   }
 
   return (
