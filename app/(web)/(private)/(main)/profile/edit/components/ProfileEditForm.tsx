@@ -34,7 +34,6 @@ const profileSchema = z.object({
       return cleaned.startsWith("0") ? "+33" + cleaned.slice(1) : cleaned;
     })
     .optional(),
-  bio: z.string().optional(),
   height: z
     .number()
     .min(150, "Votre taille doit être supérieure à 1,50 m")
@@ -69,7 +68,6 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
       lastName: user?.lastName || "",
       email: user?.email || "",
       phone: user?.phone || "",
-      bio: user?.bio || "",
       height: user?.height || undefined,
       weight: user?.weight || undefined,
       goal: user?.goal || "",
@@ -85,7 +83,6 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
         lastName: data.lastName,
         email: data.email,
         phone: data.phone,
-        bio: data.bio,
         height: data.height,
         weight: data.weight,
         goal: data.goal,
@@ -252,24 +249,6 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
         <h2 className="text-lg font-semibold text-zinc-200 mb-4">
           Informations personnelles
         </h2>
-        <div>
-          <Label
-            htmlFor="bio"
-            className="block text-sm font-medium text-zinc-300 mb-1"
-          >
-            Bio
-          </Label>
-          <textarea
-            id="bio"
-            {...register("bio")}
-            rows={4}
-            className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-md text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-custom-red focus:border-transparent"
-          />
-          {errors.bio && (
-            <p className="mt-1 text-sm text-red-500">{errors.bio.message}</p>
-          )}
-        </div>
-
         <div>
           <Label
             htmlFor="goal"
