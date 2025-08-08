@@ -45,6 +45,7 @@ const profileSchema = z.object({
     .max(300, "Votre poids doit être inférieur à 300 kg")
     .optional(),
   goal: z.string().optional(),
+  bio: z.string().optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -71,6 +72,7 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
       height: user?.height || undefined,
       weight: user?.weight || undefined,
       goal: user?.goal || "",
+      bio: user?.bio || "",
     },
   });
 
@@ -86,6 +88,7 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
         height: data.height,
         weight: data.weight,
         goal: data.goal,
+        bio: data.bio,
       });
 
       toast.success("Profil mis à jour avec succès");
@@ -102,9 +105,6 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       {/* Section Identité */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-zinc-200 mb-4">
-          Informations d&apos;identité
-        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Label
@@ -150,9 +150,6 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 
       {/* Section Contact */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-zinc-200 mb-4">
-          Informations de contact
-        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Label
@@ -198,9 +195,6 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 
       {/* Section Physique */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-zinc-200 mb-4">
-          Informations physiques
-        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Label
@@ -246,9 +240,6 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 
       {/* Section Personnelle */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-zinc-200 mb-4">
-          Informations personnelles
-        </h2>
         <div>
           <Label
             htmlFor="goal"
@@ -264,6 +255,28 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
           />
           {errors.goal && (
             <p className="mt-1 text-sm text-red-500">{errors.goal.message}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Section Bio */}
+      <div className="space-y-4">
+        <div>
+          <Label
+            htmlFor="bio"
+            className="block text-sm font-medium text-zinc-300 mb-1"
+          >
+            Commentaire
+          </Label>
+          <textarea
+            id="bio"
+            {...register("bio")}
+            rows={4}
+            placeholder="Quel type de programme souhaitez vous ?"
+            className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-md text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-custom-red focus:border-transparent"
+          />
+          {errors.bio && (
+            <p className="mt-1 text-sm text-red-500">{errors.bio.message}</p>
           )}
         </div>
       </div>
