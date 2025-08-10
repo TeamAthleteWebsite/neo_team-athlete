@@ -1,4 +1,3 @@
-import { DashboardTitle } from "@/components/features/DashboardTitle";
 import { prisma } from "@/lib/prisma";
 import { type Prospect } from "@/lib/types/prospect.types";
 import { UserRole } from "@/prisma/generated";

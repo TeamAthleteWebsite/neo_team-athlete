@@ -82,3 +82,64 @@ export async function getCurrentUser() {
 		throw new Error("Échec de la récupération de l'utilisateur");
 	}
 }
+
+export async function getClients() {
+	try {
+		const clients = await prisma.user.findMany({
+			where: {
+				role: {
+					equals: "CLIENT",
+				},
+			},
+			select: {
+				id: true,
+				name: true,
+				lastName: true,
+				image: true,
+				contracts: {
+					select: {
+						offer: {
+							select: {
+								program: {
+									select: {
+										type: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			orderBy: {
+				createdAt: "desc",
+			},
+		});
+
+		return clients.map((client) => ({
+			id: client.id,
+			name: `${client.name} ${client.lastName || ""}`.trim(),
+			image: client.image,
+			trainingType: client.contracts[0]?.offer?.program?.type || "Personal Training",
+		}));
+	} catch (error) {
+		console.error("Error fetching clients:", error);
+		throw new Error("Échec de la récupération des clients");
+	}
+}
+
+export async function getClientsCount(): Promise<number> {
+	try {
+		const count = await prisma.user.count({
+			where: {
+				role: {
+					equals: "CLIENT",
+				},
+			},
+		});
+
+		return count;
+	} catch (error) {
+		console.error("Error counting clients:", error);
+		throw new Error("Échec du comptage des clients");
+	}
+}
