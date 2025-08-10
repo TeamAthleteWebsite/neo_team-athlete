@@ -29,7 +29,9 @@ export const ClientsClient: React.FC<ClientsClientProps> = ({ clients }) => {
 	};
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black relative overflow-hidden">
+		<div 
+        className="min-h-screen bg-black/90 relative overflow-hidden"
+        >
 			{/* Background Image Overlay */}
 			<div 
 				className="absolute inset-0 bg-cover bg-center opacity-20"

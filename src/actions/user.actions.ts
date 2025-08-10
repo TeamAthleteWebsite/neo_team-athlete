@@ -96,6 +96,11 @@ export async function getClients() {
 				name: true,
 				lastName: true,
 				image: true,
+				email: true,
+				phone: true,
+				height: true,
+				weight: true,
+				goal: true,
 				contracts: {
 					select: {
 						offer: {
@@ -119,6 +124,11 @@ export async function getClients() {
 			id: client.id,
 			name: `${client.name} ${client.lastName || ""}`.trim(),
 			image: client.image,
+			email: client.email,
+			phone: client.phone,
+			height: client.height,
+			weight: client.weight,
+			goal: client.goal,
 			trainingType: client.contracts[0]?.offer?.program?.type || "Personal Training",
 		}));
 	} catch (error) {
@@ -141,5 +151,61 @@ export async function getClientsCount(): Promise<number> {
 	} catch (error) {
 		console.error("Error counting clients:", error);
 		throw new Error("Échec du comptage des clients");
+	}
+}
+
+export async function getClientById(id: string) {
+	try {
+		const client = await prisma.user.findFirst({
+			where: {
+				id: id,
+				role: {
+					equals: "CLIENT",
+				},
+			},
+			select: {
+				id: true,
+				name: true,
+				lastName: true,
+				image: true,
+				email: true,
+				phone: true,
+				height: true,
+				weight: true,
+				goal: true,
+				contracts: {
+					select: {
+						offer: {
+							select: {
+								program: {
+									select: {
+										type: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		});
+
+		if (!client) {
+			return null;
+		}
+
+		return {
+			id: client.id,
+			name: `${client.name} ${client.lastName || ""}`.trim(),
+			image: client.image,
+			email: client.email,
+			phone: client.phone,
+			height: client.height,
+			weight: client.weight,
+			goal: client.goal,
+			trainingType: client.contracts[0]?.offer?.program?.type || "Personal Training",
+		};
+	} catch (error) {
+		console.error("Error fetching client by id:", error);
+		throw new Error("Échec de la récupération du client");
 	}
 }

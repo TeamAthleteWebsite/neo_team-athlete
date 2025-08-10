@@ -2,6 +2,7 @@
 
 import { Client } from "./types";
 import Image from "next/image";
+import Link from "next/link";
 
 interface ClientItemProps {
 	client: Client;
@@ -47,9 +48,10 @@ export const ClientItem: React.FC<ClientItemProps> = ({ client, isLast }) => {
 	};
 
 	return (
-		<div
-			className="bg-gray-800/80 backdrop-blur-sm rounded-lg p-4 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-200 cursor-pointer group"
-		>
+		<Link href={`/dashboard/admin/clients/${client.id}`}>
+			<div
+				className="bg-gray-800/80 backdrop-blur-sm rounded-lg p-4 border border-gray-700/50 hover:border-gray-600/50 transition-all duration-200 cursor-pointer group"
+			>
 			<div className="flex items-center justify-between">
 				<div className="flex items-center gap-4">
 					{/* Profile Image/Initials */}
@@ -89,5 +91,6 @@ export const ClientItem: React.FC<ClientItemProps> = ({ client, isLast }) => {
 				</div>
 			</div>
 		</div>
+		</Link>
 	);
 }; 
