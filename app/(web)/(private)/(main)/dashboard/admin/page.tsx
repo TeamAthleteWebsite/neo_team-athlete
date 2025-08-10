@@ -1,8 +1,10 @@
 import { DashboardNavItem } from "@/components/features/DashboardNavItem";
 import { DashboardTitle } from "@/components/features/DashboardTitle";
 import { ProspectsItem } from "./_components/ProspectsItem";
+import { getClientsCount } from "@/src/actions/user.actions";
 
-export default function AdminPage() {
+export default async function AdminPage() {
+	const clientsCount = await getClientsCount();
   return (
     <div className="w-full space-y-4 sm:space-y-6">
       <DashboardTitle title="Admin" backRoute="/dashboard" />
@@ -12,10 +14,10 @@ export default function AdminPage() {
 
         {/* Clients */}
         <DashboardNavItem
-          value={33}
+          value={clientsCount}
           iconName="UserCheck"
           title="Clients"
-          route="/clients"
+          route="/dashboard/admin/clients"
         />
 
         {/* Séances */}

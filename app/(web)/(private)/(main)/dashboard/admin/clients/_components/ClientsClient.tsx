@@ -28,7 +28,7 @@ export const ClientsClient: React.FC<ClientsClientProps> = ({ clients }) => {
 		setSortOrder(sortOrder === "asc" ? "desc" : "asc");
 	};
 
-		return (
+	return (
 		<div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black relative overflow-hidden">
 			{/* Background Image Overlay */}
 			<div 
