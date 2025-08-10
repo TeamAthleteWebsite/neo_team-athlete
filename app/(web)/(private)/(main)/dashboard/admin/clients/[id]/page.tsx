@@ -5,24 +5,25 @@ import { LoadingClientDetails } from "./_components/LoadingClientDetails";
 import { Suspense } from "react";
 
 interface ClientPageProps {
-	params: {
+	params: Promise<{
 		id: string;
-	};
+	}>;
 }
 
 export default async function ClientPage({ params }: ClientPageProps) {
+	const resolvedParams = await params;
 	return (
 		<div className="w-full">
 			<Suspense fallback={<LoadingClientDetails />}>
-				<ClientWrapper id={params.id} />
+				<ClientWrapper params={resolvedParams} />
 			</Suspense>
 		</div>
 	);
 }
 
-async function ClientWrapper({ id }: { id: string }) {
+async function ClientWrapper({ params }: { params: { id: string } }) {
 	try {
-		const client = await getClientById(id);
+		const client = await getClientById(params.id);
 		
 		if (!client) {
 			notFound();
