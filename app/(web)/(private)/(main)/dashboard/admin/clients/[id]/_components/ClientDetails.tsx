@@ -146,6 +146,24 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client }) => {
 												</span>
 											</div>
 										</div>
+
+										{/* Subscription Section */}
+										<div className="pt-6 border-t border-white/10">
+											<div className="text-center space-y-4">
+												<h3 className="text-white text-2xl font-bold">
+													Abonnement
+												</h3>
+												<p className="text-white text-lg">
+													Aucun abonnement en cours...
+												</p>
+												<p className="text-blue-400 text-base">
+													Veuillez sélectionner un programme
+												</p>
+												<button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+													Sélection
+												</button>
+											</div>
+										</div>
 									</div>
 								</div>
 							</div>
