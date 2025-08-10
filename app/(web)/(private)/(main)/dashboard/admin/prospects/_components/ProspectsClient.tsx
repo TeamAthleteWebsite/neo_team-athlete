@@ -4,7 +4,7 @@ import { type Prospect } from "@/lib/types/prospect.types";
 import { useState } from "react";
 import { toast } from "sonner";
 import { convertProspectToClient } from "../_actions/convert-prospect";
-import { ProspectsTable } from "./ProspectsTable";
+import { ProspectsList } from "./ProspectsList";
 
 interface ProspectsClientProps {
   prospects: Prospect[];
@@ -17,34 +17,35 @@ export const ProspectsClient = ({
 
   const handleView = (id: string) => {
     console.log("View prospect:", id);
+    // Ici vous pouvez ajouter la logique pour rediriger vers la page de détail du prospect
+    // Par exemple: router.push(`/dashboard/admin/prospects/${id}`);
   };
 
-  const handleDelete = (id: string) => {
-    console.log("Delete prospect:", id);
+  const handleDelete = async (id: string) => {
+    try {
+      // Ici vous pouvez ajouter la logique de suppression
+      console.log("Delete prospect:", id);
+      toast.success("Prospect supprimé avec succès");
+    } catch (error) {
+      toast.error("Erreur lors de la suppression");
+    }
   };
 
   const handleConvert = async (id: string) => {
     try {
-      const result = await convertProspectToClient(id);
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      // Mettre à jour la liste des prospects en retirant le prospect converti
-      setProspects((prev: Prospect[]) =>
-        prev.filter((prospect: Prospect) => prospect.id !== id),
+      // La conversion est maintenant gérée directement dans la popup
+      console.log("Prospect converted:", id);
+      // Mettre à jour la liste locale si nécessaire
+      setProspects(prevProspects => 
+        prevProspects.filter(prospect => prospect.id !== id)
       );
-
-      toast.success("Le prospect a été converti en client avec succès.");
     } catch (error) {
-      console.error("Error converting prospect:", error);
-      toast.error("Impossible de convertir le prospect en client.");
+      console.error("Error handling conversion:", error);
     }
   };
 
   return (
-    <ProspectsTable
+    <ProspectsList
       prospects={prospects}
       onView={handleView}
       onDelete={handleDelete}

@@ -6,6 +6,7 @@ export interface Prospect {
   name: string;
   lastName?: string | null;
   phone?: string | null;
+  bio?: string | null;
   height?: number | null;
   weight?: number | null;
   birthYear?: number | null;

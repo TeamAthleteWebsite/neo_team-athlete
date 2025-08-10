@@ -23,12 +23,8 @@ export default async function ProspectsPage() {
   const prospects = await getProspects();
 
   return (
-    <div className="w-full space-y-4 sm:space-y-6 backdrop-blur-sm py-4 rounded-lg">
-      <DashboardTitle title="Prospects" backRoute="/dashboard/admin" />
-
-      <div className="px-2 sm:px-4">
-        <ProspectsClient prospects={prospects} />
-      </div>
+    <div className="w-full">
+      <ProspectsClient prospects={prospects} />
     </div>
   );
 }
