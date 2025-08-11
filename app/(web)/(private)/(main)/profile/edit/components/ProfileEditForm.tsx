@@ -161,7 +161,16 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 
   const handleOfferSelection = (offerId: string) => {
     setSelectedOfferId(offerId);
-    toast.success("Offre sélectionnée avec succès");
+    toast.success("Coach et offre sélectionnés avec succès !");
+    
+    // Fermer automatiquement la popup après un court délai pour laisser le temps de voir le message
+    setTimeout(() => {
+      setIsCoachPopupOpen(false);
+      setSelectedCoach(null);
+      setSelectedCoachId("");
+      setOffers([]);
+      setSelectedOfferId("");
+    }, 1500);
   };
 
   const getProgramTypeLabel = (type: string) => {
@@ -638,23 +647,7 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
                   )}
                 </div>
 
-                {/* Bouton de confirmation */}
-                {selectedOfferId && (
-                  <div className="flex justify-end pt-4 border-t border-zinc-700">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsCoachPopupOpen(false);
-                        toast.success("Coach et offre sélectionnés avec succès !");
-                      }}
-                      className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
-                    >
-                      Confirmer la sélection
-                    </button>
-                  </div>
-                )}
+
               </div>
             )}
             
