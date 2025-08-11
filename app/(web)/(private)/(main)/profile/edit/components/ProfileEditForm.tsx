@@ -170,7 +170,7 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
       setSelectedCoachId("");
       setOffers([]);
       setSelectedOfferId("");
-    }, 1500);
+    }, 800);
   };
 
   const getProgramTypeLabel = (type: string) => {
@@ -630,7 +630,12 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
                                           }`}
                                         >
                                           <div className="font-semibold">{offer.price}€</div>
-                                          <div className="text-xs opacity-80">{offer.program.name}</div>
+                                          <div className="text-xs opacity-80">par mois</div>
+                                          {offer.sessions > 0 && (
+                                            <div className="text-xs opacity-60">
+                                              {(offer.price / offer.sessions).toFixed(2)}€ / séance
+                                            </div>
+                                          )}
                                         </button>
                                       ) : (
                                         <span className="text-zinc-500">-</span>
