@@ -494,9 +494,9 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-white font-medium truncate">
-                            {coach.name} {coach.lastName || ""}
-                          </p>
+                                                <p className="text-white font-medium truncate">
+                        {coach.name}
+                      </p>
                           {coach.bio && (
                             <p className="text-zinc-400 text-sm truncate">{coach.bio}</p>
                           )}
