@@ -168,7 +168,7 @@ const ProfilePage = () => {
         <LayoutBlock>
           <div className="space-y-4">
             <div className="flex flex-col pb-3">
-              <span className="font-medium text-zinc-400 mb-2">Bio:</span>
+              <span className="font-medium text-zinc-400 mb-2">Message :</span>
               <span className="text-white">
                 {user.bio || "Aucune bio renseignée"}
               </span>

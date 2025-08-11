@@ -266,7 +266,7 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
             htmlFor="bio"
             className="block text-sm font-medium text-zinc-300 mb-1"
           >
-            Commentaire
+            Message
           </Label>
           <textarea
             id="bio"
