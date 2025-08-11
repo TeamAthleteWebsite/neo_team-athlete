@@ -192,7 +192,18 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
   };
 
   const getOffersByProgramType = (programType: string) => {
-    return offers.filter(offer => offer.program.type === programType);
+    let filteredOffers = offers.filter(offer => offer.program.type === programType);
+    
+    // Filtrer selon le type d'engagement
+    if (showCommitmentOffers) {
+      // Avec engagement : durée > 0
+      filteredOffers = filteredOffers.filter(offer => offer.duration > 0);
+    } else {
+      // Sans engagement : durée = 0
+      filteredOffers = filteredOffers.filter(offer => offer.duration === 0);
+    }
+    
+    return filteredOffers;
   };
 
   const openCoachPopup = () => {
@@ -600,11 +611,11 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
                           <thead>
                             <tr className="border-b border-zinc-700">
                               <th className="text-left p-3 text-zinc-300 font-medium">Séances</th>
-                              {Array.from(new Set(getOffersByProgramType(activeProgramType).map(o => o.duration))).sort((a, b) => a - b).map(duration => (
-                                <th key={duration} className="text-center p-3 text-zinc-300 font-medium">
-                                  {duration} mois
-                                </th>
-                              ))}
+                                                             {Array.from(new Set(getOffersByProgramType(activeProgramType).map(o => o.duration))).sort((a, b) => a - b).map(duration => (
+                                 <th key={duration} className="text-center p-3 text-zinc-300 font-medium">
+                                   {duration === 0 ? '' : `${duration} mois`}
+                                 </th>
+                               ))}
                             </tr>
                           </thead>
                           <tbody>
