@@ -12,6 +12,21 @@ export const findById = async (id: string): Promise<User | null> => {
           providerId: true,
         },
       },
+      selectedOffer: {
+        include: {
+          program: {
+            select: {
+              name: true,
+              type: true,
+            },
+          },
+          coach: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
     },
   });
 };

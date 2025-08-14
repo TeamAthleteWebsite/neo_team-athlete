@@ -16,6 +16,19 @@ import { getOffersByCoachAction } from "@/src/actions/offer.actions";
 
 type ExtendedUser = User & {
   role?: UserRole;
+  selectedOffer?: {
+    id: string;
+    program: {
+      name: string;
+      type: string;
+    };
+    sessions: number;
+    duration: number;
+    price: number;
+    coach: {
+      name: string;
+    };
+  } | null;
 };
 
 interface Coach {
@@ -69,6 +82,7 @@ const profileSchema = z.object({
     .optional(),
   goal: z.string().optional(),
   bio: z.string().optional(),
+  selectedOfferId: z.string().optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -108,6 +122,13 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
       bio: user?.bio || "",
     },
   });
+
+  // Initialiser l'offre sélectionnée actuelle de l'utilisateur
+  useEffect(() => {
+    if (user?.selectedOfferId) {
+      setSelectedOfferId(user.selectedOfferId);
+    }
+  }, [user?.selectedOfferId]);
 
   const loadCoaches = async () => {
     setIsLoadingCoaches(true);
@@ -161,16 +182,7 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 
   const handleOfferSelection = (offerId: string) => {
     setSelectedOfferId(offerId);
-    toast.success("Coach et offre sélectionnés avec succès !");
-    
-    // Fermer automatiquement la popup après un court délai pour laisser le temps de voir le message
-    setTimeout(() => {
-      setIsCoachPopupOpen(false);
-      setSelectedCoach(null);
-      setSelectedCoachId("");
-      setOffers([]);
-      setSelectedOfferId("");
-    }, 800);
+    toast.success("Offre sélectionnée ! Cliquez sur 'Sauvegarder' pour confirmer votre choix.");
   };
 
   const getProgramTypeLabel = (type: string) => {
@@ -226,6 +238,7 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
         weight: data.weight,
         goal: data.goal,
         bio: data.bio,
+        selectedOfferId: selectedOfferId || null,
       });
 
       toast.success("Profil mis à jour avec succès");
@@ -429,8 +442,16 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
             onClick={openCoachPopup}
             className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200"
           >
-            {selectedCoachId ? "Coach sélectionné ✓" : "Sélectionner une offre"}
+            {selectedOfferId ? "Offre sélectionnée ✓" : "Sélectionner une offre"}
           </Button>
+          
+          {selectedOfferId && (
+            <div className="mt-3 p-3 bg-green-500/20 border border-green-500/30 rounded-md">
+              <p className="text-green-400 text-sm">
+                ✓ Une offre a été sélectionnée. Cliquez sur "Enregistrer les modifications" pour confirmer votre choix.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -679,6 +700,37 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
                   className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
                 >
                   Annuler
+                </button>
+              </div>
+            )}
+            
+            {selectedCoach && (
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsCoachPopupOpen(false);
+                    setSelectedCoach(null);
+                    setSelectedCoachId("");
+                    setOffers([]);
+                    setSelectedOfferId("");
+                  }}
+                  className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsCoachPopupOpen(false);
+                  }}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                >
+                  Confirmer la sélection
                 </button>
               </div>
             )}

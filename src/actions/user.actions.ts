@@ -15,6 +15,7 @@ export async function updateUserProfile(data: {
 	height?: number;
 	weight?: number;
 	goal?: string;
+	selectedOfferId?: string | null;
 }) {
 	try {
 		const session = await auth.api.getSession({
@@ -36,6 +37,7 @@ export async function updateUserProfile(data: {
 				height: data.height,
 				weight: data.weight,
 				goal: data.goal,
+				selectedOfferId: data.selectedOfferId,
 			},
 		});
 
@@ -207,5 +209,29 @@ export async function getClientById(id: string) {
 	} catch (error) {
 		console.error("Error fetching client by id:", error);
 		throw new Error("Échec de la récupération du client");
+	}
+}
+
+export async function updateUserSelectedOffer(offerId: string | null) {
+	try {
+		const session = await auth.api.getSession({
+			headers: await headers(),
+		});
+
+		if (!session) {
+			throw new Error("Non autorisé");
+		}
+
+		const user = await prisma.user.update({
+			where: { id: session.user.id },
+			data: {
+				selectedOfferId: offerId,
+			},
+		});
+
+		return user;
+	} catch (error) {
+		console.error("Error updating user selected offer:", error);
+		throw new Error("Échec de la mise à jour de l'offre sélectionnée");
 	}
 }

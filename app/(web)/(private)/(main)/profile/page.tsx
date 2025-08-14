@@ -12,6 +12,19 @@ import { useEffect, useState } from "react";
 
 type ExtendedUser = User & {
   role?: UserRole;
+  selectedOffer?: {
+    id: string;
+    program: {
+      name: string;
+      type: string;
+    };
+    sessions: number;
+    duration: number;
+    price: number;
+    coach: {
+      name: string;
+    };
+  } | null;
 };
 
 const ProfilePage = () => {
@@ -172,6 +185,27 @@ const ProfilePage = () => {
               <span className="text-white">
                 {user.bio || "Aucune bio renseignée"}
               </span>
+            </div>
+          </div>
+        </LayoutBlock>
+      )}
+
+      {user.selectedOffer && (
+        <LayoutBlock>
+          <div className="space-y-4">
+            <div className="flex flex-col pb-3">
+              <span className="font-medium text-zinc-400 mb-2">Offre sélectionnée :</span>
+              <div className="bg-blue-500/20 border border-blue-500/30 rounded-md p-3">
+                <div className="text-white font-medium">
+                  {user.selectedOffer.program.name} - {user.selectedOffer.program.type}
+                </div>
+                <div className="text-blue-300 text-sm">
+                  {user.selectedOffer.sessions} séances • {user.selectedOffer.duration} mois • {user.selectedOffer.price}€
+                </div>
+                <div className="text-blue-200 text-xs mt-1">
+                  Coach : {user.selectedOffer.coach.name}
+                </div>
+              </div>
             </div>
           </div>
         </LayoutBlock>
