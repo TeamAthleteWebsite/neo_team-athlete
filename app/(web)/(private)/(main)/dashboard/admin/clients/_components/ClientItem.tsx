@@ -6,10 +6,9 @@ import { useRouter } from "next/navigation";
 
 interface ClientItemProps {
 	client: Client;
-	isLast: boolean;
 }
 
-export const ClientItem: React.FC<ClientItemProps> = ({ client, isLast }) => {
+export const ClientItem: React.FC<ClientItemProps> = ({ client }) => {
 	const router = useRouter();
 
 	const getTrainingTypeLabel = (type: string) => {

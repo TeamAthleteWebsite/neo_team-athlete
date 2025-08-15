@@ -1,4 +1,4 @@
-import { PrismaClient, ProgramType } from "../generated";
+import { PrismaClient } from "../generated";
 
 const prisma = new PrismaClient();
 
@@ -42,7 +42,7 @@ export async function seedContracts() {
     // Créer des contrats pour chaque client
     for (let i = 0; i < clients.length; i++) {
       const client = clients[i];
-      const programIndex = i % programs.length;
+
       const offerIndex = i % offers.length;
       
       await prisma.contract.create({

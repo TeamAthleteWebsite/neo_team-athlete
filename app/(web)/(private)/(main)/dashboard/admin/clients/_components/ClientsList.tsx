@@ -23,11 +23,10 @@ export const ClientsList: React.FC<ClientsListProps> = ({ clients }) => {
 
 	return (
 		<>
-			{clients.map((client, index) => (
+			{clients.map((client) => (
 				<ClientItem
 					key={client.id}
 					client={client}
-					isLast={index === clients.length - 1}
 				/>
 			))}
 		</>

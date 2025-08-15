@@ -92,7 +92,7 @@ export default function ProgramDetailsPage({
 							width={300}
 							height={300}
 							src={program.imageUrl}
-							alt={program.title}
+							alt={program.name}
 							className="w-full h-full object-cover"
 						/>
 					) : (
@@ -126,13 +126,13 @@ export default function ProgramDetailsPage({
 						</div>
 
 						<h1 className="text-3xl sm:text-4xl font-bold text-white mb-4 font-helvetica">
-							{program.title}
+							{program.name}
 						</h1>
 
 						<div className="flex flex-wrap gap-4 mb-6 text-zinc-300">
 							<div className="flex items-center gap-2">
 								<Clock className="h-5 w-5 text-[#801d20]" />
-								<span>{program.duration} minutes</span>
+								<span>Sur mesure</span>
 							</div>
 							<div className="flex items-center gap-2">
 								<Calendar className="h-5 w-5 text-[#801d20]" />
@@ -154,7 +154,7 @@ export default function ProgramDetailsPage({
 							<div className="flex items-center gap-2">
 								<CreditCard className="h-5 w-5 text-[#801d20]" />
 								<span className="text-xl font-bold text-white">
-									{program.price}€
+									Sur devis
 								</span>
 							</div>
 							<button

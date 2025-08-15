@@ -1,4 +1,4 @@
-import { DashboardTitle } from "@/components/features/DashboardTitle";
+
 import { getClients } from "@/src/actions/user.actions";
 import { ClientsClient } from "./_components/ClientsClient";
 import { LoadingClients } from "./_components/LoadingClients";

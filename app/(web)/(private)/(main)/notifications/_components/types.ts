@@ -6,7 +6,7 @@ export interface Notification {
   message: string;
   type: NotificationType;
   isRead: boolean;
-  createdAt: Date;
+  createdAt: Date | null;
 }
 
 export interface NotificationCardProps {

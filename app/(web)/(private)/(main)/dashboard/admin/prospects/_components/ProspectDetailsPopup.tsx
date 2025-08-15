@@ -33,6 +33,8 @@ export const ProspectDetailsPopup = ({
       document.addEventListener("keydown", handleEscape);
       return () => document.removeEventListener("keydown", handleEscape);
     }
+    
+    return undefined;
   }, [isOpen, onClose]);
 
   // Fermer la popup en cliquant à l'extérieur

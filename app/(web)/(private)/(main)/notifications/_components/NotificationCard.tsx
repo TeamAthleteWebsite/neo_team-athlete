@@ -44,10 +44,10 @@ export function NotificationCard({
               {notification.message}
             </p>
             <p className="text-xs text-muted-foreground">
-              {formatDistanceToNow(new Date(notification.createdAt), {
+              {notification.createdAt ? formatDistanceToNow(new Date(notification.createdAt), {
                 addSuffix: true,
                 locale: fr,
-              })}
+              }) : "Date inconnue"}
             </p>
           </div>
           <div className="flex gap-2">

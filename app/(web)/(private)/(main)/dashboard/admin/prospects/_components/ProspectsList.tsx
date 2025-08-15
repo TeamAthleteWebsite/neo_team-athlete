@@ -9,14 +9,12 @@ import { ProspectDetailsPopup } from "./ProspectDetailsPopup";
 interface ProspectsListProps {
   prospects: Prospect[];
   onView: (id: string) => void;
-  onDelete: (id: string) => void;
   onConvert: (id: string) => Promise<void>;
 }
 
 export const ProspectsList = ({
   prospects: initialProspects,
   onView,
-  onDelete,
   onConvert,
 }: ProspectsListProps) => {
   const [prospects, setProspects] = useState<Prospect[]>(initialProspects);

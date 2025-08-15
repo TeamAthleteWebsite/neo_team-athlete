@@ -96,7 +96,7 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCoachPopupOpen, setIsCoachPopupOpen] = useState(false);
   const [coaches, setCoaches] = useState<Coach[]>([]);
-  const [selectedCoachId, setSelectedCoachId] = useState<string>("");
+
   const [isLoadingCoaches, setIsLoadingCoaches] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -170,7 +170,6 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
   };
 
   const handleCoachSelection = async (coachId: string) => {
-    setSelectedCoachId(coachId);
     const coach = coaches.find(c => c.id === coachId);
     setSelectedCoach(coach || null);
     
@@ -471,7 +470,6 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
                   if (selectedCoach) {
                     // Si un coach est sélectionné, revenir à la sélection de coach
                     setSelectedCoach(null);
-                    setSelectedCoachId("");
                     setOffers([]);
                     setSelectedOfferId("");
                   } else {
@@ -540,7 +538,6 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
                         e.preventDefault();
                         e.stopPropagation();
                         setSelectedCoach(null);
-                        setSelectedCoachId("");
                         setOffers([]);
                         setSelectedOfferId("");
                       }}
@@ -713,7 +710,6 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
                     e.stopPropagation();
                     setIsCoachPopupOpen(false);
                     setSelectedCoach(null);
-                    setSelectedCoachId("");
                     setOffers([]);
                     setSelectedOfferId("");
                   }}

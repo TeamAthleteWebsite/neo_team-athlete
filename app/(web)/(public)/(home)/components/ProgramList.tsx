@@ -45,7 +45,7 @@ export function ProgramList() {
 					<ProgramCard
 						key={program.id}
 						id={program.id}
-						title={program.title}
+						title={program.name}
 						type={program.type}
 						description={program.description}
 					/>

@@ -2,8 +2,8 @@
 
 import { type Prospect } from "@/lib/types/prospect.types";
 import { useState } from "react";
-import { toast } from "sonner";
-import { convertProspectToClient } from "../_actions/convert-prospect";
+
+
 import { ProspectsList } from "./ProspectsList";
 
 interface ProspectsClientProps {
@@ -21,15 +21,7 @@ export const ProspectsClient = ({
     // Par exemple: router.push(`/dashboard/admin/prospects/${id}`);
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      // Ici vous pouvez ajouter la logique de suppression
-      console.log("Delete prospect:", id);
-      toast.success("Prospect supprimé avec succès");
-    } catch (error) {
-      toast.error("Erreur lors de la suppression");
-    }
-  };
+
 
   const handleConvert = async (id: string) => {
     try {
@@ -48,7 +40,6 @@ export const ProspectsClient = ({
     <ProspectsList
       prospects={prospects}
       onView={handleView}
-      onDelete={handleDelete}
       onConvert={handleConvert}
     />
   );
