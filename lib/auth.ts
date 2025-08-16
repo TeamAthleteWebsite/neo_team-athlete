@@ -4,10 +4,8 @@ import { nextCookies } from "better-auth/next-js";
 import { prisma } from "./prisma";
 import { resend } from "./resend";
 
-import { notifyCoaches } from "@/src/actions/prospect.actions";
 import { getUserById } from "@/src/actions/user.actions";
 import { createAuthMiddleware } from "better-auth/api";
-import { User } from "../prisma/generated";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -32,16 +30,6 @@ export const auth = betterAuth({
   },
   plugins: [nextCookies()],
   hooks: {
-    onSignUp: async ({ user }: { user: User }) => {
-      try {
-        await notifyCoaches(user.id);
-      } catch (error) {
-        console.error(
-          "Erreur lors de l'envoi des notifications aux coachs:",
-          error,
-        );
-      }
-    },
     after: createAuthMiddleware(async (ctx) => {
       if (!ctx.context.session?.user.id) {
         return;

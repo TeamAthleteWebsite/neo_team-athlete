@@ -1,57 +1,36 @@
 import { DashboardNavItem } from "@/components/features/DashboardNavItem";
-import { DashboardTitle } from "@/components/features/DashboardTitle";
-import { ProspectsItem } from "./_components/ProspectsItem";
-import { getClientsCount } from "@/src/actions/user.actions";
+import { ServerAccessControl } from "@/components/features/ServerAccessControl";
 
 export default async function AdminPage() {
-	const clientsCount = await getClientsCount();
   return (
-    <div className="w-full space-y-4 sm:space-y-6">
-      <DashboardTitle title="Admin" backRoute="/dashboard" />
-
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-4xl mx-auto px-2 sm:px-4">
-        <ProspectsItem />
-
-        {/* Clients */}
-        <DashboardNavItem
-          value={clientsCount}
-          iconName="UserCheck"
-          title="Clients"
-          route="/dashboard/admin/clients"
-        />
-
-        {/* Séances */}
-        <DashboardNavItem
-          value={5}
-          iconName="Dumbbell"
-          title="Séances"
-          route="/sessions"
-        />
-
-        {/* Disponibilités */}
-        <DashboardNavItem
-          value={3}
-          iconName="Calendar"
-          title="Disponibilités"
-          route="/disponibilites"
-        />
-
-        {/* Offres Actives */}
-        <DashboardNavItem
-          value={12}
-          iconName="Tags"
-          title="Offres Actives"
-          route="/offres"
-        />
-
-        {/* Offres Actives */}
-        <DashboardNavItem
-          value={12}
-          iconName="Book"
-          title="Programmes"
-          route="/dashboard/admin/programs"
-        />
+    <ServerAccessControl allowedRoles={["ADMIN", "COACH"]}>
+      <div className="w-full">
+        <div className="max-w-4xl mx-auto px-2 sm:px-4">
+          <h1 className="text-2xl font-bold text-accent mb-6">
+            Administration
+          </h1>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <DashboardNavItem
+              iconName="Users"
+              title="Gestion des Prospects"
+              route="/dashboard/admin/prospects"
+            />
+            
+            <DashboardNavItem
+              iconName="UserCheck"
+              title="Gestion des Clients"
+              route="/dashboard/admin/clients"
+            />
+            
+            <DashboardNavItem
+              iconName="Dumbbell"
+              title="Gestion des Programmes"
+              route="/dashboard/admin/programs"
+            />
+          </div>
+        </div>
       </div>
-    </div>
+    </ServerAccessControl>
   );
 }

@@ -3,14 +3,17 @@ import { getClients } from "@/src/actions/user.actions";
 import { ClientsClient } from "./_components/ClientsClient";
 import { LoadingClients } from "./_components/LoadingClients";
 import { Suspense } from "react";
+import { ServerAccessControl } from "@/components/features/ServerAccessControl";
 
 export default async function ClientsPage() {
 	return (
-		<div className="w-full">
-			<Suspense fallback={<LoadingClients />}>
-				<ClientsWrapper />
-			</Suspense>
-		</div>
+		<ServerAccessControl allowedRoles={["ADMIN", "COACH"]}>
+			<div className="w-full">
+				<Suspense fallback={<LoadingClients />}>
+					<ClientsWrapper />
+				</Suspense>
+			</div>
+		</ServerAccessControl>
 	);
 }
 

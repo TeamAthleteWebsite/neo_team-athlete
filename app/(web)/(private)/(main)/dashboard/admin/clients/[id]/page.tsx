@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ClientDetails } from "./_components/ClientDetails";
 import { LoadingClientDetails } from "./_components/LoadingClientDetails";
 import { Suspense } from "react";
+import { ServerAccessControl } from "@/components/features/ServerAccessControl";
 
 interface ClientPageProps {
 	params: Promise<{
@@ -13,11 +14,13 @@ interface ClientPageProps {
 export default async function ClientPage({ params }: ClientPageProps) {
 	const resolvedParams = await params;
 	return (
-		<div className="w-full">
-			<Suspense fallback={<LoadingClientDetails />}>
-				<ClientWrapper params={resolvedParams} />
-			</Suspense>
-		</div>
+		<ServerAccessControl allowedRoles={["ADMIN", "COACH"]}>
+			<div className="w-full">
+				<Suspense fallback={<LoadingClientDetails />}>
+					<ClientWrapper params={resolvedParams} />
+				</Suspense>
+			</div>
+		</ServerAccessControl>
 	);
 }
 

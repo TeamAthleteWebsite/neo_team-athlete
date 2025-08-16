@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { type Prospect } from "@/lib/types/prospect.types";
 import { UserRole } from "@/prisma/generated";
 import { ProspectsClient } from "./_components/ProspectsClient";
+import { ServerAccessControl } from "@/components/features/ServerAccessControl";
 
 async function getProspects(): Promise<Prospect[]> {
   const prospects = await prisma.user.findMany({
@@ -22,8 +23,10 @@ export default async function ProspectsPage() {
   const prospects = await getProspects();
 
   return (
-    <div className="w-full">
-      <ProspectsClient prospects={prospects} />
-    </div>
+    <ServerAccessControl allowedRoles={["ADMIN", "COACH"]}>
+      <div className="w-full">
+        <ProspectsClient prospects={prospects} />
+      </div>
+    </ServerAccessControl>
   );
 }

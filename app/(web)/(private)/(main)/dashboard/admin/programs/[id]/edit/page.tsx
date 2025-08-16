@@ -4,6 +4,7 @@ import { getProgramById } from "@/src/actions/program.actions";
 import { Program } from "@/src/repositories/program.repository";
 import { useEffect, useState } from "react";
 import { ProgramForm } from "../../components/ProgramForm";
+import { ServerAccessControl } from "@/components/features/ServerAccessControl";
 
 interface EditProgramPageProps {
 	params: {
@@ -49,11 +50,13 @@ export default function EditProgramPage({ params }: EditProgramPageProps) {
 	}
 
 	return (
-		<div className="p-8">
-			<div className="max-w-2xl mx-auto">
-				<h1 className="text-2xl font-bold mb-6">Modifier le Programme</h1>
-				<ProgramForm initialData={program} />
+		<ServerAccessControl allowedRoles={["ADMIN", "COACH"]}>
+			<div className="p-8">
+				<div className="max-w-2xl mx-auto">
+					<h1 className="text-2xl font-bold mb-6">Modifier le Programme</h1>
+					<ProgramForm initialData={program} />
+				</div>
 			</div>
-		</div>
+		</ServerAccessControl>
 	);
 }
