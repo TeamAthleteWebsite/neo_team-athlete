@@ -40,19 +40,12 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-4xl mx-auto px-2 sm:px-4">
         <DashboardNavItem iconName="User" title="Mon compte" route="/profile" />
         
-        {hasAdminAccess ? (
+        {hasAdminAccess && (
           <DashboardNavItem
             iconName="ShieldEllipsis"
-            title="Admin"
+            title="Espace Coach"
             route="/dashboard/admin"
           />
-        ) : (
-          <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-center">
-            <div className="text-center text-gray-500 text-sm">
-              <div className="font-medium">Accès Admin</div>
-              <div>Non autorisé</div>
-            </div>
-          </div>
         )}
       </div>
     </div>
