@@ -186,7 +186,10 @@ export const ProspectDetailsPopup = ({
                         <span className="text-gray-400">Durée:</span>
                         <span className="text-white ml-2">{prospect.selectedOffer.duration} mois</span>
                       </div>
-        
+                      <div>
+                        <span className="text-gray-400">Coach:</span>
+                        <span className="text-white ml-2">{prospect.selectedOffer.coach.name}</span>
+                      </div>
                     </div>
                   </div>
                 </div>

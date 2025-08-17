@@ -98,7 +98,14 @@ export const ProspectsList = ({
               </h2>
               <div className="flex items-center space-x-2 text-white/70">
                 <ArrowUpDown className="w-4 h-4" />
-                <span className="text-sm">Trier/Filtrer</span>
+                <span className="text-sm">
+                  {prospects.length === 0 
+                    ? "Aucun prospect trouvé" 
+                    : prospects.length === 1 
+                      ? "1 prospect" 
+                      : `${prospects.length} prospects`
+                  }
+                </span>
               </div>
             </div>
             
@@ -123,6 +130,7 @@ export const ProspectsList = ({
                     <p className="text-gray-300 text-sm">
                       {getProspectBio(prospect)}
                     </p>
+
                   </div>
                   
                   <div className="flex items-center">

@@ -26,5 +26,10 @@ export interface Prospect {
       type: string;
       description: string;
     };
+    coach: {
+      id: string;
+      name: string;
+      email: string;
+    };
   } | null;
 }
