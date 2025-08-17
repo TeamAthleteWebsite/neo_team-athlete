@@ -8,4 +8,9 @@ export interface Client {
 	weight: number | null;
 	goal: string | null;
 	trainingType: string;
+	coach?: {
+		id: string;
+		name: string;
+		email: string;
+	} | null;
 } 

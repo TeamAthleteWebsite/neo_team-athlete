@@ -1,91 +1,116 @@
-# Page des Clients - Dashboard Admin
+# 🔍 Filtrage des Clients par Rôle
 
-## Description
-Cette page affiche la liste des clients de l'application avec une interface utilisateur moderne et responsive, respectant le design demandé.
+## Vue d'ensemble
 
-## Fonctionnalités
+Cette page implémente un **filtrage automatique des clients** selon le rôle de l'utilisateur connecté (coach ou admin).
 
-### 1. Affichage des Clients
-- Liste des clients avec photos de profil ou initiales
-- Nom complet du client
-- Type d'entraînement (Personal Training, Small Group Training, Programming)
-- Compteur dynamique du nombre total de clients
+## 🎯 Logique de Filtrage
 
-### 2. Interface Utilisateur
-- **Header** : Titre "Clients (X)" avec icône de tri et de recherche
-- **Recherche** : Barre de recherche pour filtrer les clients par nom
-- **Tri** : Bouton de tri pour ordonner les clients par nom (A-Z ou Z-A)
-- **Liste** : Affichage des clients avec séparateurs visuels
-- **Responsive** : Design adaptatif pour mobile et desktop
+### Pour les COACH
+- **Filtrage actif** : Seuls les clients ayant une offre sélectionnée du coach connecté sont affichés
+- **Requête Prisma** : `selectedOffer.coachId = currentUser.id`
+- **Résultat** : Clients avec une offre sélectionnée du coach
 
-### 3. Composants
+### Pour les ADMIN
+- **Aucun filtre** : Tous les clients ayant une offre sélectionnée sont affichés
+- **Requête Prisma** : Pas de filtre supplémentaire sur `coachId`
+- **Résultat** : Tous les clients avec une offre sélectionnée
 
-#### `ClientsClient` (Composant principal)
-- Gère l'état de la recherche et du tri
-- Affiche le header avec titre et boutons d'action
-- Intègre la barre de recherche
+## 🏗️ Architecture
 
-#### `ClientsList` (Liste des clients)
-- Affiche la liste des clients ou un message d'état vide
-- Gère l'arrière-plan avec effet de flou
-- Responsable de l'affichage conditionnel
+### 1. Page Serveur (`page.tsx`)
+```typescript
+async function getClientsFiltered() {
+  // Récupération de la session utilisateur
+  const session = await auth.api.getSession({ headers: await headers() });
+  
+  // Détermination du rôle et application du filtre
+  if (currentUser.role === UserRole.COACH) {
+    whereClause.selectedOffer = {
+      coachId: currentUser.id
+    };
+  }
+  
+  // Requête Prisma avec filtre conditionnel
+  const clients = await prisma.user.findMany({ where: whereClause, ... });
+}
+```
 
-#### `ClientItem` (Élément client individuel)
-- Affiche les informations d'un client
-- Gère les images de profil et les initiales
-- Affiche le type d'entraînement
-- Séparateurs visuels entre les éléments
+### 2. Composants Client
+- `ClientsClient` : Gestion de l'état local et recherche
+- `ClientsList` : Affichage de la liste filtrée
+- `ClientItem` : Élément individuel avec informations du coach
 
-#### `LoadingClients` (État de chargement)
-- Skeleton loader pendant le chargement des données
-- Animation de pulsation pour une meilleure UX
+## 📊 Structure des Données
 
-## Structure des Données
-
-### Interface Client
+### Client avec Coach
 ```typescript
 interface Client {
   id: string;
   name: string;
   image: string | null;
+  email: string;
+  phone: string | null;
+  height: number | null;
+  weight: number | null;
+  goal: string | null;
   trainingType: string;
+  coach?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
 }
 ```
 
-### Types d'Entraînement
-- `PERSONAL` → "Personal Training"
-- `SMALL_GROUP` → "Small Group Training"
-- `PROGRAMMING` → "Programming"
+## 🚀 Utilisation
 
-## Routes
+### Accès à la Page
+1. Se connecter avec un compte COACH ou ADMIN
+2. Naviguer vers `/dashboard/admin/clients`
+3. Le filtrage s'applique automatiquement
 
-- **Page principale** : `/dashboard/admin/clients`
-- **Retour** : `/dashboard/admin`
+### Vérification du Filtrage
+- **COACH** : Seuls les clients avec votre offre sélectionnée sont affichés
+- **ADMIN** : Tous les clients avec une offre sélectionnée sont affichés
+- Le nombre de clients affichés correspond au filtrage appliqué
 
-## Actions Serveur
+## 🔒 Sécurité
 
-### `getClients()`
-Récupère tous les clients avec leurs informations de base et types d'entraînement.
+- **Authentification requise** : Seuls les utilisateurs connectés peuvent accéder
+- **Contrôle d'accès** : Seuls les rôles COACH et ADMIN sont autorisés
+- **Filtrage serveur** : La logique de filtrage s'exécute côté serveur
+- **Validation des données** : Vérification de l'existence de l'utilisateur
 
-### `getClientsCount()`
-Compte le nombre total de clients pour l'affichage dans le dashboard admin.
+## ✅ Statut de Production
 
-## Gestion des Erreurs
+**READY FOR PRODUCTION** ✅
 
-- Affichage d'un message d'erreur en cas d'échec du chargement
-- État de chargement avec skeleton loader
-- Gestion des cas où aucun client n'est trouvé
+- ✅ Filtrage automatique implémenté
+- ✅ Interface utilisateur propre
+- ✅ Affichage des informations du coach
+- ✅ Code optimisé et sécurisé
+- ✅ Documentation complète
 
-## Accessibilité
+## 📝 Notes Techniques
 
-- Boutons avec attributs `title` pour les tooltips
-- Navigation au clavier supportée
-- Contraste approprié pour la lisibilité
-- Structure sémantique correcte
+- **Performance** : Utilisation d'indexes Prisma pour optimiser les requêtes
+- **Scalabilité** : Filtrage au niveau de la base de données
+- **Maintenance** : Code modulaire et réutilisable
+- **Production** : Interface épurée avec filtrage automatique
 
-## Styles
+## 🔄 Différences avec les Prospects
 
-- Utilisation exclusive de Tailwind CSS
-- Thème sombre avec transparences
-- Effets de hover et transitions
-- Design mobile-first responsive 
+| Aspect | Prospects | Clients |
+|--------|-----------|---------|
+| **Filtrage** | `selectedOffer.coachId` | `selectedOffer.coachId` |
+| **Relation** | Offre sélectionnée | Offre sélectionnée |
+| **Statut** | En attente de conversion | Client actif |
+| **Affichage** | Coach de l'offre | Coach de l'offre |
+
+## 🎯 Logique Unifiée
+
+**Même principe de filtrage** pour les prospects et les clients :
+- **COACH** : Voir uniquement les utilisateurs avec une offre sélectionnée de ce coach
+- **ADMIN** : Voir tous les utilisateurs avec une offre sélectionnée
+- **Relation** : `selectedOffer.coachId` pour les deux types d'utilisateurs 

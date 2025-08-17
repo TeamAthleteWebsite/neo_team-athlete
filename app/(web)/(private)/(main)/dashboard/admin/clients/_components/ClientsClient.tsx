@@ -70,7 +70,14 @@ export const ClientsClient: React.FC<ClientsClientProps> = ({ clients }) => {
 								title={`Trier par nom (${sortOrder === "asc" ? "A-Z" : "Z-A"})`}
 							>
 								<ArrowUpDown className="w-4 h-4" />
-								<span className="text-sm">Trier/Filtrer</span>
+								<span className="text-sm">
+									{sortedClients.length === 0 
+										? "Aucun client trouvé" 
+										: sortedClients.length === 1 
+											? "1 client" 
+											: `${sortedClients.length} clients`
+									}
+								</span>
 							</button>
 						</div>
 					</div>
@@ -83,6 +90,8 @@ export const ClientsClient: React.FC<ClientsClientProps> = ({ clients }) => {
 						<Search className="w-6 h-6" />
 					</button>
 				</div>
+
+
 
 				{/* Search Bar */}
 				{showSearch && (
