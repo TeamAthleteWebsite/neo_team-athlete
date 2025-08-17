@@ -15,4 +15,16 @@ export interface Prospect {
   role: UserRole;
   createdAt: Date;
   isOnboarded: boolean;
+  selectedOffer?: {
+    id: string;
+    price: number;
+    sessions: number;
+    duration: number;
+    program: {
+      id: string;
+      name: string;
+      type: string;
+      description: string;
+    };
+  } | null;
 }

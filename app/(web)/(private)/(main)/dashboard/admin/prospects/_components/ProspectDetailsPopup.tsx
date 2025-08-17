@@ -1,7 +1,7 @@
 "use client";
 
 import { type Prospect } from "@/lib/types/prospect.types";
-import { X, Mail, Phone, Weight, Ruler, Target, MessageSquare, UserPlus } from "lucide-react";
+import { X, Mail, Phone, Weight, Ruler, Target, MessageSquare, UserPlus, Package } from "lucide-react";
 import { useEffect, useState } from "react";
 import { convertProspectToClient } from "../_actions/convert-prospect";
 import { toast } from "sonner";
@@ -160,6 +160,36 @@ export const ProspectDetailsPopup = ({
               <div className="flex-1">
                 <span className="text-gray-400 text-sm">Commentaire</span>
                 <span className="block text-white">{prospect.bio}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Selected Offer */}
+          {prospect.selectedOffer && (
+            <div className="flex items-start space-x-3">
+              <Package className="w-5 h-5 text-green-400 mt-1" />
+              <div className="flex-1">
+                <span className="text-gray-400 text-sm">Offre souhaitée</span>
+                <div className="space-y-2 mt-1">
+                  <div className="bg-gray-700 rounded-lg p-3 space-y-2">
+                    <h4 className="text-white font-medium">{prospect.selectedOffer.program.name}</h4>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-gray-400">Type:</span>
+                        <span className="text-white ml-2">{prospect.selectedOffer.program.type}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Séances:</span>
+                        <span className="text-white ml-2">{prospect.selectedOffer.sessions}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Durée:</span>
+                        <span className="text-white ml-2">{prospect.selectedOffer.duration} mois</span>
+                      </div>
+        
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

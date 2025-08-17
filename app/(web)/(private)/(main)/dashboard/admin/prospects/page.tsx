@@ -11,6 +11,20 @@ async function getProspects(): Promise<Prospect[]> {
         equals: UserRole.PROSPECT,
       },
     },
+    include: {
+      selectedOffer: {
+        include: {
+          program: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+              description: true,
+            },
+          },
+        },
+      },
+    },
     orderBy: {
       createdAt: "desc",
     },
