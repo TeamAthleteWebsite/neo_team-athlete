@@ -12,6 +12,7 @@
   - Sélection visuelle des offres avec mise en surbrillance
   - Bouton de confirmation avec validation
   - **Nouveau** : Section "Informations du contrat" avec sélection de date de début
+  - **Nouveau** : Champ de personnalisation du nombre de séances
 
 ### 2. Intégration dans ClientDetails
 - **Fichier modifié** : `app/(web)/(private)/(main)/dashboard/admin/clients/[id]/_components/ClientDetails.tsx`
@@ -58,6 +59,7 @@
 - ✅ Callback de sélection d'offre
 - ✅ Validation avant confirmation
 - ✅ **Nouveau** : Gestion de la date de début de contrat
+- ✅ **Nouveau** : Gestion du nombre de séances personnalisé
 
 ### Intégration
 - ✅ Bouton "Sélection" dans ClientDetails
@@ -71,9 +73,9 @@
 ```
 OfferSelectionPopup/
 ├── Props : isOpen, onClose, coachId, onOfferSelect
-├── États : offers, isLoadingOffers, selectedOfferId, activeProgramType, contractStartDate
-├── Fonctions : loadOffers, handleOfferSelection, handleConfirmSelection, handleDateChange
-├── Utilitaires : getMinDate, formatDisplayDate
+├── États : offers, isLoadingOffers, selectedOfferId, activeProgramType, contractStartDate, customSessions
+├── Fonctions : loadOffers, handleOfferSelection, handleConfirmSelection, handleDateChange, handleSessionsChange
+├── Utilitaires : (formatDisplayDate supprimé)
 └── Interface : Toggle engagement, Types programmes, Tableau tarifs, Informations contrat
 ```
 
@@ -84,6 +86,7 @@ OfferSelectionPopup/
 - Interface `Offer` avec id, sessions, price, duration, program
 - Props typées avec TypeScript
 - **Nouveau** : État `contractStartDate` pour la date de début
+- **Nouveau** : État `customSessions` pour le nombre de séances personnalisé
 
 ## 🎯 Logique de Filtrage Corrigée
 
@@ -108,6 +111,36 @@ const filteredOffers = offers.filter(offer => {
 ### Affichage des Tarifs
 - **Avec engagement** : Prix "par mois" + calcul prix par séance
 - **Sans engagement** : "Prix unique" (pas de calcul par séance)
+
+## 🆕 Nouvelles Fonctionnalités : Informations du Contrat
+
+### Gestion du Nombre de Séances Personnalisé
+```typescript
+const [customSessions, setCustomSessions] = useState<number>(0);
+
+const handleOfferSelection = (offerId: string) => {
+  setSelectedOfferId(offerId);
+  
+  // Mettre à jour le nombre de séances par défaut avec celui de l'offre sélectionnée
+  const selectedOffer = offers.find(offer => offer.id === offerId);
+  if (selectedOffer) {
+    setCustomSessions(selectedOffer.sessions);
+  }
+};
+
+const handleSessionsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const value = parseInt(event.target.value) || 0;
+  setCustomSessions(Math.max(0, value)); // Empêcher les valeurs négatives
+};
+```
+
+### Interface Utilisateur du Champ Séances
+- **Champ numérique** avec validation des valeurs
+- **Valeur par défaut** : Nombre de séances de l'offre sélectionnée
+- **État désactivé** quand aucune offre n'est sélectionnée
+- **Validation** : Minimum 1 séance, pas de valeurs négatives
+- **Indicateurs visuels** : Affichage de la valeur par défaut et du total
+- **Unité** : "séances" affiché dans le champ
 
 ## 🆕 Nouvelle Fonctionnalité : Informations du Contrat
 
@@ -155,12 +188,14 @@ const formatDisplayDate = (dateString: string) => {
 2. Cliquer sur le bouton "Sélection"
 3. Tester les différentes fonctionnalités de la popup
 4. **Nouveau** : Tester la sélection de date de début de contrat
+5. **Nouveau** : Tester la personnalisation du nombre de séances
 
 ### 2. Test Isolé
 1. Naviguer vers `/dashboard/admin/clients/[id]/test-popup`
 2. Utiliser l'interface de test dédiée
 3. Vérifier toutes les fonctionnalités
 4. **Nouveau** : Vérifier la gestion des dates
+5. **Nouveau** : Vérifier la personnalisation du nombre de séances
 
 ## 📋 Prochaines Étapes
 
@@ -169,6 +204,7 @@ const formatDisplayDate = (dateString: string) => {
 - [ ] Créer l'action pour associer l'offre au client
 - [ ] Ajouter la validation des permissions
 - [ ] **Nouveau** : Sauvegarder la date de début de contrat
+- [ ] **Nouveau** : Sauvegarder le nombre de séances personnalisé
 
 ### Phase 3 : Persistance
 - [ ] Modifier le schéma Prisma si nécessaire
@@ -240,6 +276,7 @@ La popup de sélection d'offres est **entièrement implémentée et fonctionnell
 - ✅ Interface utilisateur moderne et responsive
 - ✅ Gestion complète des états et interactions
 - ✅ **Nouvelle section** : Informations du contrat avec sélection de date de début
+- ✅ **Nouveau champ** : Personnalisation du nombre de séances
 
 ### 🔧 Correction Importante
 La logique de filtrage a été corrigée pour refléter la réalité métier :
@@ -252,4 +289,11 @@ La logique de filtrage a été corrigée pour refléter la réalité métier :
 - **Formatage français** : DD/MM/YYYY
 - **Interface utilisateur cohérente** avec le thème de l'application
 
-La prochaine étape sera d'implémenter la logique de sauvegarde pour associer l'offre sélectionnée au client et sauvegarder les informations du contrat.
+### 🎯 Nouvelle Fonctionnalité Ajoutée : Nombre de Séances Personnalisé
+- **Valeur par défaut automatique** : Prend la valeur de l'offre sélectionnée
+- **Personnalisation possible** : Modification libre du nombre de séances
+- **Validation robuste** : Minimum 1 séance, pas de valeurs négatives
+- **Interface intuitive** : Champ désactivé sans sélection d'offre
+- **Indicateurs visuels** : Affichage de la valeur par défaut et du total
+
+La prochaine étape sera d'implémenter la logique de sauvegarde pour associer l'offre sélectionnée au client et sauvegarder les informations du contrat (date de début et nombre de séances personnalisé).

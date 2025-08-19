@@ -44,6 +44,11 @@ Cette page permet aux coachs de visualiser les détails d'un client et de sélec
   - **Dates autorisées** : Toutes les dates (passées, présentes et futures)
   - **Format d'affichage** : DD/MM/YYYY (format français)
   - **Icône calendrier** : Indication visuelle du type de champ
+- **Nombre de séances personnalisé** : Champ numérique avec valeur par défaut
+  - **Valeur par défaut** : Nombre de séances de l'offre sélectionnée
+  - **Personnalisation** : Modification possible du nombre de séances
+  - **Validation** : Minimum 1 séance, champ désactivé sans offre sélectionnée
+  - **Indicateurs visuels** : Affichage de la valeur par défaut et du total
 
 ### 5. Interface Utilisateur
 - Design cohérent avec le thème de l'application
@@ -58,7 +63,9 @@ Cette page permet aux coachs de visualiser les détails d'un client et de sélec
    - Choisir le type d'offre (Avec/Sans engagement)
    - Sélectionner le type de programme
    - Choisir l'offre dans le tableau des tarifs
-4. **Contrat** : Définir la date de début de contrat
+4. **Contrat** : 
+   - Définir la date de début de contrat
+   - Personnaliser le nombre de séances (optionnel)
 5. **Confirmation** : Cliquer sur "Confirmer la sélection"
 
 ## Structure des Données
@@ -90,6 +97,7 @@ interface OfferSelectionPopupProps {
 ### Nouveaux États
 ```typescript
 const [contractStartDate, setContractStartDate] = useState<string>("");
+const [customSessions, setCustomSessions] = useState<number>(0);
 ```
 
 ## Actions
@@ -106,6 +114,7 @@ const [contractStartDate, setContractStartDate] = useState<string>("");
 - `activeProgramType` : Type de programme sélectionné
 - `selectedOfferId` : ID de l'offre sélectionnée
 - **`contractStartDate`** : Date de début de contrat sélectionnée
+- **`customSessions`** : Nombre de séances personnalisé (par défaut : sessions de l'offre)
 
 ## Logique de Filtrage
 
@@ -127,6 +136,32 @@ const filteredOffers = offers.filter(offer =>
   matchesProgramType && matchesCommitment
 );
 ```
+
+## Gestion du Nombre de Séances
+
+### Logique de Personnalisation
+```typescript
+const handleOfferSelection = (offerId: string) => {
+  setSelectedOfferId(offerId);
+  
+  // Mettre à jour le nombre de séances par défaut avec celui de l'offre sélectionnée
+  const selectedOffer = offers.find(offer => offer.id === offerId);
+  if (selectedOffer) {
+    setCustomSessions(selectedOffer.sessions);
+  }
+};
+
+const handleSessionsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const value = parseInt(event.target.value) || 0;
+  setCustomSessions(Math.max(0, value)); // Empêcher les valeurs négatives
+};
+```
+
+### Validation et Affichage
+- **Champ désactivé** tant qu'aucune offre n'est sélectionnée
+- **Valeur par défaut** automatiquement remplie avec le nombre de séances de l'offre
+- **Validation** : Minimum 1 séance pour confirmer la sélection
+- **Indicateurs visuels** : Affichage de la valeur par défaut et du total final
 
 ## Gestion des Dates
 

@@ -34,6 +34,7 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
   const [selectedOfferId, setSelectedOfferId] = useState<string>("");
   const [activeProgramType, setActiveProgramType] = useState<string>("PERSONAL");
   const [contractStartDate, setContractStartDate] = useState<string>("");
+  const [customSessions, setCustomSessions] = useState<number>(0);
 
   useEffect(() => {
     if (isOpen && coachId) {
@@ -59,6 +60,12 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
 
   const handleOfferSelection = (offerId: string) => {
     setSelectedOfferId(offerId);
+    
+    // Mettre à jour le nombre de séances par défaut avec celui de l'offre sélectionnée
+    const selectedOffer = offers.find(offer => offer.id === offerId);
+    if (selectedOffer) {
+      setCustomSessions(selectedOffer.sessions);
+    }
   };
 
   const handleConfirmSelection = () => {
@@ -72,22 +79,18 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
     setContractStartDate(event.target.value);
   };
 
+  const handleSessionsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(event.target.value) || 0;
+    setCustomSessions(Math.max(0, value)); // Empêcher les valeurs négatives
+  };
+
   // Suppression de la restriction de date minimale pour permettre les dates rétroactives
   // const getMinDate = () => {
   //   const today = new Date();
   //   return today.toISOString().split('T')[0];
   // };
 
-  // Formater la date pour l'affichage
-  const formatDisplayDate = (dateString: string) => {
-    if (!dateString) return "Sélectionner une date";
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
+  // Fonction formatDisplayDate supprimée car non utilisée
 
   // Filtrer les offres par type de programme et par engagement
   const filteredOffers = offers.filter(offer => {
@@ -271,6 +274,38 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
               <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-zinc-400 pointer-events-none" />
             </div>
           </div>
+
+          {/* Nombre de séances personnalisé */}
+          <div className="space-y-3">
+            <label htmlFor="custom-sessions" className="block text-sm font-medium text-zinc-300">
+              Nombre de séances
+              {selectedOfferId && (
+                <span className="text-xs text-zinc-400 ml-2">
+                  (Défaut: {offers.find(o => o.id === selectedOfferId)?.sessions || 0} séances)
+                </span>
+              )}
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                id="custom-sessions"
+                value={customSessions || ""}
+                onChange={handleSessionsChange}
+                min="1"
+                step="1"
+                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Nombre de séances"
+                disabled={!selectedOfferId}
+              />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <span className="text-zinc-400 text-sm">séances</span>
+              </div>
+            </div>
+            {!selectedOfferId && (
+              <p className="text-xs text-zinc-500">Veuillez d'abord sélectionner une offre</p>
+            )}
+
+          </div>
         </div>
 
         {/* Boutons d'action */}
@@ -283,7 +318,7 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
           </button>
           <button
             onClick={handleConfirmSelection}
-            disabled={!selectedOfferId}
+            disabled={!selectedOfferId || customSessions <= 0}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Confirmer la sélection
