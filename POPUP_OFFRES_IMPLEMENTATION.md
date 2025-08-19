@@ -13,6 +13,7 @@
   - Bouton de confirmation avec validation
   - **Nouveau** : Section "Informations du contrat" avec sélection de date de début
   - **Nouveau** : Champ de personnalisation du nombre de séances
+  - **Nouveau** : Champ de personnalisation du prix du contrat
 
 ### 2. Intégration dans ClientDetails
 - **Fichier modifié** : `app/(web)/(private)/(main)/dashboard/admin/clients/[id]/_components/ClientDetails.tsx`
@@ -60,6 +61,7 @@
 - ✅ Validation avant confirmation
 - ✅ **Nouveau** : Gestion de la date de début de contrat
 - ✅ **Nouveau** : Gestion du nombre de séances personnalisé
+- ✅ **Nouveau** : Gestion du prix personnalisé du contrat
 
 ### Intégration
 - ✅ Bouton "Sélection" dans ClientDetails
@@ -73,8 +75,8 @@
 ```
 OfferSelectionPopup/
 ├── Props : isOpen, onClose, coachId, onOfferSelect
-├── États : offers, isLoadingOffers, selectedOfferId, activeProgramType, contractStartDate, customSessions
-├── Fonctions : loadOffers, handleOfferSelection, handleConfirmSelection, handleDateChange, handleSessionsChange
+├── États : offers, isLoadingOffers, selectedOfferId, activeProgramType, contractStartDate, customSessions, customPrice
+├── Fonctions : loadOffers, handleOfferSelection, handleConfirmSelection, handleDateChange, handleSessionsChange, handlePriceChange
 ├── Utilitaires : (formatDisplayDate supprimé)
 └── Interface : Toggle engagement, Types programmes, Tableau tarifs, Informations contrat
 ```
@@ -87,6 +89,7 @@ OfferSelectionPopup/
 - Props typées avec TypeScript
 - **Nouveau** : État `contractStartDate` pour la date de début
 - **Nouveau** : État `customSessions` pour le nombre de séances personnalisé
+- **Nouveau** : État `customPrice` pour le prix personnalisé du contrat
 
 ## 🎯 Logique de Filtrage Corrigée
 
@@ -143,6 +146,26 @@ const handleSessionsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 - **Unité** : "séances" affiché dans le champ
 - **Taille optimisée** : Padding réduit (px-3 py-2) et texte d'unité plus petit (text-xs)
 
+### Gestion du Prix Personnalisé
+```typescript
+const [customPrice, setCustomPrice] = useState<number>(0);
+
+const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const value = parseFloat(event.target.value) || 0;
+  setCustomPrice(Math.max(0, value)); // Empêcher les valeurs négatives
+};
+```
+
+### Interface Utilisateur du Champ Prix
+- **Champ numérique** avec validation des valeurs décimales
+- **Valeur par défaut** : Prix de l'offre sélectionnée
+- **État désactivé** quand aucune offre n'est sélectionnée
+- **Validation** : Minimum 0€, pas de valeurs négatives
+- **Indicateurs visuels** : Affichage de la valeur par défaut avec symbole €
+- **Unité** : "€" affiché dans le champ
+- **Précision** : Step de 0.01€ pour les prix décimaux
+- **Taille optimisée** : Padding réduit (px-3 py-2) et symbole € plus petit (text-xs)
+
 ## 🆕 Nouvelle Fonctionnalité : Informations du Contrat
 
 ### Sélection de Date de Début
@@ -177,7 +200,7 @@ const formatDisplayDate = (dateString: string) => {
 ```
 
 ### Interface Utilisateur
-- **Layout optimisé** : Champs disposés sur la même ligne (grid grid-cols-2 gap-4)
+- **Layout optimisé** : Champs disposés sur 3 colonnes (grid grid-cols-3 gap-4)
 - **Champ de type date** avec validation HTML5
 - **Dates autorisées** : Toutes les dates (passées, présentes et futures)
 - **Icône calendrier** de Lucide React
@@ -192,6 +215,7 @@ const formatDisplayDate = (dateString: string) => {
 3. Tester les différentes fonctionnalités de la popup
 4. **Nouveau** : Tester la sélection de date de début de contrat
 5. **Nouveau** : Tester la personnalisation du nombre de séances
+6. **Nouveau** : Tester la personnalisation du prix du contrat
 
 ### 2. Test Isolé
 1. Naviguer vers `/dashboard/admin/clients/[id]/test-popup`
@@ -199,6 +223,7 @@ const formatDisplayDate = (dateString: string) => {
 3. Vérifier toutes les fonctionnalités
 4. **Nouveau** : Vérifier la gestion des dates
 5. **Nouveau** : Vérifier la personnalisation du nombre de séances
+6. **Nouveau** : Vérifier la personnalisation du prix du contrat
 
 ## 📋 Prochaines Étapes
 
@@ -208,6 +233,7 @@ const formatDisplayDate = (dateString: string) => {
 - [ ] Ajouter la validation des permissions
 - [ ] **Nouveau** : Sauvegarder la date de début de contrat
 - [ ] **Nouveau** : Sauvegarder le nombre de séances personnalisé
+- [ ] **Nouveau** : Sauvegarder le prix personnalisé du contrat
 
 ### Phase 3 : Persistance
 - [ ] Modifier le schéma Prisma si nécessaire
@@ -280,6 +306,7 @@ La popup de sélection d'offres est **entièrement implémentée et fonctionnell
 - ✅ Gestion complète des états et interactions
 - ✅ **Nouvelle section** : Informations du contrat avec sélection de date de début
 - ✅ **Nouveau champ** : Personnalisation du nombre de séances
+- ✅ **Nouveau champ** : Personnalisation du prix du contrat
 
 ### 🔧 Correction Importante
 La logique de filtrage a été corrigée pour refléter la réalité métier :
@@ -292,11 +319,21 @@ La logique de filtrage a été corrigée pour refléter la réalité métier :
 - **Formatage français** : DD/MM/YYYY
 - **Interface utilisateur cohérente** avec le thème de l'application
 
-### 🎯 Nouvelle Fonctionnalité Ajoutée : Nombre de Séances Personnalisé
+### 🎯 Nouvelles Fonctionnalités Ajoutées
+
+#### Nombre de Séances Personnalisé
 - **Valeur par défaut automatique** : Prend la valeur de l'offre sélectionnée
 - **Personnalisation possible** : Modification libre du nombre de séances
 - **Validation robuste** : Minimum 1 séance, pas de valeurs négatives
 - **Interface intuitive** : Champ désactivé sans sélection d'offre
 - **Indicateurs visuels** : Affichage de la valeur par défaut et du total
 
-La prochaine étape sera d'implémenter la logique de sauvegarde pour associer l'offre sélectionnée au client et sauvegarder les informations du contrat (date de début et nombre de séances personnalisé).
+#### Prix Personnalisé du Contrat
+- **Valeur par défaut automatique** : Prend le prix de l'offre sélectionnée
+- **Personnalisation possible** : Modification libre du prix
+- **Validation robuste** : Minimum 0€, pas de valeurs négatives
+- **Interface intuitive** : Champ désactivé sans sélection d'offre
+- **Indicateurs visuels** : Affichage de la valeur par défaut avec symbole €
+- **Précision décimale** : Step de 0.01€ pour les prix précis
+
+La prochaine étape sera d'implémenter la logique de sauvegarde pour associer l'offre sélectionnée au client et sauvegarder les informations du contrat (date de début, nombre de séances et prix personnalisés).

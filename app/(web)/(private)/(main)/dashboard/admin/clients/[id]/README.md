@@ -40,7 +40,7 @@ Cette page permet aux coachs de visualiser les détails d'un client et de sélec
 - Gestion des erreurs de chargement
 
 ### 4. Informations du Contrat
-- **Layout optimisé** : Champs disposés sur la même ligne pour économiser l'espace vertical
+- **Layout optimisé** : Champs disposés sur 3 colonnes pour une utilisation optimale de l'espace
 - **Date de début de contrat** : Champ de sélection de date avec validation
   - **Dates autorisées** : Toutes les dates (passées, présentes et futures)
   - **Format d'affichage** : DD/MM/YYYY (format français)
@@ -52,6 +52,12 @@ Cette page permet aux coachs de visualiser les détails d'un client et de sélec
   - **Validation** : Minimum 1 séance, champ désactivé sans offre sélectionnée
   - **Indicateurs visuels** : Affichage de la valeur par défaut et du total
   - **Taille optimisée** : Padding réduit (px-3 py-2) et texte d'unité plus petit (text-xs)
+- **Prix personnalisé** : Champ numérique avec valeur par défaut
+  - **Valeur par défaut** : Prix de l'offre sélectionnée
+  - **Personnalisation** : Modification possible du prix
+  - **Validation** : Minimum 0€, champ désactivé sans offre sélectionnée
+  - **Indicateurs visuels** : Affichage de la valeur par défaut avec symbole €
+  - **Taille optimisée** : Padding réduit (px-3 py-2) et symbole € plus petit (text-xs)
 
 ### 5. Interface Utilisateur
 - Design cohérent avec le thème de l'application
@@ -69,6 +75,7 @@ Cette page permet aux coachs de visualiser les détails d'un client et de sélec
 4. **Contrat** : 
    - Définir la date de début de contrat
    - Personnaliser le nombre de séances (optionnel)
+   - Personnaliser le prix du contrat (optionnel)
 5. **Confirmation** : Cliquer sur "Confirmer la sélection"
 
 ## Structure des Données
@@ -101,6 +108,7 @@ interface OfferSelectionPopupProps {
 ```typescript
 const [contractStartDate, setContractStartDate] = useState<string>("");
 const [customSessions, setCustomSessions] = useState<number>(0);
+const [customPrice, setCustomPrice] = useState<number>(0);
 ```
 
 ## Actions
@@ -118,6 +126,7 @@ const [customSessions, setCustomSessions] = useState<number>(0);
 - `selectedOfferId` : ID de l'offre sélectionnée
 - **`contractStartDate`** : Date de début de contrat sélectionnée
 - **`customSessions`** : Nombre de séances personnalisé (par défaut : sessions de l'offre)
+- **`customPrice`** : Prix personnalisé du contrat (par défaut : prix de l'offre)
 
 ## Logique de Filtrage
 
@@ -165,6 +174,36 @@ const handleSessionsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 - **Valeur par défaut** automatiquement remplie avec le nombre de séances de l'offre
 - **Validation** : Minimum 1 séance pour confirmer la sélection
 - **Indicateurs visuels** : Affichage de la valeur par défaut et du total final
+
+## Gestion du Prix Personnalisé
+
+### Logique de Personnalisation
+```typescript
+const [customPrice, setCustomPrice] = useState<number>(0);
+
+const handleOfferSelection = (offerId: string) => {
+  setSelectedOfferId(offerId);
+  
+  // Mettre à jour le nombre de séances et le prix par défaut avec ceux de l'offre sélectionnée
+  const selectedOffer = offers.find(offer => offer.id === offerId);
+  if (selectedOffer) {
+    setCustomSessions(selectedOffer.sessions);
+    setCustomPrice(selectedOffer.price);
+  }
+};
+
+const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const value = parseFloat(event.target.value) || 0;
+  setCustomPrice(Math.max(0, value)); // Empêcher les valeurs négatives
+};
+```
+
+### Validation et Affichage
+- **Champ désactivé** tant qu'aucune offre n'est sélectionnée
+- **Valeur par défaut** automatiquement remplie avec le prix de l'offre
+- **Validation** : Minimum 0€ pour confirmer la sélection
+- **Indicateurs visuels** : Affichage de la valeur par défaut avec symbole €
+- **Précision** : Step de 0.01€ pour les prix décimaux
 
 ## Gestion des Dates
 

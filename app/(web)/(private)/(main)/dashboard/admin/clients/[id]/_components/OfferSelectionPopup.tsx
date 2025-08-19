@@ -35,6 +35,7 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
   const [activeProgramType, setActiveProgramType] = useState<string>("PERSONAL");
   const [contractStartDate, setContractStartDate] = useState<string>("");
   const [customSessions, setCustomSessions] = useState<number>(0);
+  const [customPrice, setCustomPrice] = useState<number>(0);
 
   useEffect(() => {
     if (isOpen && coachId) {
@@ -61,10 +62,11 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
   const handleOfferSelection = (offerId: string) => {
     setSelectedOfferId(offerId);
     
-    // Mettre à jour le nombre de séances par défaut avec celui de l'offre sélectionnée
+    // Mettre à jour le nombre de séances et le prix par défaut avec ceux de l'offre sélectionnée
     const selectedOffer = offers.find(offer => offer.id === offerId);
     if (selectedOffer) {
       setCustomSessions(selectedOffer.sessions);
+      setCustomPrice(selectedOffer.price);
     }
   };
 
@@ -82,6 +84,11 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
   const handleSessionsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(event.target.value) || 0;
     setCustomSessions(Math.max(0, value)); // Empêcher les valeurs négatives
+  };
+
+  const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(event.target.value) || 0;
+    setCustomPrice(Math.max(0, value)); // Empêcher les valeurs négatives
   };
 
   // Suppression de la restriction de date minimale pour permettre les dates rétroactives
@@ -257,7 +264,7 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
           <h4 className="text-white font-medium mb-4">Informations du contrat</h4>
           
           {/* Champs du contrat sur la même ligne */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             {/* Date de début de contrat */}
             <div className="space-y-2">
               <label htmlFor="contract-start-date" className="block text-sm font-medium text-zinc-300">
@@ -307,6 +314,37 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
                 <p className="text-xs text-zinc-500">Veuillez d'abord sélectionner une offre</p>
               )}
             </div>
+
+            {/* Prix personnalisé */}
+            <div className="space-y-2">
+              <label htmlFor="custom-price" className="block text-sm font-medium text-zinc-300">
+                Prix du contrat
+                {selectedOfferId && (
+                  <span className="text-xs text-zinc-400 ml-2">
+                    (Défaut: {offers.find(o => o.id === selectedOfferId)?.price || 0}€)
+                  </span>
+                )}
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  id="custom-price"
+                  value={customPrice || ""}
+                  onChange={handlePriceChange}
+                  min="0"
+                  step="0.01"
+                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  placeholder="Prix du contrat"
+                  disabled={!selectedOfferId}
+                />
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                  <span className="text-zinc-400 text-xs">€</span>
+                </div>
+              </div>
+              {!selectedOfferId && (
+                <p className="text-xs text-zinc-500">Veuillez d'abord sélectionner une offre</p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -320,7 +358,7 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
           </button>
           <button
             onClick={handleConfirmSelection}
-            disabled={!selectedOfferId || customSessions <= 0}
+            disabled={!selectedOfferId || customSessions <= 0 || customPrice <= 0}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Confirmer la sélection
