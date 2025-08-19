@@ -391,10 +391,10 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
           </button>
           <button
             onClick={handleConfirmSelection}
-            disabled={!selectedOfferId || customSessions <= 0 || customPrice <= 0}
+            disabled={!selectedOfferId || customPrice <= 0 || !contractStartDate}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Confirmer la sélection
+            Créer le contrat
           </button>
         </div>
       </div>
