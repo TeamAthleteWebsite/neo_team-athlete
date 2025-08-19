@@ -58,6 +58,11 @@ Cette page permet aux coachs de visualiser les détails d'un client et de sélec
   - **Validation** : Minimum 0€, champ désactivé sans offre sélectionnée
   - **Indicateurs visuels** : Affichage de la valeur par défaut avec symbole €
   - **Taille optimisée** : Padding réduit (px-3 py-2) et symbole € plus petit (text-xs)
+- **Contrat flexible** : Toggle pour définir la flexibilité du contrat
+  - **État par défaut** : Désactivé (contrat non flexible)
+  - **Fonctionnalité** : Permet de modifier les conditions après signature
+  - **Interface** : Toggle moderne avec animation et accessibilité
+  - **Description** : Explication claire de l'option avec texte d'aide
 
 ### 5. Interface Utilisateur
 - Design cohérent avec le thème de l'application
@@ -76,6 +81,7 @@ Cette page permet aux coachs de visualiser les détails d'un client et de sélec
    - Définir la date de début de contrat
    - Personnaliser le nombre de séances (optionnel)
    - Personnaliser le prix du contrat (optionnel)
+   - Définir si le contrat est flexible (optionnel)
 5. **Confirmation** : Cliquer sur "Confirmer la sélection"
 
 ## Structure des Données
@@ -109,6 +115,7 @@ interface OfferSelectionPopupProps {
 const [contractStartDate, setContractStartDate] = useState<string>("");
 const [customSessions, setCustomSessions] = useState<number>(0);
 const [customPrice, setCustomPrice] = useState<number>(0);
+const [isFlexibleContract, setIsFlexibleContract] = useState<boolean>(false);
 ```
 
 ## Actions
@@ -127,6 +134,7 @@ const [customPrice, setCustomPrice] = useState<number>(0);
 - **`contractStartDate`** : Date de début de contrat sélectionnée
 - **`customSessions`** : Nombre de séances personnalisé (par défaut : sessions de l'offre)
 - **`customPrice`** : Prix personnalisé du contrat (par défaut : prix de l'offre)
+- **`isFlexibleContract`** : Indique si le contrat est flexible (par défaut : false)
 
 ## Logique de Filtrage
 
@@ -204,6 +212,30 @@ const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 - **Validation** : Minimum 0€ pour confirmer la sélection
 - **Indicateurs visuels** : Affichage de la valeur par défaut avec symbole €
 - **Précision** : Step de 0.01€ pour les prix décimaux
+
+## Gestion du Contrat Flexible
+
+### Logique de Flexibilité
+```typescript
+const [isFlexibleContract, setIsFlexibleContract] = useState<boolean>(false);
+
+const handleFlexibleToggle = () => {
+  setIsFlexibleContract(!isFlexibleContract);
+};
+```
+
+### Interface Utilisateur
+- **Section dédiée** : "Options du contrat" avec titre clair
+- **Toggle moderne** : Design arrondi avec animation fluide
+- **États visuels** : Bleu (actif) / Gris (inactif)
+- **Description** : Explication de l'option avec texte d'aide
+- **Accessibilité** : Attributs ARIA et focus ring
+
+### Comportement
+- **État par défaut** : Désactivé (contrat non flexible)
+- **Modification** : Clic pour basculer entre les états
+- **Animation** : Transition fluide du thumb du toggle
+- **Validation** : Pas de validation requise (optionnel)
 
 ## Gestion des Dates
 

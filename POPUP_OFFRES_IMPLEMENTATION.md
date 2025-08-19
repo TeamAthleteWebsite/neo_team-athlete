@@ -14,6 +14,7 @@
   - **Nouveau** : Section "Informations du contrat" avec sélection de date de début
   - **Nouveau** : Champ de personnalisation du nombre de séances
   - **Nouveau** : Champ de personnalisation du prix du contrat
+  - **Nouveau** : Toggle pour définir si le contrat est flexible
 
 ### 2. Intégration dans ClientDetails
 - **Fichier modifié** : `app/(web)/(private)/(main)/dashboard/admin/clients/[id]/_components/ClientDetails.tsx`
@@ -62,6 +63,7 @@
 - ✅ **Nouveau** : Gestion de la date de début de contrat
 - ✅ **Nouveau** : Gestion du nombre de séances personnalisé
 - ✅ **Nouveau** : Gestion du prix personnalisé du contrat
+- ✅ **Nouveau** : Gestion du contrat flexible
 
 ### Intégration
 - ✅ Bouton "Sélection" dans ClientDetails
@@ -75,10 +77,10 @@
 ```
 OfferSelectionPopup/
 ├── Props : isOpen, onClose, coachId, onOfferSelect
-├── États : offers, isLoadingOffers, selectedOfferId, activeProgramType, contractStartDate, customSessions, customPrice
-├── Fonctions : loadOffers, handleOfferSelection, handleConfirmSelection, handleDateChange, handleSessionsChange, handlePriceChange
+├── États : offers, isLoadingOffers, selectedOfferId, activeProgramType, contractStartDate, customSessions, customPrice, isFlexibleContract
+├── Fonctions : loadOffers, handleOfferSelection, handleConfirmSelection, handleDateChange, handleSessionsChange, handlePriceChange, handleFlexibleToggle
 ├── Utilitaires : (formatDisplayDate supprimé)
-└── Interface : Toggle engagement, Types programmes, Tableau tarifs, Informations contrat
+└── Interface : Toggle engagement, Types programmes, Tableau tarifs, Informations contrat, Options contrat
 ```
 
 ### Actions Utilisées
@@ -90,6 +92,7 @@ OfferSelectionPopup/
 - **Nouveau** : État `contractStartDate` pour la date de début
 - **Nouveau** : État `customSessions` pour le nombre de séances personnalisé
 - **Nouveau** : État `customPrice` pour le prix personnalisé du contrat
+- **Nouveau** : État `isFlexibleContract` pour la flexibilité du contrat
 
 ## 🎯 Logique de Filtrage Corrigée
 
@@ -166,6 +169,29 @@ const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 - **Précision** : Step de 0.01€ pour les prix décimaux
 - **Taille optimisée** : Padding réduit (px-3 py-2) et symbole € plus petit (text-xs)
 
+### Gestion du Contrat Flexible
+```typescript
+const [isFlexibleContract, setIsFlexibleContract] = useState<boolean>(false);
+
+const handleFlexibleToggle = () => {
+  setIsFlexibleContract(!isFlexibleContract);
+};
+```
+
+### Interface Utilisateur du Toggle Flexible
+- **Section dédiée** : "Options du contrat" avec titre clair
+- **Toggle moderne** : Design arrondi avec animation fluide
+- **États visuels** : Bleu (actif) / Gris (inactif)
+- **Description** : Explication de l'option avec texte d'aide
+- **Accessibilité** : Attributs ARIA et focus ring
+- **Animation** : Transition fluide du thumb du toggle
+
+### Comportement du Toggle
+- **État par défaut** : Désactivé (contrat non flexible)
+- **Modification** : Clic pour basculer entre les états
+- **Validation** : Pas de validation requise (optionnel)
+- **Persistance** : État conservé jusqu'à la confirmation
+
 ## 🆕 Nouvelle Fonctionnalité : Informations du Contrat
 
 ### Sélection de Date de Début
@@ -216,6 +242,7 @@ const formatDisplayDate = (dateString: string) => {
 4. **Nouveau** : Tester la sélection de date de début de contrat
 5. **Nouveau** : Tester la personnalisation du nombre de séances
 6. **Nouveau** : Tester la personnalisation du prix du contrat
+7. **Nouveau** : Tester le toggle de contrat flexible
 
 ### 2. Test Isolé
 1. Naviguer vers `/dashboard/admin/clients/[id]/test-popup`
@@ -224,6 +251,7 @@ const formatDisplayDate = (dateString: string) => {
 4. **Nouveau** : Vérifier la gestion des dates
 5. **Nouveau** : Vérifier la personnalisation du nombre de séances
 6. **Nouveau** : Vérifier la personnalisation du prix du contrat
+7. **Nouveau** : Vérifier le toggle de contrat flexible
 
 ## 📋 Prochaines Étapes
 
@@ -234,12 +262,13 @@ const formatDisplayDate = (dateString: string) => {
 - [ ] **Nouveau** : Sauvegarder la date de début de contrat
 - [ ] **Nouveau** : Sauvegarder le nombre de séances personnalisé
 - [ ] **Nouveau** : Sauvegarder le prix personnalisé du contrat
+- [ ] **Nouveau** : Sauvegarder l'état de flexibilité du contrat
 
 ### Phase 3 : Persistance
 - [ ] Modifier le schéma Prisma si nécessaire
 - [ ] Créer les migrations de base de données
 - [ ] Implémenter la logique de sauvegarde
-- [ ] **Nouveau** : Gérer la persistance des informations du contrat
+- [ ] **Nouveau** : Gérer la persistance des informations du contrat (date de début, nombre de séances, prix et flexibilité)
 
 ### Phase 4 : Améliorations
 - [ ] Ajouter les notifications de succès/erreur
@@ -307,6 +336,7 @@ La popup de sélection d'offres est **entièrement implémentée et fonctionnell
 - ✅ **Nouvelle section** : Informations du contrat avec sélection de date de début
 - ✅ **Nouveau champ** : Personnalisation du nombre de séances
 - ✅ **Nouveau champ** : Personnalisation du prix du contrat
+- ✅ **Nouveau toggle** : Contrat flexible
 
 ### 🔧 Correction Importante
 La logique de filtrage a été corrigée pour refléter la réalité métier :
@@ -336,4 +366,11 @@ La logique de filtrage a été corrigée pour refléter la réalité métier :
 - **Indicateurs visuels** : Affichage de la valeur par défaut avec symbole €
 - **Précision décimale** : Step de 0.01€ pour les prix précis
 
-La prochaine étape sera d'implémenter la logique de sauvegarde pour associer l'offre sélectionnée au client et sauvegarder les informations du contrat (date de début, nombre de séances et prix personnalisés).
+#### Contrat Flexible
+- **État par défaut** : Désactivé (contrat non flexible)
+- **Fonctionnalité** : Permet de modifier les conditions après signature
+- **Interface moderne** : Toggle avec animation fluide et accessibilité
+- **Description claire** : Explication de l'option avec texte d'aide
+- **Validation** : Pas de validation requise (optionnel)
+
+La prochaine étape sera d'implémenter la logique de sauvegarde pour associer l'offre sélectionnée au client et sauvegarder les informations du contrat (date de début, nombre de séances, prix et flexibilité personnalisés).

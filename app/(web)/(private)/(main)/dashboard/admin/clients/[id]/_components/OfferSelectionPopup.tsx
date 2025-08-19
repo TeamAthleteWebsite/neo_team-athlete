@@ -36,6 +36,7 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
   const [contractStartDate, setContractStartDate] = useState<string>("");
   const [customSessions, setCustomSessions] = useState<number>(0);
   const [customPrice, setCustomPrice] = useState<number>(0);
+  const [isFlexibleContract, setIsFlexibleContract] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen && coachId) {
@@ -89,6 +90,10 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
   const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(event.target.value) || 0;
     setCustomPrice(Math.max(0, value)); // Empêcher les valeurs négatives
+  };
+
+  const handleFlexibleToggle = () => {
+    setIsFlexibleContract(!isFlexibleContract);
   };
 
   // Suppression de la restriction de date minimale pour permettre les dates rétroactives
@@ -345,6 +350,34 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
                 <p className="text-xs text-zinc-500">Veuillez d'abord sélectionner une offre</p>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Toggle Flexible */}
+        <div className="mb-6">
+          <h4 className="text-white font-medium mb-4">Options du contrat</h4>
+          <div className="flex items-center justify-between p-4 bg-zinc-800 rounded-lg border border-zinc-700">
+            <div className="flex items-center gap-3">
+              <span className="text-white text-sm font-medium">Contrat flexible</span>
+              <span className="text-zinc-400 text-xs">
+                Permet au client de définir des horaires flexibles pour ces séances
+              </span>
+            </div>
+            <button
+              onClick={handleFlexibleToggle}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-900 ${
+                isFlexibleContract ? 'bg-blue-500' : 'bg-zinc-600'
+              }`}
+              role="switch"
+              aria-checked={isFlexibleContract}
+              aria-label="Activer le contrat flexible"
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isFlexibleContract ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
           </div>
         </div>
 
