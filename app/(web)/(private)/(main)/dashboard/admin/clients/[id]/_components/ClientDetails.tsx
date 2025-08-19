@@ -6,13 +6,16 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSession } from "@/lib/auth-client";
 import { Client } from "../../_components/types";
-import { OfferSelectionPopup, ContractInfo } from "./";
+import { OfferSelectionPopup, ContractInfo, PlanningList } from "./";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { type PlanningWithContract } from "@/src/actions/planning.actions";
 
 interface ClientDetailsProps {
 	client: Client;
+	plannings: PlanningWithContract[];
 }
 
-export const ClientDetails: React.FC<ClientDetailsProps> = ({ client }) => {
+export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings }) => {
 	const router = useRouter();
 	const { data: session } = useSession();
 	const [isOfferPopupOpen, setIsOfferPopupOpen] = useState(false);
@@ -92,7 +95,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client }) => {
 
 				{/* Main Content */}
 				<main className="flex-1 flex items-center justify-center px-6 pb-6">
-					<div className="w-full max-w-5xl">
+					<div className="w-full max-w-5xl space-y-8">
 						{/* Profile Card */}
 						<div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
 							<div className="flex flex-col lg:flex-row">
@@ -184,6 +187,40 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client }) => {
 								</div>
 							</div>
 						</div>
+
+						{/* Planning et Séances Section */}
+						<div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
+							<div className="p-8">
+								<Tabs defaultValue="planning" className="w-full">
+									<TabsList className="grid w-full grid-cols-2 bg-white/10 border border-white/20">
+										<TabsTrigger 
+											value="planning"
+											className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/80 hover:text-white transition-colors"
+										>
+											Planning
+										</TabsTrigger>
+										<TabsTrigger 
+											value="seances"
+											className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/80 hover:text-white transition-colors"
+										>
+											Séances
+										</TabsTrigger>
+									</TabsList>
+									
+									<TabsContent value="planning" className="mt-6">
+										<PlanningList plannings={plannings} />
+									</TabsContent>
+									
+									<TabsContent value="seances" className="mt-6">
+										<div className="text-center py-12">
+											<div className="text-white/60 text-lg">
+												Contenu des séances à définir ultérieurement
+											</div>
+										</div>
+									</TabsContent>
+								</Tabs>
+							</div>
+						</div>
 					</div>
 				</main>
 			</div>
@@ -200,4 +237,4 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client }) => {
 			)}
 		</div>
 	);
-}; 
+};

@@ -1,4 +1,5 @@
 import { getClientById } from "@/src/actions/user.actions";
+import { getPlanningsByClientId } from "@/src/actions/planning.actions";
 import { notFound } from "next/navigation";
 import { ClientDetails } from "./_components/ClientDetails";
 import { LoadingClientDetails } from "./_components/LoadingClientDetails";
@@ -26,14 +27,18 @@ export default async function ClientPage({ params }: ClientPageProps) {
 
 async function ClientWrapper({ params }: { params: { id: string } }) {
 	try {
-		const client = await getClientById(params.id);
+		const [client, plannings] = await Promise.all([
+			getClientById(params.id),
+			getPlanningsByClientId(params.id)
+		]);
 		
 		if (!client) {
 			notFound();
 		}
 
-		return <ClientDetails client={client} />;
+		return <ClientDetails client={client} plannings={plannings} />;
 	} catch (error) {
+		console.error("Erreur lors du chargement du client:", error);
 		notFound();
 	}
 } 
