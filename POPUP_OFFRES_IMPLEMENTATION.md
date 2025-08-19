@@ -141,6 +141,7 @@ const handleSessionsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 - **Validation** : Minimum 1 séance, pas de valeurs négatives
 - **Indicateurs visuels** : Affichage de la valeur par défaut et du total
 - **Unité** : "séances" affiché dans le champ
+- **Taille optimisée** : Padding réduit (px-3 py-2) et texte d'unité plus petit (text-xs)
 
 ## 🆕 Nouvelle Fonctionnalité : Informations du Contrat
 
@@ -176,10 +177,12 @@ const formatDisplayDate = (dateString: string) => {
 ```
 
 ### Interface Utilisateur
+- **Layout optimisé** : Champs disposés sur la même ligne (grid grid-cols-2 gap-4)
 - **Champ de type date** avec validation HTML5
 - **Dates autorisées** : Toutes les dates (passées, présentes et futures)
 - **Icône calendrier** de Lucide React
 - **Style cohérent** avec le thème de l'application
+- **Taille optimisée** : Padding réduit (px-3 py-2) et icône plus petite (w-4 h-4)
 
 ## 🚀 Comment Tester
 

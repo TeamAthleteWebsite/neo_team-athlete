@@ -120,7 +120,7 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
       <div className="bg-zinc-900 rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold text-white">
-            Sélection d'offre pour le client
+            Nouveau Contrat
           </h3>
           <button
             onClick={onClose}
@@ -256,55 +256,57 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
         <div className="mb-6">
           <h4 className="text-white font-medium mb-4">Informations du contrat</h4>
           
-          {/* Date de début de contrat */}
-          <div className="space-y-3">
-            <label htmlFor="contract-start-date" className="block text-sm font-medium text-zinc-300">
-              Date de début de contrat
-            </label>
-            <div className="relative">
-              <input
-                type="date"
-                id="contract-start-date"
-                value={contractStartDate}
-                onChange={handleDateChange}
-                // min={getMinDate()} // Suppression de la restriction de date minimale
-                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Sélectionner une date"
-              />
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-zinc-400 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Nombre de séances personnalisé */}
-          <div className="space-y-3">
-            <label htmlFor="custom-sessions" className="block text-sm font-medium text-zinc-300">
-              Nombre de séances
-              {selectedOfferId && (
-                <span className="text-xs text-zinc-400 ml-2">
-                  (Défaut: {offers.find(o => o.id === selectedOfferId)?.sessions || 0} séances)
-                </span>
-              )}
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                id="custom-sessions"
-                value={customSessions || ""}
-                onChange={handleSessionsChange}
-                min="1"
-                step="1"
-                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Nombre de séances"
-                disabled={!selectedOfferId}
-              />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <span className="text-zinc-400 text-sm">séances</span>
+          {/* Champs du contrat sur la même ligne */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Date de début de contrat */}
+            <div className="space-y-2">
+              <label htmlFor="contract-start-date" className="block text-sm font-medium text-zinc-300">
+                Date de début de contrat
+              </label>
+              <div className="relative">
+                <input
+                  type="date"
+                  id="contract-start-date"
+                  value={contractStartDate}
+                  onChange={handleDateChange}
+                  // min={getMinDate()} // Suppression de la restriction de date minimale
+                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  placeholder="Sélectionner une date"
+                />
+                <Calendar className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
               </div>
             </div>
-            {!selectedOfferId && (
-              <p className="text-xs text-zinc-500">Veuillez d'abord sélectionner une offre</p>
-            )}
 
+            {/* Nombre de séances personnalisé */}
+            <div className="space-y-2">
+              <label htmlFor="custom-sessions" className="block text-sm font-medium text-zinc-300">
+                Nombre de séances
+                {selectedOfferId && (
+                  <span className="text-xs text-zinc-400 ml-2">
+                    (Défaut: {offers.find(o => o.id === selectedOfferId)?.sessions || 0})
+                  </span>
+                )}
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  id="custom-sessions"
+                  value={customSessions || ""}
+                  onChange={handleSessionsChange}
+                  min="1"
+                  step="1"
+                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  placeholder="Nombre de séances"
+                  disabled={!selectedOfferId}
+                />
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                  <span className="text-zinc-400 text-xs">séances</span>
+                </div>
+              </div>
+              {!selectedOfferId && (
+                <p className="text-xs text-zinc-500">Veuillez d'abord sélectionner une offre</p>
+              )}
+            </div>
           </div>
         </div>
 

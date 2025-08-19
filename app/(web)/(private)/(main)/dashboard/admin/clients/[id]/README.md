@@ -40,15 +40,18 @@ Cette page permet aux coachs de visualiser les détails d'un client et de sélec
 - Gestion des erreurs de chargement
 
 ### 4. Informations du Contrat
+- **Layout optimisé** : Champs disposés sur la même ligne pour économiser l'espace vertical
 - **Date de début de contrat** : Champ de sélection de date avec validation
   - **Dates autorisées** : Toutes les dates (passées, présentes et futures)
   - **Format d'affichage** : DD/MM/YYYY (format français)
   - **Icône calendrier** : Indication visuelle du type de champ
+  - **Taille optimisée** : Padding réduit (px-3 py-2) et icône plus petite (w-4 h-4)
 - **Nombre de séances personnalisé** : Champ numérique avec valeur par défaut
   - **Valeur par défaut** : Nombre de séances de l'offre sélectionnée
   - **Personnalisation** : Modification possible du nombre de séances
   - **Validation** : Minimum 1 séance, champ désactivé sans offre sélectionnée
   - **Indicateurs visuels** : Affichage de la valeur par défaut et du total
+  - **Taille optimisée** : Padding réduit (px-3 py-2) et texte d'unité plus petit (text-xs)
 
 ### 5. Interface Utilisateur
 - Design cohérent avec le thème de l'application
