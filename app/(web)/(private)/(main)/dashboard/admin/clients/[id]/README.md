@@ -82,7 +82,8 @@ Cette page permet aux coachs de visualiser les détails d'un client et de sélec
    - Personnaliser le nombre de séances (optionnel)
    - Personnaliser le prix du contrat (optionnel)
    - Définir si le contrat est flexible (optionnel)
-5. **Confirmation** : Cliquer sur "Confirmer la sélection"
+5. **Confirmation** : Cliquer sur "Créer le contrat"
+6. **Sauvegarde** : Le contrat est automatiquement créé en base de données
 
 ## Structure des Données
 
@@ -135,6 +136,8 @@ const [isFlexibleContract, setIsFlexibleContract] = useState<boolean>(false);
 - **`customSessions`** : Nombre de séances personnalisé (par défaut : sessions de l'offre)
 - **`customPrice`** : Prix personnalisé du contrat (par défaut : prix de l'offre)
 - **`isFlexibleContract`** : Indique si le contrat est flexible (par défaut : false)
+- **`isCreatingContract`** : Indique si la création du contrat est en cours
+- **`contractMessage`** : Message de feedback (succès ou erreur)
 
 ## Logique de Filtrage
 
@@ -236,6 +239,37 @@ const handleFlexibleToggle = () => {
 - **Modification** : Clic pour basculer entre les états
 - **Animation** : Transition fluide du thumb du toggle
 - **Validation** : Pas de validation requise (optionnel)
+
+## Création du Contrat
+
+### Action de Sauvegarde
+```typescript
+import { createContractAction } from "@/src/actions/contract.actions";
+
+const result = await createContractAction({
+  clientId: clientId,
+  offerId: selectedOfferId,
+  startDate: contractStartDate,
+  customSessions: customSessions,
+  customPrice: customPrice,
+  isFlexible: isFlexibleContract
+});
+```
+
+### Champs Sauvegardés
+- **`offerId`** : ID de l'offre sélectionnée
+- **`startDate`** : Date de début de contrat sélectionnée par l'utilisateur
+- **`endDate`** : Calculée automatiquement (startDate + durée de l'offre en mois)
+- **`totalSessions`** : Nombre de séances personnalisé
+- **`amount`** : Prix du contrat personnalisé
+- **`isFlexible`** : État du toggle de flexibilité
+- **`status`** : ACTIVE (par défaut)
+
+### Gestion des États
+- **Chargement** : Bouton désactivé avec texte "Création en cours..."
+- **Succès** : Message vert "Contrat créé avec succès !"
+- **Erreur** : Message rouge avec description de l'erreur
+- **Fermeture** : Popup fermée automatiquement après 2 secondes en cas de succès
 
 ## Gestion des Dates
 

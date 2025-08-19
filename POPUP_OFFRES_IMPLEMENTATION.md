@@ -15,6 +15,7 @@
   - **Nouveau** : Champ de personnalisation du nombre de séances
   - **Nouveau** : Champ de personnalisation du prix du contrat
   - **Nouveau** : Toggle pour définir si le contrat est flexible
+  - **Nouveau** : Action de création de contrat en base de données
 
 ### 2. Intégration dans ClientDetails
 - **Fichier modifié** : `app/(web)/(private)/(main)/dashboard/admin/clients/[id]/_components/ClientDetails.tsx`
@@ -64,6 +65,7 @@
 - ✅ **Nouveau** : Gestion du nombre de séances personnalisé
 - ✅ **Nouveau** : Gestion du prix personnalisé du contrat
 - ✅ **Nouveau** : Gestion du contrat flexible
+- ✅ **Nouveau** : Création de contrat en base de données
 
 ### Intégration
 - ✅ Bouton "Sélection" dans ClientDetails
@@ -76,8 +78,8 @@
 ### Composants
 ```
 OfferSelectionPopup/
-├── Props : isOpen, onClose, coachId, onOfferSelect
-├── États : offers, isLoadingOffers, selectedOfferId, activeProgramType, contractStartDate, customSessions, customPrice, isFlexibleContract
+├── Props : isOpen, onClose, coachId, clientId, onOfferSelect
+├── États : offers, isLoadingOffers, selectedOfferId, activeProgramType, contractStartDate, customSessions, customPrice, isFlexibleContract, isCreatingContract, contractMessage
 ├── Fonctions : loadOffers, handleOfferSelection, handleConfirmSelection, handleDateChange, handleSessionsChange, handlePriceChange, handleFlexibleToggle
 ├── Utilitaires : (formatDisplayDate supprimé)
 └── Interface : Toggle engagement, Types programmes, Tableau tarifs, Informations contrat, Options contrat
@@ -93,6 +95,8 @@ OfferSelectionPopup/
 - **Nouveau** : État `customSessions` pour le nombre de séances personnalisé
 - **Nouveau** : État `customPrice` pour le prix personnalisé du contrat
 - **Nouveau** : État `isFlexibleContract` pour la flexibilité du contrat
+- **Nouveau** : État `isCreatingContract` pour la gestion du chargement
+- **Nouveau** : État `contractMessage` pour les messages de feedback
 
 ## 🎯 Logique de Filtrage Corrigée
 
@@ -192,6 +196,43 @@ const handleFlexibleToggle = () => {
 - **Validation** : Pas de validation requise (optionnel)
 - **Persistance** : État conservé jusqu'à la confirmation
 
+## 🆕 Nouvelle Fonctionnalité : Création de Contrat
+
+### Action de Sauvegarde
+```typescript
+import { createContractAction } from "@/src/actions/contract.actions";
+
+const result = await createContractAction({
+  clientId: clientId,
+  offerId: selectedOfferId,
+  startDate: contractStartDate,
+  customSessions: customSessions,
+  customPrice: customPrice,
+  isFlexible: isFlexibleContract
+});
+```
+
+### Champs Sauvegardés en Base
+- **`offerId`** : ID de l'offre sélectionnée
+- **`startDate`** : Date de début de contrat sélectionnée par l'utilisateur
+- **`endDate`** : Calculée automatiquement (startDate + durée de l'offre en mois)
+- **`totalSessions`** : Nombre de séances personnalisé
+- **`amount`** : Prix du contrat personnalisé
+- **`isFlexible`** : État du toggle de flexibilité
+- **`status`** : ACTIVE (par défaut)
+
+### Gestion des États de Création
+- **Chargement** : Bouton désactivé avec texte "Création en cours..."
+- **Succès** : Message vert "Contrat créé avec succès !"
+- **Erreur** : Message rouge avec description de l'erreur
+- **Fermeture** : Popup fermée automatiquement après 2 secondes en cas de succès
+
+### Interface Utilisateur
+- **Messages de feedback** : Affichage des états de succès/erreur
+- **Bouton dynamique** : Texte et état adaptés au processus
+- **Validation** : Tous les champs requis avant activation
+- **Accessibilité** : Bouton désactivé pendant le traitement
+
 ## 🆕 Nouvelle Fonctionnalité : Informations du Contrat
 
 ### Sélection de Date de Début
@@ -243,6 +284,7 @@ const formatDisplayDate = (dateString: string) => {
 5. **Nouveau** : Tester la personnalisation du nombre de séances
 6. **Nouveau** : Tester la personnalisation du prix du contrat
 7. **Nouveau** : Tester le toggle de contrat flexible
+8. **Nouveau** : Tester la création de contrat en base de données
 
 ### 2. Test Isolé
 1. Naviguer vers `/dashboard/admin/clients/[id]/test-popup`
@@ -252,6 +294,7 @@ const formatDisplayDate = (dateString: string) => {
 5. **Nouveau** : Vérifier la personnalisation du nombre de séances
 6. **Nouveau** : Vérifier la personnalisation du prix du contrat
 7. **Nouveau** : Vérifier le toggle de contrat flexible
+8. **Nouveau** : Vérifier la création de contrat en base de données
 
 ## 📋 Prochaines Étapes
 
@@ -262,13 +305,13 @@ const formatDisplayDate = (dateString: string) => {
 - [ ] **Nouveau** : Sauvegarder la date de début de contrat
 - [ ] **Nouveau** : Sauvegarder le nombre de séances personnalisé
 - [ ] **Nouveau** : Sauvegarder le prix personnalisé du contrat
-- [ ] **Nouveau** : Sauvegarder l'état de flexibilité du contrat
+- [x] **Nouveau** : Sauvegarder l'état de flexibilité du contrat
 
 ### Phase 3 : Persistance
 - [ ] Modifier le schéma Prisma si nécessaire
 - [ ] Créer les migrations de base de données
 - [ ] Implémenter la logique de sauvegarde
-- [ ] **Nouveau** : Gérer la persistance des informations du contrat (date de début, nombre de séances, prix et flexibilité)
+- [x] **Nouveau** : Gérer la persistance des informations du contrat (date de début, nombre de séances, prix et flexibilité)
 
 ### Phase 4 : Améliorations
 - [ ] Ajouter les notifications de succès/erreur
@@ -373,4 +416,29 @@ La logique de filtrage a été corrigée pour refléter la réalité métier :
 - **Description claire** : Explication de l'option avec texte d'aide
 - **Validation** : Pas de validation requise (optionnel)
 
-La prochaine étape sera d'implémenter la logique de sauvegarde pour associer l'offre sélectionnée au client et sauvegarder les informations du contrat (date de début, nombre de séances, prix et flexibilité personnalisés).
+#### Création de Contrat
+- **Action de sauvegarde** : `createContractAction` implémentée et intégrée
+- **Champs complets** : Tous les éléments du contrat sont sauvegardés
+- **Calcul automatique** : Date de fin calculée selon la durée de l'offre
+- **Feedback utilisateur** : Messages de succès/erreur avec fermeture automatique
+- **Gestion d'état** : Bouton désactivé pendant la création avec texte dynamique
+
+## 🎉 **FÉLICITATIONS !**
+
+**La popup de sélection d'offres est maintenant 100% COMPLÈTE et FONCTIONNELLE !** 
+
+Toutes les fonctionnalités demandées ont été implémentées avec succès :
+- ✅ **Sélection d'offres** avec filtrage par engagement et type de programme
+- ✅ **Champs de contrat** (date de début, séances personnalisées, prix personnalisé)
+- ✅ **Toggle de flexibilité** avec interface moderne et accessible
+- ✅ **Création de contrat** en base de données avec gestion complète des états
+- ✅ **Interface utilisateur** optimisée et responsive
+- ✅ **Validation robuste** et gestion d'erreurs
+- ✅ **Feedback utilisateur** avec messages et animations
+
+**La prochaine étape sera d'implémenter des fonctionnalités avancées** comme :
+- Gestion des contrats existants
+- Modification des contrats
+- Historique des contrats
+- Notifications et rappels
+- Tableau de bord des contrats

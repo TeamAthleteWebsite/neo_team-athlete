@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Calendar } from "lucide-react";
 import { getOffersByCoachAction } from "@/src/actions/offer.actions";
+import { createContractAction } from "@/src/actions/contract.actions";
 
 interface Offer {
   id: string;
@@ -19,6 +20,7 @@ interface OfferSelectionPopupProps {
   isOpen: boolean;
   onClose: () => void;
   coachId: string;
+  clientId: string;
   onOfferSelect: (offerId: string) => void;
 }
 
@@ -26,6 +28,7 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
   isOpen,
   onClose,
   coachId,
+  clientId,
   onOfferSelect,
 }) => {
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -37,6 +40,8 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
   const [customSessions, setCustomSessions] = useState<number>(0);
   const [customPrice, setCustomPrice] = useState<number>(0);
   const [isFlexibleContract, setIsFlexibleContract] = useState<boolean>(false);
+  const [isCreatingContract, setIsCreatingContract] = useState<boolean>(false);
+  const [contractMessage, setContractMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   useEffect(() => {
     if (isOpen && coachId) {
@@ -71,10 +76,51 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
     }
   };
 
-  const handleConfirmSelection = () => {
-    if (selectedOfferId) {
-      onOfferSelect(selectedOfferId);
-      onClose();
+  const handleConfirmSelection = async () => {
+    if (!selectedOfferId || customPrice <= 0 || !contractStartDate) {
+      return;
+    }
+
+    setIsCreatingContract(true);
+    setContractMessage(null);
+
+    try {
+      const result = await createContractAction({
+        clientId: clientId,
+        offerId: selectedOfferId,
+        startDate: contractStartDate,
+        customSessions: customSessions,
+        customPrice: customPrice,
+        isFlexible: isFlexibleContract
+      });
+
+      if (result.success && result.data) {
+        setContractMessage({
+          type: 'success',
+          text: 'Contrat créé avec succès !'
+        });
+        
+        // Appeler le callback avec l'ID de l'offre
+        onOfferSelect(selectedOfferId);
+        
+        // Fermer la popup après un délai pour montrer le message de succès
+        setTimeout(() => {
+          onClose();
+        }, 2000);
+      } else {
+        setContractMessage({
+          type: 'error',
+          text: result.error || 'Erreur lors de la création du contrat'
+        });
+      }
+    } catch (error) {
+      console.error("Erreur lors de la création du contrat:", error);
+      setContractMessage({
+        type: 'error',
+        text: 'Une erreur inattendue est survenue'
+      });
+    } finally {
+      setIsCreatingContract(false);
     }
   };
 
@@ -381,6 +427,21 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
           </div>
         </div>
 
+        {/* Messages de feedback */}
+        {contractMessage && (
+          <div className={`mb-4 p-4 rounded-lg ${
+            contractMessage.type === 'success' 
+              ? 'bg-green-600 text-white' 
+              : 'bg-red-600 text-white'
+          }`}>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">
+                {contractMessage.text}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Boutons d'action */}
         <div className="flex justify-end gap-3">
           <button
@@ -391,10 +452,10 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
           </button>
           <button
             onClick={handleConfirmSelection}
-            disabled={!selectedOfferId || customPrice <= 0 || !contractStartDate}
+            disabled={!selectedOfferId || customPrice <= 0 || !contractStartDate || isCreatingContract}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Créer le contrat
+            {isCreatingContract ? 'Création en cours...' : 'Créer le contrat'}
           </button>
         </div>
       </div>

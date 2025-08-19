@@ -203,6 +203,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client }) => {
 					isOpen={isOfferPopupOpen}
 					onClose={handleCloseOfferPopup}
 					coachId={coachId}
+					clientId={client.id}
 					onOfferSelect={handleOfferSelect}
 				/>
 			)}
