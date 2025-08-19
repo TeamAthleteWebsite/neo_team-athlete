@@ -23,11 +23,6 @@ export default async function AdminPage() {
               route="/dashboard/admin/clients"
             />
             
-            <DashboardNavItem
-              iconName="Dumbbell"
-              title="Gestion des Programmes"
-              route="/dashboard/admin/programs"
-            />
           </div>
         </div>
       </div>
