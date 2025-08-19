@@ -75,3 +75,91 @@ export async function createContractAction(data: CreateContractData) {
     };
   }
 }
+
+export async function getClientContractsAction(clientId: string) {
+  try {
+    const today = new Date();
+    
+    // Récupérer tous les contrats du client avec les informations complètes
+    const contracts = await prisma.contract.findMany({
+      where: {
+        clientId: clientId,
+      },
+      include: {
+        offer: {
+          include: {
+            program: {
+              select: {
+                name: true,
+                type: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: [
+        { startDate: 'asc' },
+      ],
+    });
+
+    if (contracts.length === 0) {
+      return {
+        success: true,
+        data: null,
+        message: "Aucun contrat trouvé"
+      };
+    }
+
+    // Trouver le contrat en cours (date de début <= aujourd'hui ET date de fin >= aujourd'hui)
+    const activeContract = contracts.find(contract => {
+      const startDate = new Date(contract.startDate);
+      const endDate = new Date(contract.endDate);
+      return startDate <= today && endDate >= today;
+    });
+
+    if (activeContract) {
+      return {
+        success: true,
+        data: activeContract,
+        type: "active",
+        message: "Contrat en cours"
+      };
+    }
+
+    // Si pas de contrat en cours, trouver le contrat futur avec la date de début la plus proche
+    const futureContracts = contracts.filter(contract => {
+      const startDate = new Date(contract.startDate);
+      return startDate > today;
+    });
+
+    if (futureContracts.length > 0) {
+      // Trier par date de début (la plus proche en premier)
+      futureContracts.sort((a, b) => {
+        const dateA = new Date(a.startDate);
+        const dateB = new Date(b.startDate);
+        return dateA.getTime() - dateB.getTime();
+      });
+
+      return {
+        success: true,
+        data: futureContracts[0],
+        type: "future",
+        message: "Contrat futur"
+      };
+    }
+
+    // Si aucun contrat en cours ni futur, retourner null
+    return {
+      success: true,
+      data: null,
+      message: "Aucun contrat actif ou futur"
+    };
+
+  } catch (error) {
+    console.error("Erreur lors de la récupération des contrats:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Une erreur est survenue lors de la récupération des contrats"
+    };
+  }
+}

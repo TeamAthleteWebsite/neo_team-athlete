@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSession } from "@/lib/auth-client";
 import { Client } from "../../_components/types";
-import { OfferSelectionPopup } from "./OfferSelectionPopup";
+import { OfferSelectionPopup, ContractInfo } from "./";
 
 interface ClientDetailsProps {
 	client: Client;
@@ -16,6 +16,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client }) => {
 	const router = useRouter();
 	const { data: session } = useSession();
 	const [isOfferPopupOpen, setIsOfferPopupOpen] = useState(false);
+	const [hasContract, setHasContract] = useState(false);
 
 	const handleClose = () => {
 		router.back();
@@ -33,6 +34,10 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client }) => {
 		// TODO: Implémenter la logique de sélection d'offre
 		console.log("Offre sélectionnée:", offerId);
 		// Ici vous pourrez ajouter la logique pour associer l'offre au client
+	};
+
+	const handleContractUpdate = (hasContractData: boolean) => {
+		setHasContract(hasContractData);
 	};
 
 	const getInitials = (name: string) => {
@@ -170,25 +175,11 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client }) => {
 										</div>
 
 										{/* Subscription Section */}
-										<div className="pt-6 border-t border-white/10">
-											<div className="text-center space-y-4">
-												<h3 className="text-white text-2xl font-bold">
-													Abonnement
-												</h3>
-												<p className="text-white text-lg">
-													Aucun abonnement en cours...
-												</p>
-												<p className="text-blue-400 text-base">
-													Veuillez sélectionner un programme
-												</p>
-												<button 
-													onClick={handleOpenOfferPopup}
-													className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-												>
-													Sélection
-												</button>
-											</div>
-										</div>
+										<ContractInfo 
+											clientId={client.id} 
+											onContractUpdate={handleContractUpdate}
+											onOpenOfferPopup={handleOpenOfferPopup}
+										/>
 									</div>
 								</div>
 							</div>
