@@ -404,7 +404,7 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
           <h4 className="text-white font-medium mb-4">Options du contrat</h4>
           <div className="flex items-center justify-between p-4 bg-zinc-800 rounded-lg border border-zinc-700">
             <div className="flex items-center gap-3">
-              <span className="text-white text-sm font-medium">Contrat flexible</span>
+              <span className="text-white text-sm font-medium">Horaires flexibles</span>
               <span className="text-zinc-400 text-xs">
                 Permet au client de définir des horaires flexibles pour ces séances
               </span>
