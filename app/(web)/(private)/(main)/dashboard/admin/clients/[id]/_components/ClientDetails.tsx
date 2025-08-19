@@ -3,7 +3,10 @@
 import { X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useSession } from "@/lib/auth-client";
 import { Client } from "../../_components/types";
+import { OfferSelectionPopup } from "./OfferSelectionPopup";
 
 interface ClientDetailsProps {
 	client: Client;
@@ -11,9 +14,25 @@ interface ClientDetailsProps {
 
 export const ClientDetails: React.FC<ClientDetailsProps> = ({ client }) => {
 	const router = useRouter();
+	const { data: session } = useSession();
+	const [isOfferPopupOpen, setIsOfferPopupOpen] = useState(false);
 
 	const handleClose = () => {
 		router.back();
+	};
+
+	const handleOpenOfferPopup = () => {
+		setIsOfferPopupOpen(true);
+	};
+
+	const handleCloseOfferPopup = () => {
+		setIsOfferPopupOpen(false);
+	};
+
+	const handleOfferSelect = (offerId: string) => {
+		// TODO: Implémenter la logique de sélection d'offre
+		console.log("Offre sélectionnée:", offerId);
+		// Ici vous pourrez ajouter la logique pour associer l'offre au client
 	};
 
 	const getInitials = (name: string) => {
@@ -39,6 +58,9 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client }) => {
 		const index = name.charCodeAt(0) % colors.length;
 		return colors[index];
 	};
+
+	// Récupérer l'ID du coach connecté
+	const coachId = session?.user?.id;
 
 	return (
 		<div className="min-h-screen bg-black/90 relative overflow-hidden">
@@ -159,7 +181,10 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client }) => {
 												<p className="text-blue-400 text-base">
 													Veuillez sélectionner un programme
 												</p>
-												<button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+												<button 
+													onClick={handleOpenOfferPopup}
+													className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+												>
 													Sélection
 												</button>
 											</div>
@@ -171,6 +196,16 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client }) => {
 					</div>
 				</main>
 			</div>
+
+			{/* Popup de sélection d'offres */}
+			{isOfferPopupOpen && coachId && (
+				<OfferSelectionPopup
+					isOpen={isOfferPopupOpen}
+					onClose={handleCloseOfferPopup}
+					coachId={coachId}
+					onOfferSelect={handleOfferSelect}
+				/>
+			)}
 		</div>
 	);
 }; 
