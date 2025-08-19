@@ -16,6 +16,7 @@ Cette page permet aux coachs de visualiser les détails d'un client et de sélec
 - Affiche les offres du coach connecté
 - Permet de switcher entre les types d'offres (Avec/Sans engagement)
 - Affiche les offres regroupées par type de programme
+- **Nouveau** : Section pour définir les informations du contrat
 
 ## Fonctionnalités
 
@@ -38,7 +39,13 @@ Cette page permet aux coachs de visualiser les détails d'un client et de sélec
 - Bouton de confirmation désactivé tant qu'aucune offre n'est sélectionnée
 - Gestion des erreurs de chargement
 
-### 4. Interface Utilisateur
+### 4. Informations du Contrat
+- **Date de début de contrat** : Champ de sélection de date avec validation
+  - **Dates autorisées** : Toutes les dates (passées, présentes et futures)
+  - **Format d'affichage** : DD/MM/YYYY (format français)
+  - **Icône calendrier** : Indication visuelle du type de champ
+
+### 5. Interface Utilisateur
 - Design cohérent avec le thème de l'application
 - Responsive et accessible
 - Animations et transitions fluides
@@ -51,7 +58,8 @@ Cette page permet aux coachs de visualiser les détails d'un client et de sélec
    - Choisir le type d'offre (Avec/Sans engagement)
    - Sélectionner le type de programme
    - Choisir l'offre dans le tableau des tarifs
-4. **Confirmation** : Cliquer sur "Confirmer la sélection"
+4. **Contrat** : Définir la date de début de contrat
+5. **Confirmation** : Cliquer sur "Confirmer la sélection"
 
 ## Structure des Données
 
@@ -79,6 +87,11 @@ interface OfferSelectionPopupProps {
 }
 ```
 
+### Nouveaux États
+```typescript
+const [contractStartDate, setContractStartDate] = useState<string>("");
+```
+
 ## Actions
 
 ### getOffersByCoachAction
@@ -92,6 +105,7 @@ interface OfferSelectionPopupProps {
 - `showCommitmentOffers` : Type d'offres affiché (engagement ou non)
 - `activeProgramType` : Type de programme sélectionné
 - `selectedOfferId` : ID de l'offre sélectionnée
+- **`contractStartDate`** : Date de début de contrat sélectionnée
 
 ## Logique de Filtrage
 
@@ -114,6 +128,30 @@ const filteredOffers = offers.filter(offer =>
 );
 ```
 
+## Gestion des Dates
+
+### Validation des Dates
+```typescript
+// Suppression de la restriction de date minimale pour permettre les dates rétroactives
+// const getMinDate = () => {
+//   const today = new Date();
+//   return today.toISOString().split('T')[0];
+// };
+```
+
+### Formatage des Dates
+```typescript
+const formatDisplayDate = (dateString: string) => {
+  if (!dateString) return "Sélectionner une date";
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
+```
+
 ## Affichage des Tarifs
 
 ### Avec Engagement (durée > 0)
@@ -130,11 +168,13 @@ const filteredOffers = offers.filter(offer =>
 - Thème sombre cohérent avec l'application
 - Composants Shadcn UI pour les éléments d'interface
 - Responsive design mobile-first
+- **Nouveau** : Icône Calendar de Lucide React pour le champ date
 
 ## Prochaines Étapes
 
 1. **Implémentation de la logique de sélection** : Associer l'offre sélectionnée au client
-2. **Persistance des données** : Sauvegarder la sélection en base de données
+2. **Persistance des données** : Sauvegarder la sélection et la date de début en base de données
 3. **Notifications** : Informer l'utilisateur du succès de la sélection
 4. **Validation** : Vérifier que le client peut recevoir cette offre
 5. **Historique** : Garder une trace des sélections précédentes
+6. **Champs supplémentaires** : Ajouter d'autres informations du contrat (durée, conditions, etc.)

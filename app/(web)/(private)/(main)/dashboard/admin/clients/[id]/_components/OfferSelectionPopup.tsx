@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, Calendar } from "lucide-react";
 import { getOffersByCoachAction } from "@/src/actions/offer.actions";
 
 interface Offer {
@@ -33,6 +33,7 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
   const [showCommitmentOffers, setShowCommitmentOffers] = useState(true);
   const [selectedOfferId, setSelectedOfferId] = useState<string>("");
   const [activeProgramType, setActiveProgramType] = useState<string>("PERSONAL");
+  const [contractStartDate, setContractStartDate] = useState<string>("");
 
   useEffect(() => {
     if (isOpen && coachId) {
@@ -65,6 +66,27 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
       onOfferSelect(selectedOfferId);
       onClose();
     }
+  };
+
+  const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setContractStartDate(event.target.value);
+  };
+
+  // Suppression de la restriction de date minimale pour permettre les dates rétroactives
+  // const getMinDate = () => {
+  //   const today = new Date();
+  //   return today.toISOString().split('T')[0];
+  // };
+
+  // Formater la date pour l'affichage
+  const formatDisplayDate = (dateString: string) => {
+    if (!dateString) return "Sélectionner une date";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   };
 
   // Filtrer les offres par type de programme et par engagement
@@ -225,6 +247,30 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
               </table>
             </div>
           )}
+        </div>
+
+        {/* Informations du contrat */}
+        <div className="mb-6">
+          <h4 className="text-white font-medium mb-4">Informations du contrat</h4>
+          
+          {/* Date de début de contrat */}
+          <div className="space-y-3">
+            <label htmlFor="contract-start-date" className="block text-sm font-medium text-zinc-300">
+              Date de début de contrat
+            </label>
+            <div className="relative">
+              <input
+                type="date"
+                id="contract-start-date"
+                value={contractStartDate}
+                onChange={handleDateChange}
+                // min={getMinDate()} // Suppression de la restriction de date minimale
+                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Sélectionner une date"
+              />
+              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-zinc-400 pointer-events-none" />
+            </div>
+          </div>
         </div>
 
         {/* Boutons d'action */}

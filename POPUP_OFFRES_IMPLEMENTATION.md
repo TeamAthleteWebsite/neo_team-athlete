@@ -11,6 +11,7 @@
   - Tableau dynamique des tarifs selon les durées et séances disponibles
   - Sélection visuelle des offres avec mise en surbrillance
   - Bouton de confirmation avec validation
+  - **Nouveau** : Section "Informations du contrat" avec sélection de date de début
 
 ### 2. Intégration dans ClientDetails
 - **Fichier modifié** : `app/(web)/(private)/(main)/dashboard/admin/clients/[id]/_components/ClientDetails.tsx`
@@ -33,6 +34,7 @@
 ### 4. Documentation
 - **Fichier créé** : `app/(web)/(private)/(main)/dashboard/admin/clients/[id]/README.md`
 - **Contenu** : Documentation complète de la popup et de son utilisation
+- **Mise à jour** : Inclut la nouvelle section des informations du contrat
 
 ## 🎯 Fonctionnalités Implémentées
 
@@ -44,6 +46,7 @@
 - ✅ Tableau des tarifs dynamique
 - ✅ Sélection visuelle des offres
 - ✅ Boutons d'action (Annuler/Confirmer)
+- ✅ **Nouveau** : Section informations du contrat
 
 ### Logique Métier
 - ✅ Récupération des offres par coach
@@ -54,6 +57,7 @@
 - ✅ Gestion des états (loading, sélection)
 - ✅ Callback de sélection d'offre
 - ✅ Validation avant confirmation
+- ✅ **Nouveau** : Gestion de la date de début de contrat
 
 ### Intégration
 - ✅ Bouton "Sélection" dans ClientDetails
@@ -67,9 +71,10 @@
 ```
 OfferSelectionPopup/
 ├── Props : isOpen, onClose, coachId, onOfferSelect
-├── États : offers, isLoadingOffers, selectedOfferId, activeProgramType
-├── Fonctions : loadOffers, handleOfferSelection, handleConfirmSelection
-└── Interface : Toggle engagement, Types programmes, Tableau tarifs
+├── États : offers, isLoadingOffers, selectedOfferId, activeProgramType, contractStartDate
+├── Fonctions : loadOffers, handleOfferSelection, handleConfirmSelection, handleDateChange
+├── Utilitaires : getMinDate, formatDisplayDate
+└── Interface : Toggle engagement, Types programmes, Tableau tarifs, Informations contrat
 ```
 
 ### Actions Utilisées
@@ -78,6 +83,7 @@ OfferSelectionPopup/
 ### Types de Données
 - Interface `Offer` avec id, sessions, price, duration, program
 - Props typées avec TypeScript
+- **Nouveau** : État `contractStartDate` pour la date de début
 
 ## 🎯 Logique de Filtrage Corrigée
 
@@ -103,17 +109,58 @@ const filteredOffers = offers.filter(offer => {
 - **Avec engagement** : Prix "par mois" + calcul prix par séance
 - **Sans engagement** : "Prix unique" (pas de calcul par séance)
 
+## 🆕 Nouvelle Fonctionnalité : Informations du Contrat
+
+### Sélection de Date de Début
+```typescript
+const [contractStartDate, setContractStartDate] = useState<string>("");
+
+const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  setContractStartDate(event.target.value);
+};
+```
+
+### Validation des Dates
+```typescript
+// Suppression de la restriction de date minimale pour permettre les dates rétroactives
+// const getMinDate = () => {
+//   const today = new Date();
+//   return today.toISOString().split('T')[0];
+// };
+```
+
+### Formatage des Dates
+```typescript
+const formatDisplayDate = (dateString: string) => {
+  if (!dateString) return "Sélectionner une date";
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
+```
+
+### Interface Utilisateur
+- **Champ de type date** avec validation HTML5
+- **Dates autorisées** : Toutes les dates (passées, présentes et futures)
+- **Icône calendrier** de Lucide React
+- **Style cohérent** avec le thème de l'application
+
 ## 🚀 Comment Tester
 
 ### 1. Test de la Popup Intégrée
 1. Naviguer vers `/dashboard/admin/clients/[id]`
 2. Cliquer sur le bouton "Sélection"
 3. Tester les différentes fonctionnalités de la popup
+4. **Nouveau** : Tester la sélection de date de début de contrat
 
 ### 2. Test Isolé
 1. Naviguer vers `/dashboard/admin/clients/[id]/test-popup`
 2. Utiliser l'interface de test dédiée
 3. Vérifier toutes les fonctionnalités
+4. **Nouveau** : Vérifier la gestion des dates
 
 ## 📋 Prochaines Étapes
 
@@ -121,16 +168,19 @@ const filteredOffers = offers.filter(offer => {
 - [ ] Implémenter la sauvegarde de l'offre sélectionnée
 - [ ] Créer l'action pour associer l'offre au client
 - [ ] Ajouter la validation des permissions
+- [ ] **Nouveau** : Sauvegarder la date de début de contrat
 
 ### Phase 3 : Persistance
 - [ ] Modifier le schéma Prisma si nécessaire
 - [ ] Créer les migrations de base de données
 - [ ] Implémenter la logique de sauvegarde
+- [ ] **Nouveau** : Gérer la persistance des informations du contrat
 
 ### Phase 4 : Améliorations
 - [ ] Ajouter les notifications de succès/erreur
 - [ ] Implémenter la gestion des erreurs avancée
 - [ ] Ajouter l'historique des sélections
+- [ ] **Nouveau** : Ajouter d'autres champs du contrat (durée, conditions, etc.)
 
 ## 🎨 Design et UX
 
@@ -138,6 +188,7 @@ const filteredOffers = offers.filter(offer => {
 - Couleurs sombres cohérentes avec l'application
 - Utilisation de Tailwind CSS
 - Composants Shadcn UI
+- **Nouveau** : Icône Calendar de Lucide React
 
 ### Responsive
 - Design mobile-first
@@ -148,6 +199,7 @@ const filteredOffers = offers.filter(offer => {
 - Labels et descriptions claires
 - Navigation au clavier
 - Contrastes appropriés
+- **Nouveau** : Champ de date avec validation HTML5
 
 ## 🔍 Points d'Attention
 
@@ -155,6 +207,7 @@ const filteredOffers = offers.filter(offer => {
 - Vérification de l'authentification du coach
 - Validation des permissions d'accès
 - Protection contre les injections
+- **Mise à jour** : Validation des dates côté client (toutes les dates autorisées)
 
 ### Performance
 - Chargement asynchrone des offres
@@ -172,7 +225,8 @@ const filteredOffers = offers.filter(offer => {
 - **Intégration** : ✅ 100% Complète
 - **Tests** : ✅ 100% Disponibles
 - **Documentation** : ✅ 100% Rédigée
-- **Logique Métier** : 🔄 50% (UI complète, logique de sauvegarde à faire)
+- **Logique Métier** : 🔄 60% (UI complète, logique de sauvegarde à faire)
+- **Nouvelle fonctionnalité** : ✅ 100% Implémentée (Informations du contrat)
 
 ## 🎉 Résumé
 
@@ -185,10 +239,17 @@ La popup de sélection d'offres est **entièrement implémentée et fonctionnell
 - ✅ Regroupement par type de programme
 - ✅ Interface utilisateur moderne et responsive
 - ✅ Gestion complète des états et interactions
+- ✅ **Nouvelle section** : Informations du contrat avec sélection de date de début
 
 ### 🔧 Correction Importante
 La logique de filtrage a été corrigée pour refléter la réalité métier :
 - **Offres avec engagement** : Durée > 0 mois (ex: 6 mois, 12 mois)
 - **Offres sans engagement** : Durée = 0 mois (prix unique)
 
-La prochaine étape sera d'implémenter la logique de sauvegarde pour associer l'offre sélectionnée au client.
+### 🆕 Nouvelle Fonctionnalité Ajoutée
+- **Section "Informations du contrat"** avec champ de sélection de date
+- **Validation des dates** : Pas de dates passées autorisées
+- **Formatage français** : DD/MM/YYYY
+- **Interface utilisateur cohérente** avec le thème de l'application
+
+La prochaine étape sera d'implémenter la logique de sauvegarde pour associer l'offre sélectionnée au client et sauvegarder les informations du contrat.
