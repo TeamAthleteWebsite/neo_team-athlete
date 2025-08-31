@@ -12,6 +12,24 @@ export interface PlanningWithContract {
   };
 }
 
+export interface PlanningWithClient {
+  id: string;
+  date: Date;
+  status: string;
+  contract: {
+    id: string;
+    startDate: Date;
+    endDate: Date;
+    totalSessions: number;
+    client: {
+      id: string;
+      name: string;
+      lastName?: string | null;
+      image?: string | null;
+    };
+  };
+}
+
 export const getPlanningsByContractId = async (
   contractId: string
 ): Promise<PlanningWithContract[]> => {
@@ -134,5 +152,49 @@ export const updateExpiredSessions = async (): Promise<void> => {
   } catch (error) {
     console.error("Erreur lors de la mise à jour des séances expirées:", error);
     throw new Error("Impossible de mettre à jour les séances expirées");
+  }
+};
+
+export const getPlanningsByCoachId = async (coachId: string) => {
+  try {
+    // Mettre à jour les séances expirées avant de récupérer les données
+    await updateExpiredSessions();
+    
+    const plannings = await prisma.planning.findMany({
+      where: {
+        status: "PLANNED",
+        contract: {
+          offer: {
+            coachId: coachId
+          }
+        }
+      },
+      include: {
+        contract: {
+          select: {
+            id: true,
+            startDate: true,
+            endDate: true,
+            totalSessions: true,
+            client: {
+              select: {
+                id: true,
+                name: true,
+                lastName: true,
+                image: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        date: "asc"
+      }
+    });
+
+    return plannings;
+  } catch (error) {
+    console.error("Erreur lors de la récupération des plannings du coach:", error);
+    throw new Error("Impossible de récupérer les plannings du coach");
   }
 };

@@ -7,7 +7,7 @@ export default async function AdminPage() {
       <div className="w-full">
         <div className="max-w-4xl mx-auto px-2 sm:px-4">
           <h1 className="text-2xl font-bold text-accent mb-6">
-            Administration
+            Dashboard du Coach
           </h1>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -27,7 +27,7 @@ export default async function AdminPage() {
             <DashboardNavItem
               iconName="Dumbbell"
               title="Séances"
-              route="/dashboard/admin/Seances"
+              route="/dashboard/admin/seances"
             />
             </div>
 
