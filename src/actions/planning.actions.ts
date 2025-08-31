@@ -31,7 +31,7 @@ export const getPlanningsByContractId = async (
         },
       },
       orderBy: {
-        date: "asc",
+        date: "desc",
       },
     });
 
@@ -46,6 +46,9 @@ export const getPlanningsByClientId = async (
   clientId: string
 ): Promise<PlanningWithContract[]> => {
   try {
+    // Mettre à jour les séances expirées avant de récupérer les données
+    await updateExpiredSessions();
+    
     const plannings = await prisma.planning.findMany({
       where: {
         contract: {
@@ -63,7 +66,7 @@ export const getPlanningsByClientId = async (
         },
       },
       orderBy: {
-        date: "asc",
+        date: "desc",
       },
     });
 
@@ -107,5 +110,29 @@ export const addPlanningSession = async (
   } catch (error) {
     console.error("Erreur lors de l'ajout de la séance:", error);
     throw new Error("Impossible d'ajouter la séance");
+  }
+};
+
+export const updateExpiredSessions = async (): Promise<void> => {
+  try {
+    const now = new Date();
+    
+    // Mettre à jour toutes les séances "PLANNED" dont la date est dans le passé
+    const result = await prisma.planning.updateMany({
+      where: {
+        status: "PLANNED",
+        date: {
+          lt: now // date < maintenant
+        }
+      },
+      data: {
+        status: "DONE"
+      }
+    });
+
+    console.log(`${result.count} séances mises à jour de PLANNED vers DONE`);
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour des séances expirées:", error);
+    throw new Error("Impossible de mettre à jour les séances expirées");
   }
 };
