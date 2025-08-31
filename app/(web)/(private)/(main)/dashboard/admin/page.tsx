@@ -13,16 +13,41 @@ export default async function AdminPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <DashboardNavItem
               iconName="Users"
-              title="Gestion des Prospects"
+              title="Prospects"
               route="/dashboard/admin/prospects"
             />
             
             <DashboardNavItem
               iconName="UserCheck"
-              title="Gestion des Clients"
+              title="Clients"
               route="/dashboard/admin/clients"
             />
             
+          <div className="col-start-1 row-start-2">
+            <DashboardNavItem
+              iconName="Dumbbell"
+              title="Séances"
+              route="/dashboard/admin/Seances"
+            />
+            </div>
+
+            <div className="col-start-2 row-start-2">
+            <DashboardNavItem
+              iconName="CalendarClock"
+              title="Disponibilités"
+              route="/dashboard/admin/Disponibilites"
+            />
+            </div>
+
+            <div className="col-start-1 row-start-3">
+            <DashboardNavItem
+              iconName="LogOut"
+              title="Deconnexion"
+              route="/auth/sign-in"
+            />
+            </div>
+
+          
           </div>
         </div>
       </div>
