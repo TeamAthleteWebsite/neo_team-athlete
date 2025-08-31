@@ -1,15 +1,19 @@
 "use client";
 
+import { type PlanningWithClient } from "@/src/actions/planning.actions";
+
 interface WeekDaysProps {
   currentWeek: Date;
   selectedDate: Date;
   onDateSelect: (date: Date) => void;
+  sessions: PlanningWithClient[];
 }
 
 export const WeekDays: React.FC<WeekDaysProps> = ({
   currentWeek,
   selectedDate,
-  onDateSelect
+  onDateSelect,
+  sessions
 }) => {
   const getWeekDays = (date: Date) => {
     const startOfWeek = new Date(date);
@@ -50,6 +54,13 @@ export const WeekDays: React.FC<WeekDaysProps> = ({
     return compareDate < today;
   };
 
+  const hasSessions = (date: Date) => {
+    return sessions.some(session => {
+      const sessionDate = new Date(session.date);
+      return sessionDate.toDateString() === date.toDateString();
+    });
+  };
+
   const weekDays = getWeekDays(currentWeek);
 
   return (
@@ -63,13 +74,15 @@ export const WeekDays: React.FC<WeekDaysProps> = ({
             onClick={() => !isPast && onDateSelect(day)}
             disabled={isPast}
             className={`
-              flex flex-col items-center justify-center p-3 rounded-lg border transition-all opacity-50 bg-black text-white
+              flex flex-col items-center justify-center p-3 rounded-lg border transition-all opacity-70 bg-black
               ${isPast
                 ? 'bg-gray-800 text-gray-400 border-gray-600 cursor-not-allowed'
                 : isSelected(day) 
                 ? 'bg-primary text-primary-foreground border-primary opacity-100' 
                 : isToday(day)
                 ? 'bg-accent/20 text-accent border-accent/30 opacity-100'
+                : hasSessions(day)
+                ? 'bg-black text-blue-400 border-gray-600 hover:bg-gray-800 hover:opacity-75'
                 : 'bg-black text-white border-gray-600 hover:bg-gray-800 hover:opacity-75'
               }
             `}

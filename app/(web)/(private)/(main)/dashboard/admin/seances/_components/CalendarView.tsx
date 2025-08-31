@@ -50,6 +50,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ sessions }) => {
         currentWeek={currentWeek}
         selectedDate={selectedDate}
         onDateSelect={handleDateSelect}
+        sessions={sessions}
       />
       
       <DaySessions
