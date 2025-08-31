@@ -252,6 +252,11 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 			<AddSessionPopup
 				isOpen={isAddSessionPopupOpen}
 				onClose={handleCloseAddSessionPopup}
+				clientId={client.id}
+				onSessionAdded={() => {
+					// TODO: Rafraîchir la liste des plannings
+					console.log("Séance ajoutée, rafraîchir la liste");
+				}}
 			/>
 
 			{/* Popup de sélection d'offres */}

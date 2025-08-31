@@ -6,14 +6,17 @@ import { useState } from "react";
 interface AddSessionPopupProps {
   isOpen: boolean;
   onClose: () => void;
+  clientId: string;
+  onSessionAdded?: () => void;
 }
 
-export const AddSessionPopup: React.FC<AddSessionPopupProps> = ({ isOpen, onClose }) => {
+export const AddSessionPopup: React.FC<AddSessionPopupProps> = ({ isOpen, onClose, clientId, onSessionAdded }) => {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [sessionCount, setSessionCount] = useState(1);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [isRecurringEnabled, setIsRecurringEnabled] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const daysOfWeek = [
     { id: 1, label: "L", fullName: "Lundi" },
@@ -33,17 +36,54 @@ export const AddSessionPopup: React.FC<AddSessionPopupProps> = ({ isOpen, onClos
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implémenter la logique de soumission
-    console.log("Données de la séance:", {
-      date: selectedDate,
-      time: selectedTime,
-      count: sessionCount,
-      days: selectedDays,
-      isRecurring: isRecurringEnabled
-    });
-    onClose();
+    
+    if (!selectedDate || !selectedTime) {
+      alert("Veuillez sélectionner une date et une heure");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Combiner date et heure
+      const dateTime = new Date(`${selectedDate}T${selectedTime}`);
+      
+      if (isRecurringEnabled && selectedDays.length > 0) {
+        // Logique pour les séances récurrentes (à implémenter plus tard)
+        console.log("Séances récurrentes à implémenter");
+      } else {
+        // Ajouter une seule séance via l'API
+        const response = await fetch('/api/planning/add-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            clientId,
+            dateTime: dateTime.toISOString()
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Erreur lors de l\'ajout de la séance');
+        }
+        
+        // Notifier le parent que la séance a été ajoutée
+        if (onSessionAdded) {
+          onSessionAdded();
+        }
+      }
+      
+      onClose();
+    } catch (error) {
+      console.error("Erreur lors de l'ajout de la séance:", error);
+      alert("Erreur lors de l'ajout de la séance");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -192,9 +232,10 @@ export const AddSessionPopup: React.FC<AddSessionPopupProps> = ({ isOpen, onClos
             </button>
             <button
               type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition-colors"
+              disabled={isSubmitting}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 disabled:cursor-not-allowed text-white py-3 rounded-lg transition-colors"
             >
-              Ajouter
+              {isSubmitting ? "Ajout..." : "Ajouter"}
             </button>
           </div>
         </form>
