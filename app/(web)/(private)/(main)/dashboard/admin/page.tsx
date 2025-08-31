@@ -35,7 +35,7 @@ export default async function AdminPage() {
             <DashboardNavItem
               iconName="CalendarClock"
               title="Disponibilités"
-              route="/dashboard/admin/Disponibilites"
+              route="/dashboard/admin/disponibilites"
             />
             </div>
 

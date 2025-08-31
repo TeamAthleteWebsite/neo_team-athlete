@@ -198,3 +198,57 @@ export const getPlanningsByCoachId = async (coachId: string) => {
     throw new Error("Impossible de récupérer les plannings du coach");
   }
 };
+
+export interface AvailabilityWithClient {
+  id: string;
+  date: Date;
+  startTime: Date;
+  endTime: Date;
+  client: {
+    id: string;
+    name: string;
+    lastName?: string | null;
+    image?: string | null;
+  };
+}
+
+export const getAvailabilitiesByCoachId = async (coachId: string) => {
+  try {
+    const now = new Date();
+    
+    const availabilities = await prisma.availability.findMany({
+      where: {
+        endTime: {
+          gt: now // endTime > maintenant (disponibilités dans le futur)
+        },
+        client: {
+          contracts: {
+            some: {
+              offer: {
+                coachId: coachId
+              }
+            }
+          }
+        }
+      },
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            image: true
+          }
+        }
+      },
+      orderBy: {
+        date: "asc"
+      }
+    });
+
+    return availabilities;
+  } catch (error) {
+    console.error("Erreur lors de la récupération des disponibilités:", error);
+    throw new Error("Impossible de récupérer les disponibilités");
+  }
+};
