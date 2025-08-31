@@ -10,11 +10,13 @@ export const DashboardNavItem = ({
   iconName,
   title,
   route,
+  bgColor,
 }: {
   value?: number | string;
   iconName: string;
   title: string;
   route: string;
+  bgColor?: string;
 }) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -25,7 +27,7 @@ export const DashboardNavItem = ({
 
   return (
     <Card
-      className={`bg-zinc-400/80 hover:bg-zinc-900/90 transition-colors rounded-lg border-foreground/10 sm:rounded-xl shadow-lg cursor-pointer ${
+      className={`${bgColor || 'bg-zinc-400/80'} hover:bg-zinc-900/90 transition-colors rounded-lg border-foreground/10 sm:rounded-xl shadow-lg cursor-pointer ${
         isPending ? "opacity-70" : ""
       }`}
       onClick={() => {

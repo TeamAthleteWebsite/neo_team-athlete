@@ -21,13 +21,16 @@ export default async function AdminPage() {
               iconName="UserCheck"
               title="Clients"
               route="/dashboard/admin/clients"
+              bgColor="bg-[#258280]/50"
             />
+            
             
           <div className="col-start-1 row-start-2">
             <DashboardNavItem
               iconName="Dumbbell"
               title="Séances"
               route="/dashboard/admin/seances"
+              bgColor="bg-[#053359]/50"
             />
             </div>
 
@@ -36,6 +39,7 @@ export default async function AdminPage() {
               iconName="CalendarClock"
               title="Disponibilités"
               route="/dashboard/admin/disponibilites"
+              bgColor="bg-[#a38f85]/50"
             />
             </div>
 
@@ -44,6 +48,7 @@ export default async function AdminPage() {
               iconName="LogOut"
               title="Deconnexion"
               route="/auth/sign-in"
+              bgColor="bg-[#000000]/50"
             />
             </div>
 
