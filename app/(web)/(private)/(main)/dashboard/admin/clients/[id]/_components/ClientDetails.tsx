@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X, Plus } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -20,6 +20,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 	const { data: session } = useSession();
 	const [isOfferPopupOpen, setIsOfferPopupOpen] = useState(false);
 	const [hasContract, setHasContract] = useState(false);
+	const [activeTab, setActiveTab] = useState("planning");
 
 	const handleClose = () => {
 		router.back();
@@ -41,6 +42,11 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 
 	const handleContractUpdate = (hasContractData: boolean) => {
 		setHasContract(hasContractData);
+	};
+
+	const handleAddSession = () => {
+		// TODO: Implémenter l'ajout de séance
+		console.log("Ajouter une séance");
 	};
 
 	const getInitials = (name: string) => {
@@ -191,7 +197,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 						{/* Planning et Séances Section */}
 						<div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
 							<div className="p-8">
-								<Tabs defaultValue="planning" className="w-full">
+								<Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
 									<TabsList className="grid w-full grid-cols-2 bg-white/10 border border-white/20">
 										<TabsTrigger 
 											value="planning"
@@ -208,7 +214,18 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 									</TabsList>
 									
 									<TabsContent value="planning" className="mt-6">
-										<PlanningList plannings={plannings} />
+										<div className="relative">
+											<PlanningList plannings={plannings} />
+											
+											{/* Bouton d'ajout de séance - positionné en haut à droite */}
+											<button
+												onClick={handleAddSession}
+												className="absolute top-0 right-0 bg-blue-600/50 hover:bg-blue-700/100 text-white p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-105 z-10"
+												title="Ajouter une séance"
+											>
+												<Plus className="w-5 h-5" />
+											</button>
+										</div>
 									</TabsContent>
 									
 									<TabsContent value="seances" className="mt-6">
@@ -224,6 +241,8 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 					</div>
 				</main>
 			</div>
+
+
 
 			{/* Popup de sélection d'offres */}
 			{isOfferPopupOpen && coachId && (
