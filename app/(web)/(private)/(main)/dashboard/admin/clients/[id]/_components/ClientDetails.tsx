@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSession } from "@/lib/auth-client";
 import { Client } from "../../_components/types";
-import { OfferSelectionPopup, ContractInfo, PlanningList } from "./";
+import { OfferSelectionPopup, ContractInfo, PlanningList, AddSessionPopup } from "./";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
 
@@ -21,6 +21,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 	const [isOfferPopupOpen, setIsOfferPopupOpen] = useState(false);
 	const [hasContract, setHasContract] = useState(false);
 	const [activeTab, setActiveTab] = useState("planning");
+	const [isAddSessionPopupOpen, setIsAddSessionPopupOpen] = useState(false);
 
 	const handleClose = () => {
 		router.back();
@@ -45,8 +46,11 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 	};
 
 	const handleAddSession = () => {
-		// TODO: Implémenter l'ajout de séance
-		console.log("Ajouter une séance");
+		setIsAddSessionPopupOpen(true);
+	};
+
+	const handleCloseAddSessionPopup = () => {
+		setIsAddSessionPopupOpen(false);
 	};
 
 	const getInitials = (name: string) => {
@@ -243,6 +247,12 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 			</div>
 
 
+
+			{/* Popup d'ajout de séance */}
+			<AddSessionPopup
+				isOpen={isAddSessionPopupOpen}
+				onClose={handleCloseAddSessionPopup}
+			/>
 
 			{/* Popup de sélection d'offres */}
 			{isOfferPopupOpen && coachId && (
