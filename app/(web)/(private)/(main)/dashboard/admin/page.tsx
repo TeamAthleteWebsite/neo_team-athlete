@@ -17,13 +17,14 @@ export default async function AdminPage() {
               route="/dashboard/admin/prospects"
             />
             
+            <div className="col-start-2 row-start-1">
             <DashboardNavItem
               iconName="UserCheck"
               title="Clients"
               route="/dashboard/admin/clients"
               bgColor="bg-[#258280]/50"
             />
-            
+            </div>
             
           <div className="col-start-1 row-start-2">
             <DashboardNavItem
