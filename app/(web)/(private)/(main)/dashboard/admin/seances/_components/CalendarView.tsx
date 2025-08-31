@@ -13,7 +13,6 @@ interface CalendarViewProps {
 }
 
 export const CalendarView: React.FC<CalendarViewProps> = ({ sessions }) => {
-  const router = useRouter();
   const today = new Date();
   const [currentWeek, setCurrentWeek] = useState(today);
   const [selectedDate, setSelectedDate] = useState(today);
