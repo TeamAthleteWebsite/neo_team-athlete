@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { WeekNavigation } from "./WeekNavigation";
 import { WeekDays } from "./WeekDays";
 import { DayAvailabilities } from "./DayAvailabilities";
+import { CreateSessionPopup } from "./CreateSessionPopup";
 import { type AvailabilityWithClient } from "@/src/actions/planning.actions";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -16,6 +17,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ availabilities }) =>
   const today = new Date();
   const [currentWeek, setCurrentWeek] = useState(today);
   const [selectedDate, setSelectedDate] = useState(today);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [selectedAvailability, setSelectedAvailability] = useState<AvailabilityWithClient | null>(null);
 
   // Filtrer les disponibilités pour la date sélectionnée
   const isPastDate = (date: Date) => {
@@ -37,6 +40,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ availabilities }) =>
     if (!isPastDate(date)) {
       setSelectedDate(date);
     }
+  };
+
+  const handleAvailabilityClick = (availability: AvailabilityWithClient) => {
+    setSelectedAvailability(availability);
+    setIsPopupOpen(true);
+  };
+
+  const handleClosePopup = () => {
+    setIsPopupOpen(false);
+    setSelectedAvailability(null);
   };
 
   const selectedDateAvailabilities = getAvailabilitiesForDate(selectedDate);
@@ -68,6 +81,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ availabilities }) =>
       <DayAvailabilities
         availabilities={selectedDateAvailabilities}
         selectedDate={selectedDate}
+        onAvailabilityClick={handleAvailabilityClick}
+      />
+      
+      <CreateSessionPopup
+        isOpen={isPopupOpen}
+        onClose={handleClosePopup}
+        availability={selectedAvailability}
       />
     </div>
   );

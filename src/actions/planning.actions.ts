@@ -252,3 +252,25 @@ export const getAvailabilitiesByCoachId = async (coachId: string) => {
     throw new Error("Impossible de récupérer les disponibilités");
   }
 };
+
+export const checkSessionExistsForAvailability = async (clientId: string, dateTime: Date) => {
+  try {
+    const session = await prisma.planning.findFirst({
+      where: {
+        contract: {
+          clientId: clientId,
+          status: "ACTIVE"
+        },
+        date: {
+          gte: new Date(dateTime.getFullYear(), dateTime.getMonth(), dateTime.getDate()),
+          lt: new Date(dateTime.getFullYear(), dateTime.getMonth(), dateTime.getDate() + 1)
+        }
+      }
+    });
+
+    return !!session;
+  } catch (error) {
+    console.error("Erreur lors de la vérification de l'existence d'une séance:", error);
+    return false;
+  }
+};
