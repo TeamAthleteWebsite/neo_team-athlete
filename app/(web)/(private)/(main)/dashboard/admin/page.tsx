@@ -15,6 +15,7 @@ export default async function AdminPage() {
               iconName="Users"
               title="Prospects"
               route="/dashboard/admin/prospects"
+              bgColor="bg-[#B02418]/20"
             />
             
             <div className="col-start-2 row-start-1">
@@ -44,7 +45,16 @@ export default async function AdminPage() {
             />
             </div>
 
+
             <div className="col-start-1 row-start-3">
+            <DashboardNavItem
+              iconName="Settings"
+              title="Paramètres"
+              route="/profile"
+            />
+            </div>
+
+            <div className="col-start-2 row-start-3">
             <DashboardNavItem
               iconName="LogOut"
               title="Deconnexion"
