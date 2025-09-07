@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSession } from "@/lib/auth-client";
 import { Client } from "../../_components/types";
-import { OfferSelectionPopup, ContractInfo, PlanningList, AddSessionPopup } from "./";
+import { OfferSelectionPopup, ContractInfo, PlanningList, AddSessionPopup, SessionsMonthlyView } from "./";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
 
@@ -222,11 +222,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 									</TabsContent>
 									
 									<TabsContent value="seances" className="mt-6">
-										<div className="text-center py-12">
-											<div className="text-white/60 text-lg">
-												Contenu des séances à définir ultérieurement
-											</div>
-										</div>
+										<SessionsMonthlyView plannings={plannings} />
 									</TabsContent>
 								</Tabs>
 							</div>
