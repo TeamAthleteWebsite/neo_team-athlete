@@ -11,12 +11,14 @@ export const DashboardNavItem = ({
   title,
   route,
   bgColor,
+  onClick,
 }: {
   value?: number | string;
   iconName: string;
   title: string;
   route: string;
   bgColor?: string;
+  onClick?: () => void;
 }) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -31,9 +33,13 @@ export const DashboardNavItem = ({
         isPending ? "opacity-70" : ""
       }`}
       onClick={() => {
-        startTransition(() => {
-          router.push(route);
-        });
+        if (onClick) {
+          onClick();
+        } else {
+          startTransition(() => {
+            router.push(route);
+          });
+        }
       }}
     >
       <CardHeader className="space-y-2 sm:space-y-3 p-3 sm:p-6">

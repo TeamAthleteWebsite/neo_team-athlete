@@ -1,9 +1,12 @@
-import { DashboardNavItem } from "@/components/features/DashboardNavItem";
-import { ServerAccessControl } from "@/components/features/ServerAccessControl";
+"use client";
 
-export default async function AdminPage() {
+import { DashboardNavItem } from "@/components/features/DashboardNavItem";
+import { ClientAccessControl } from "@/components/features/ClientAccessControl";
+import { signOut } from "@/lib/auth-client";
+
+export default function AdminPage() {
   return (
-    <ServerAccessControl allowedRoles={["ADMIN", "COACH"]}>
+    <ClientAccessControl allowedRoles={["ADMIN", "COACH"]}>
       <div className="w-full">
         <div className="max-w-4xl mx-auto px-2 sm:px-4">
           <h1 className="text-2xl font-bold text-accent mb-6">
@@ -60,6 +63,7 @@ export default async function AdminPage() {
               title="Deconnexion"
               route="/auth/sign-in"
               bgColor="bg-[#000000]/50"
+              onClick={() => signOut()}
             />
             </div>
 
@@ -67,6 +71,6 @@ export default async function AdminPage() {
           </div>
         </div>
       </div>
-    </ServerAccessControl>
+    </ClientAccessControl>
   );
 }
