@@ -11,9 +11,10 @@ import Link from "next/link";
 
 interface CalendarViewProps {
   availabilities: AvailabilityWithClient[];
+  coachId: string;
 }
 
-export const CalendarView: React.FC<CalendarViewProps> = ({ availabilities }) => {
+export const CalendarView: React.FC<CalendarViewProps> = ({ availabilities, coachId }) => {
   const today = new Date();
   const [currentWeek, setCurrentWeek] = useState(today);
   const [selectedDate, setSelectedDate] = useState(today);
@@ -88,6 +89,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ availabilities }) =>
         isOpen={isPopupOpen}
         onClose={handleClosePopup}
         availability={selectedAvailability}
+        coachId={coachId}
       />
     </div>
   );

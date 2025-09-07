@@ -35,7 +35,7 @@ export default async function DisponibilitesPage() {
             <DashboardTitle title="Gestion des Disponibilités" />
             
             <div className="space-y-6">
-              <CalendarView availabilities={availabilities} />
+              <CalendarView availabilities={availabilities} coachId={session.user.id} />
             </div>
           </div>
         </div>
