@@ -18,7 +18,7 @@ interface PlanningListProps {
 }
 
 export const PlanningList: React.FC<PlanningListProps> = ({ plannings, onAddSession }) => {
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>(PlanningStatus.PLANNED);
 
   const statusOptions = [
     { value: "all", label: "Tous les statuts" },
@@ -34,6 +34,11 @@ export const PlanningList: React.FC<PlanningListProps> = ({ plannings, onAddSess
   const filteredPlannings = selectedStatus === "all" 
     ? plannings 
     : plannings.filter(planning => planning.status === selectedStatus);
+
+  // Trier les séances par ordre croissant de date
+  const sortedPlannings = filteredPlannings.sort((a, b) => 
+    new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
   const formatDayAndTime = (date: Date) => {
     const sessionDate = new Date(date);
     const dayNames = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
@@ -47,10 +52,9 @@ export const PlanningList: React.FC<PlanningListProps> = ({ plannings, onAddSess
     const endHour = startHour + 1;
     
     const formatTime = (hour: number, minute: number) => {
-      const period = hour >= 12 ? "PM" : "AM";
-      const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+      const displayHour = hour.toString().padStart(2, "0");
       const displayMinute = minute.toString().padStart(2, "0");
-      return `${displayHour}:${displayMinute} ${period}`;
+      return `${displayHour}:${displayMinute}`;
     };
     
     return `${dayName}, ${formatTime(startHour, startMinute)} - ${formatTime(endHour, startMinute)}`;
@@ -138,7 +142,7 @@ export const PlanningList: React.FC<PlanningListProps> = ({ plannings, onAddSess
 
       {/* Liste des séances filtrées */}
       <div className="space-y-4">
-        {filteredPlannings.length === 0 ? (
+        {sortedPlannings.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-white/60 text-lg">
               {selectedStatus === "all" 
@@ -148,7 +152,7 @@ export const PlanningList: React.FC<PlanningListProps> = ({ plannings, onAddSess
             </div>
           </div>
         ) : (
-          filteredPlannings.map((planning) => (
+          sortedPlannings.map((planning) => (
             <div
               key={planning.id}
               className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4 flex items-center justify-between hover:bg-white/10 transition-colors"
