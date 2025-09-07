@@ -6,7 +6,7 @@ import { WeekDays } from "./WeekDays";
 import { DayAvailabilities } from "./DayAvailabilities";
 import { CreateSessionPopup } from "./CreateSessionPopup";
 import { type AvailabilityWithClient } from "@/src/actions/planning.actions";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CalendarCheck2 } from "lucide-react";
 import Link from "next/link";
 
 interface CalendarViewProps {
@@ -64,6 +64,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ availabilities, coac
         >
           <ArrowLeft className="w-5 h-5" />
           <span className="text-sm">Retour</span>
+        </Link>
+        
+        <Link 
+          href="/dashboard/admin/seances"
+          className="flex items-center space-x-2 text-white/70 hover:text-white transition-colors"
+        >
+          <CalendarCheck2 className="w-8 h-8" />
+          <span className="text-sm">Séances</span>
         </Link>
       </div>
       

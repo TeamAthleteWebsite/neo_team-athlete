@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { WeekNavigation } from "./WeekNavigation";
 import { WeekDays } from "./WeekDays";
 import { DaySessions } from "./DaySessions";
 import { type PlanningWithClient } from "@/src/actions/planning.actions";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CalendarClock } from "lucide-react";
 import Link from "next/link";
 
 interface CalendarViewProps {
@@ -50,6 +50,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ sessions }) => {
         >
           <ArrowLeft className="w-5 h-5" />
           <span className="text-sm">Retour</span>
+        </Link>
+        
+        <Link 
+          href="/dashboard/admin/disponibilites"
+          className="flex items-center space-x-2 text-white/70 hover:text-white transition-colors"
+        >
+          <CalendarClock className="w-8 h-8" />
+          <span className="text-sm">Disponibilités</span>
         </Link>
       </div>
       
