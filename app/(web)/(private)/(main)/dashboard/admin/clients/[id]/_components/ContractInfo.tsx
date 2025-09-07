@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getClientContractsAction } from "@/src/actions/contract.actions";
-import { Calendar, Clock, Users, DollarSign, Package } from "lucide-react";
+import { Calendar, Clock, DollarSign, Package, Dumbbell } from "lucide-react";
 
 interface ContractInfoProps {
   clientId: string;
@@ -161,7 +161,7 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, onContract
 
           {/* Nombre de sessions */}
           <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-            <Users className="w-5 h-5 text-green-400" />
+            <Dumbbell className="w-5 h-5 text-green-400" />
             <div>
               <p className="text-white font-medium">{contractData.totalSessions} Séances / mois</p>
             </div>
