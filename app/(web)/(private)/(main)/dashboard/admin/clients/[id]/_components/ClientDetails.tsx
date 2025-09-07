@@ -190,6 +190,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 										{/* Subscription Section */}
 										<ContractInfo 
 											clientId={client.id} 
+											plannings={plannings}
 											onContractUpdate={handleContractUpdate}
 											onOpenOfferPopup={handleOpenOfferPopup}
 										/>

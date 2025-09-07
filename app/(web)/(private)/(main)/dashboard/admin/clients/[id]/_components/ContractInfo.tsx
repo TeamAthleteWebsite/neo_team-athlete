@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { getClientContractsAction } from "@/src/actions/contract.actions";
 import { Calendar, Clock, DollarSign, Package, Dumbbell } from "lucide-react";
+import { type PlanningWithContract } from "@/src/actions/planning.actions";
 
 interface ContractInfoProps {
   clientId: string;
+  plannings: PlanningWithContract[];
   onContractUpdate?: (hasContractData: boolean) => void;
   onOpenOfferPopup?: () => void;
 }
@@ -26,7 +28,7 @@ interface ContractData {
   };
 }
 
-export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, onContractUpdate, onOpenOfferPopup }) => {
+export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings, onContractUpdate, onOpenOfferPopup }) => {
   const [contractData, setContractData] = useState<ContractData | null>(null);
   const [contractType, setContractType] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -84,6 +86,83 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, onContract
     } else {
       return `${months} mois`;
     }
+  };
+
+  // Fonction pour calculer le nombre total de séances du contrat
+  const calculateTotalSessions = (contractData: ContractData) => {
+    const diffTime = Math.abs(contractData.endDate.getTime() - contractData.startDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const months = Math.floor(diffDays / 30);
+    
+    if (months === 0) {
+      return contractData.totalSessions; // Pour les contrats sans engagement
+    }
+    
+    return contractData.totalSessions * months;
+  };
+
+  // Fonction pour calculer les séances restantes en utilisant la même logique que l'onglet Séances
+  const calculateRemainingSessions = (contractData: ContractData) => {
+    const totalSessions = calculateTotalSessions(contractData);
+    
+    // Calculer la somme des séances affichées par mois (même logique que getDisplaySessionCount)
+    const now = new Date();
+    const contractStartDate = new Date(contractData.startDate);
+    
+    // Créer un Map pour regrouper les séances par mois
+    const monthlyMap = new Map<string, any>();
+    
+    // Initialiser tous les mois du contrat jusqu'au mois en cours
+    const startMonth = contractStartDate.getMonth();
+    const startYear = contractStartDate.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    for (let year = startYear; year <= currentYear; year++) {
+      const monthStart = year === startYear ? startMonth : 0;
+      const monthEnd = year === currentYear ? currentMonth : 11;
+      
+      for (let month = monthStart; month <= monthEnd; month++) {
+        const key = `${year}-${month}`;
+        monthlyMap.set(key, {
+          totalSessions: 0,
+          contractTotalSessions: contractData.totalSessions,
+          isMonthCompleted: year < currentYear || (year === currentYear && month < currentMonth)
+        });
+      }
+    }
+    
+    // Compter les séances par mois
+    plannings.forEach(planning => {
+      const sessionDate = new Date(planning.date);
+      const year = sessionDate.getFullYear();
+      const month = sessionDate.getMonth();
+      const key = `${year}-${month}`;
+      
+      const monthlyData = monthlyMap.get(key);
+      if (monthlyData) {
+        monthlyData.totalSessions++;
+      }
+    });
+    
+    // Calculer la somme des séances affichées (même logique que getDisplaySessionCount)
+    let totalDisplayedSessions = 0;
+    Array.from(monthlyMap.values()).forEach(monthData => {
+      const { totalSessions, contractTotalSessions, isMonthCompleted } = monthData;
+      
+      if (!isMonthCompleted) {
+        totalDisplayedSessions += totalSessions;
+      } else {
+        // Mois terminé - si moins que le total du contrat, afficher le total du contrat
+        if (totalSessions < contractTotalSessions) {
+          totalDisplayedSessions += contractTotalSessions;
+        } else {
+          totalDisplayedSessions += totalSessions;
+        }
+      }
+    });
+    
+    return Math.max(0, totalSessions - totalDisplayedSessions);
   };
 
  
@@ -159,13 +238,15 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, onContract
             </div>
           </div>
 
-          {/* Nombre de sessions */}
+          {/* Durée du contrat */}
           <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-            <Dumbbell className="w-5 h-5 text-green-400" />
+            <Clock className="w-5 h-5 text-yellow-400" />
             <div>
-              <p className="text-white font-medium">{contractData.totalSessions} Séances / mois</p>
+              <p className="text-white font-medium">{calculateDuration(contractData.startDate, contractData.endDate)}</p>
             </div>
           </div>
+
+          
 
           {/* Date de début */}
           <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
@@ -184,15 +265,39 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, onContract
             </div>
           </div>
 
-          {/* Durée du contrat */}
+
+          {/* Nombre de sessions */}
           <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-            <Clock className="w-5 h-5 text-yellow-400" />
+            <Dumbbell className="w-5 h-5 text-green-400" />
             <div>
-              <p className="text-white font-medium">{calculateDuration(contractData.startDate, contractData.endDate)}</p>
+            <p className="text-white/60 text-sm"> séances / mois</p>
+              <p className="text-white font-medium">{contractData.totalSessions}</p>
             </div>
           </div>
 
-          {/* Prix par mois */}
+          
+
+         
+
+          {/* Nombre total de séances */}
+          <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
+            <Dumbbell className="w-5 h-5 text-cyan-400" />
+            <div>
+              <p className="text-white/60 text-sm"> séances Totales</p>
+              <p className="text-white font-medium">{calculateTotalSessions(contractData)}</p>
+            </div>
+          </div>
+
+          {/* Séances restantes */}
+          <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
+            <Clock className="w-5 h-5 text-orange-400" />
+            <div>
+              <p className="text-white/60 text-sm">Séances restantes</p>
+              <p className="text-white font-medium">{calculateRemainingSessions(contractData)}</p>
+            </div>
+          </div>
+
+            {/* Prix par mois */}
           <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
             <DollarSign className="w-5 h-5 text-emerald-400" />
             <div>
@@ -204,7 +309,12 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, onContract
               </p>
             </div>
           </div>
+
+
+
         </div>
+
+        
 
         {/* Prix total du contrat */}
         <div className="text-center p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
