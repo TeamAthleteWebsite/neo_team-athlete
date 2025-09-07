@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Plus } from "lucide-react";
+import { X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -218,18 +218,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 									</TabsList>
 									
 									<TabsContent value="planning" className="mt-6">
-										<div className="relative">
-											<PlanningList plannings={plannings} />
-											
-											{/* Bouton d'ajout de séance - positionné en haut à droite */}
-											<button
-												onClick={handleAddSession}
-												className="absolute top-0 right-0 bg-blue-600/50 hover:bg-blue-700/100 text-white p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-105 z-10"
-												title="Ajouter une séance"
-											>
-												<Plus className="w-5 h-5" />
-											</button>
-										</div>
+										<PlanningList plannings={plannings} onAddSession={handleAddSession} />
 									</TabsContent>
 									
 									<TabsContent value="seances" className="mt-6">
