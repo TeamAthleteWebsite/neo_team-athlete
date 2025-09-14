@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSession } from "@/lib/auth-client";
 import { Client } from "../../_components/types";
-import { OfferSelectionPopup, ContractInfo, PlanningList, AddSessionPopup, SessionsMonthlyView } from "./";
+import { OfferSelectionPopup, ContractInfo, PlanningList, AddSessionPopup, SessionsMonthlyView, PaymentTab } from "./";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
 
@@ -203,7 +203,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 						<div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
 							<div className="p-8">
 								<Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-									<TabsList className="grid w-full grid-cols-2 bg-white/10 border border-white/20">
+									<TabsList className="grid w-full grid-cols-3 bg-white/10 border border-white/20">
 										<TabsTrigger 
 											value="planning"
 											className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/80 hover:text-white transition-colors"
@@ -216,6 +216,12 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 										>
 											Séances
 										</TabsTrigger>
+										<TabsTrigger 
+											value="paiement"
+											className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/80 hover:text-white transition-colors"
+										>
+											Paiement
+										</TabsTrigger>
 									</TabsList>
 									
 									<TabsContent value="planning" className="mt-6">
@@ -224,6 +230,10 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 									
 									<TabsContent value="seances" className="mt-6">
 										<SessionsMonthlyView plannings={plannings} />
+									</TabsContent>
+									
+									<TabsContent value="paiement" className="mt-6">
+										<PaymentTab plannings={plannings} />
 									</TabsContent>
 								</Tabs>
 							</div>

@@ -6,9 +6,11 @@ export interface PlanningWithContract {
   status: string;
   contract: {
     id: string;
+    clientId: string;
     startDate: Date;
     endDate: Date;
     totalSessions: number;
+    amount: number;
   };
 }
 
@@ -42,9 +44,11 @@ export const getPlanningsByContractId = async (
         contract: {
           select: {
             id: true,
+            clientId: true,
             startDate: true,
             endDate: true,
             totalSessions: true,
+            amount: true,
           },
         },
       },
@@ -77,9 +81,11 @@ export const getPlanningsByClientId = async (
         contract: {
           select: {
             id: true,
+            clientId: true,
             startDate: true,
             endDate: true,
             totalSessions: true,
+            amount: true,
           },
         },
       },
