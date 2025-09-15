@@ -2,6 +2,7 @@
 
 import { type PlanningWithClient } from "@/src/actions/planning.actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useRouter } from "next/navigation";
 
 interface DaySessionsProps {
   sessions: PlanningWithClient[];
@@ -12,6 +13,7 @@ export const DaySessions: React.FC<DaySessionsProps> = ({
   sessions,
   selectedDate
 }) => {
+  const router = useRouter();
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("fr-FR", {
       weekday: "long",
@@ -36,6 +38,10 @@ export const DaySessions: React.FC<DaySessionsProps> = ({
     const firstName = client.name.charAt(0).toUpperCase();
     const lastName = client.lastName ? client.lastName.charAt(0).toUpperCase() : "";
     return `${firstName}${lastName}`;
+  };
+
+  const handleSessionClick = (clientId: string) => {
+    router.push(`/dashboard/admin/clients/${clientId}`);
   };
 
   const sortedSessions = sessions.sort((a, b) => {
@@ -69,7 +75,17 @@ export const DaySessions: React.FC<DaySessionsProps> = ({
           return (
             <div
               key={session.id}
-              className="flex items-center gap-4 p-4 bg-black/70 rounded-lg"
+              className="flex items-center gap-4 p-4 bg-black/70 rounded-lg cursor-pointer hover:bg-black/80 transition-colors duration-200 hover:scale-[1.02] transform"
+              onClick={() => handleSessionClick(session.contract.client.id)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleSessionClick(session.contract.client.id);
+                }
+              }}
+              aria-label={`Voir la fiche de ${getClientFullName(session.contract.client)}`}
             >
               <Avatar className="h-12 w-12">
                 <AvatarImage 
@@ -88,6 +104,23 @@ export const DaySessions: React.FC<DaySessionsProps> = ({
                 <p className="text-sm text-muted-foreground">
                   {formatTime(startTime)} - {formatTime(endTime)}
                 </p>
+              </div>
+              
+              <div className="text-muted-foreground">
+                <svg 
+                  className="w-5 h-5" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M9 5l7 7-7 7" 
+                  />
+                </svg>
               </div>
             </div>
           );
