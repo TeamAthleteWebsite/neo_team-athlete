@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getClientContractsAction } from "@/src/actions/contract.actions";
-import { Calendar, Clock, DollarSign, Package, Dumbbell } from "lucide-react";
+import { Calendar, Clock, DollarSign, Package, Dumbbell, CreditCard } from "lucide-react";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
 
 interface ContractInfoProps {
@@ -28,15 +28,60 @@ interface ContractData {
   };
 }
 
+interface Payment {
+  id: string;
+  contractId: string;
+  amount: number;
+  paymentDate: string;
+  comment?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  contract: {
+    id: string;
+    clientId: string;
+    startDate: string;
+    endDate: string;
+    amount: number;
+  };
+}
+
 export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings, onContractUpdate, onOpenOfferPopup }) => {
   const [contractData, setContractData] = useState<ContractData | null>(null);
   const [contractType, setContractType] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [payments, setPayments] = useState<Payment[]>([]);
 
   useEffect(() => {
     loadContractData();
+    loadPayments();
   }, [clientId]);
+
+  // Fonction pour charger les paiements
+  const loadPayments = async () => {
+    try {
+      if (plannings.length === 0) {
+        setPayments([]);
+        return;
+      }
+
+      const clientIdFromPlanning = plannings[0]?.contract.clientId;
+      if (!clientIdFromPlanning) {
+        setPayments([]);
+        return;
+      }
+
+      const response = await fetch(`/api/payment?clientId=${clientIdFromPlanning}`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setPayments(result.data);
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des paiements:", error);
+    }
+  };
 
   const loadContractData = async () => {
     setIsLoading(true);
@@ -165,6 +210,25 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings,
     return Math.max(0, totalSessions - totalDisplayedSessions);
   };
 
+  // Fonction pour calculer le montant restant à payer
+  const calculateRemainingAmount = (contractData: ContractData) => {
+    if (!contractData || contractData.offer.duration <= 0) {
+      return 0; // Pour les contrats sans engagement ou prix unique
+    }
+
+    const totalContractAmount = contractData.amount * contractData.offer.duration;
+    
+    // Calculer le montant déjà payé en faisant la somme des montants dans la table Payment
+    // pour le contrat actif (même contrat que celui utilisé pour la liste de planning)
+    const paidAmount = payments.reduce((sum, payment) => {
+      return sum + payment.amount;
+    }, 0);
+    
+    const remainingAmount = totalContractAmount - paidAmount;
+    
+    return Math.max(0, remainingAmount);
+  };
+
  
   if (isLoading) {
     return (
@@ -279,14 +343,6 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings,
 
          
 
-          {/* Nombre total de séances */}
-          <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-            <Dumbbell className="w-5 h-5 text-cyan-400" />
-            <div>
-              <p className="text-white/60 text-sm"> séances Totales</p>
-              <p className="text-white font-medium">{calculateTotalSessions(contractData)}</p>
-            </div>
-          </div>
 
           {/* Séances restantes */}
           <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
@@ -309,6 +365,19 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings,
               </p>
             </div>
           </div>
+
+          {/* Montant restant à payer */}
+          {contractData.offer.duration > 0 && (
+            <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
+              <CreditCard className="w-5 h-5 text-orange-400" />
+              <div>
+                <p className="text-white/60 text-sm">Montant restant</p>
+                <p className="text-white font-medium">
+                  {calculateRemainingAmount(contractData).toFixed(2)}€
+                </p>
+              </div>
+            </div>
+          )}
 
 
 
