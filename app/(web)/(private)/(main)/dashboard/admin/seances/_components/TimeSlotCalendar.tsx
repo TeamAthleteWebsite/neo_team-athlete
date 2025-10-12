@@ -30,12 +30,6 @@ export const TimeSlotCalendar: React.FC<TimeSlotCalendarProps> = ({
     });
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("fr-FR", {
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-  };
 
   const getClientFullName = (client: PlanningWithClient["contract"]["client"]) => {
     return `${client.name} ${client.lastName || ""}`.trim();
@@ -111,8 +105,6 @@ export const TimeSlotCalendar: React.FC<TimeSlotCalendarProps> = ({
                 ) : (
                   <div className="space-y-2">
                     {timeSlot.sessions.map((session) => {
-                      const startTime = new Date(session.date);
-                      const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // +1 heure
                       
                       return (
                         <div
@@ -143,9 +135,6 @@ export const TimeSlotCalendar: React.FC<TimeSlotCalendarProps> = ({
                             <h4 className="font-medium text-white text-sm">
                               {getClientFullName(session.contract.client)}
                             </h4>
-                            <p className="text-xs text-muted-foreground">
-                              {formatTime(startTime)} - {formatTime(endTime)}
-                            </p>
                           </div>
                           
                           <div className="text-muted-foreground">
