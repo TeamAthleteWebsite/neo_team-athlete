@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { WeekNavigation } from "./WeekNavigation";
 import { WeekDays } from "./WeekDays";
-import { DaySessions } from "./DaySessions";
+import { TimeSlotCalendar } from "./TimeSlotCalendar";
 import { type PlanningWithClient } from "@/src/actions/planning.actions";
 import { ArrowLeft, CalendarClock } from "lucide-react";
 import Link from "next/link";
@@ -73,7 +73,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ sessions }) => {
         sessions={sessions}
       />
       
-      <DaySessions
+      <TimeSlotCalendar
         sessions={selectedDateSessions}
         selectedDate={selectedDate}
       />

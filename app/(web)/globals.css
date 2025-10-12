@@ -120,3 +120,13 @@
 		@apply bg-background text-foreground;
 	}
 }
+
+/* Masquer les barres de défilement */
+.hide-scrollbar {
+	scrollbar-width: none; /* Firefox */
+	-ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+	display: none; /* WebKit */
+}
