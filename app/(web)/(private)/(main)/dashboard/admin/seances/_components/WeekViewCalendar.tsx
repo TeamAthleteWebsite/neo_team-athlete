@@ -75,8 +75,8 @@ export const WeekViewCalendar: React.FC<WeekViewCalendarProps> = ({
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Trouver le lundi de la semaine du jour sélectionné
-    const monday = new Date(selectedDate);
+    // Trouver le lundi de la semaine affichée par la navigation
+    const monday = new Date(currentWeek);
     const dayOfWeek = monday.getDay();
     const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
     monday.setDate(monday.getDate() + daysToMonday);
@@ -134,15 +134,15 @@ export const WeekViewCalendar: React.FC<WeekViewCalendarProps> = ({
             }}
             aria-label={`Sélectionner le ${day.dayName} ${day.dayNumber}`}
           >
-            <div className="text-xs font-medium">{day.dayName}</div>
-            <div className="text-sm font-bold">{day.dayNumber}</div>
+            <div className="text-sm font-medium">{day.dayName}</div>
+            <div className="text-base font-bold">{day.dayNumber}</div>
           </div>
         ))}
       </div>
 
       {/* Calendrier horaire commun avec scroll synchronisé */}
-      <div className="max-h-[400px] overflow-y-auto hide-scrollbar">
-        <div className="space-y-1">
+      <div className="max-h-[500px] overflow-y-auto hide-scrollbar">
+        <div className="space-y-2">
           {/* Générer les créneaux horaires de 7h à 22h */}
           {Array.from({ length: 16 }, (_, index) => {
             const hour = 7 + index;
@@ -151,8 +151,8 @@ export const WeekViewCalendar: React.FC<WeekViewCalendarProps> = ({
             return (
               <div key={hour} className="flex gap-2">
                 {/* Label horaire (seulement pour le premier jour) */}
-                <div className="w-16 flex-shrink-0 text-right">
-                  <span className="text-sm font-medium text-white">
+                <div className="w-20 flex-shrink-0 text-right">
+                  <span className="text-base font-medium text-white">
                     {timeSlotLabel}
                   </span>
                 </div>
@@ -166,9 +166,9 @@ export const WeekViewCalendar: React.FC<WeekViewCalendarProps> = ({
                     });
                     
                     return (
-                      <div key={`${day.date.toISOString()}-${hour}`} className="min-h-[20px]">
+                      <div key={`${day.date.toISOString()}-${hour}`} className="min-h-[30px]">
                         {sessionsInSlot.length === 0 ? (
-                          <div className="h-[20px] border-l border-gray-700/30 ml-1"></div>
+                          <div className="h-[30px] border-l border-gray-700/30 ml-1"></div>
                         ) : (
                           <div className="space-y-1">
                             {sessionsInSlot.map((session) => {
@@ -176,7 +176,7 @@ export const WeekViewCalendar: React.FC<WeekViewCalendarProps> = ({
                               return (
                                 <div
                                   key={session.id}
-                                  className="flex items-center gap-1 p-1 bg-black/70 rounded cursor-pointer hover:bg-black/80 transition-colors duration-200 hover:scale-[1.02] transform border-l-2 border-primary"
+                                  className="flex items-center gap-2 p-2 bg-black/70 rounded cursor-pointer hover:bg-black/80 transition-colors duration-200 hover:scale-[1.02] transform border-l-2 border-primary"
                                   onClick={() => handleSessionClick(session.contract.client.id)}
                                   role="button"
                                   tabIndex={0}
@@ -188,18 +188,18 @@ export const WeekViewCalendar: React.FC<WeekViewCalendarProps> = ({
                                   }}
                                   aria-label={`Voir la fiche de ${getClientFullName(session.contract.client)}`}
                                 >
-                                  <Avatar className="h-4 w-4">
+                                  <Avatar className="h-6 w-6">
                                     <AvatarImage 
                                       src={session.contract.client.image || undefined} 
                                       alt={getClientFullName(session.contract.client)}
                                     />
-                                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
                                       {getClientInitials(session.contract.client)}
                                     </AvatarFallback>
                                   </Avatar>
                                   
                                   <div className="flex-1 min-w-0">
-                                    <div className="text-xs font-medium text-white truncate">
+                                    <div className="text-sm font-medium text-white truncate">
                                       {getClientFullName(session.contract.client)}
                                     </div>
                                   </div>

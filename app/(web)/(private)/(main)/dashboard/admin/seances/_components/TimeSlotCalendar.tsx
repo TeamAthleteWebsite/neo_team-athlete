@@ -92,16 +92,16 @@ export const TimeSlotCalendar: React.FC<TimeSlotCalendarProps> = ({
           {timeSlots.map((timeSlot) => (
             <div key={timeSlot.hour} className="flex gap-4">
               {/* Label horaire */}
-              <div className="w-16 flex-shrink-0 text-right">
-                <span className="text-sm font-medium text-white">
+              <div className="w-20 flex-shrink-0 text-right">
+                <span className="text-base font-medium text-white">
                   {timeSlot.label}
                 </span>
               </div>
               
               {/* Conteneur des séances */}
-              <div className="flex-1 min-h-[60px]">
+              <div className="flex-1 min-h-[80px]">
                 {timeSlot.sessions.length === 0 ? (
-                  <div className="h-[60px] border-l-2 border-gray-700/50 ml-4"></div>
+                  <div className="h-[80px] border-l-2 border-gray-700/50 ml-4"></div>
                 ) : (
                   <div className="space-y-2">
                     {timeSlot.sessions.map((session) => {
@@ -109,7 +109,7 @@ export const TimeSlotCalendar: React.FC<TimeSlotCalendarProps> = ({
                       return (
                         <div
                           key={session.id}
-                          className="flex items-center gap-3 p-3 bg-black/70 rounded-lg cursor-pointer hover:bg-black/80 transition-colors duration-200 hover:scale-[1.02] transform border-l-4 border-primary"
+                          className="flex items-center gap-4 p-4 bg-black/70 rounded-lg cursor-pointer hover:bg-black/80 transition-colors duration-200 hover:scale-[1.02] transform border-l-4 border-primary"
                           onClick={() => handleSessionClick(session.contract.client.id)}
                           role="button"
                           tabIndex={0}
@@ -121,25 +121,25 @@ export const TimeSlotCalendar: React.FC<TimeSlotCalendarProps> = ({
                           }}
                           aria-label={`Voir la fiche de ${getClientFullName(session.contract.client)}`}
                         >
-                          <Avatar className="h-10 w-10">
+                          <Avatar className="h-12 w-12">
                             <AvatarImage 
                               src={session.contract.client.image || undefined} 
                               alt={getClientFullName(session.contract.client)}
                             />
-                            <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                            <AvatarFallback className="bg-primary/10 text-primary text-base">
                               {getClientInitials(session.contract.client)}
                             </AvatarFallback>
                           </Avatar>
                           
                           <div className="flex-1">
-                            <h4 className="font-medium text-white text-sm">
+                            <h4 className="font-medium text-white text-base">
                               {getClientFullName(session.contract.client)}
                             </h4>
                           </div>
                           
                           <div className="text-muted-foreground">
                             <svg 
-                              className="w-4 h-4" 
+                              className="w-5 h-5" 
                               fill="none" 
                               stroke="currentColor" 
                               viewBox="0 0 24 24"

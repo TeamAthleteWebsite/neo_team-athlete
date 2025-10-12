@@ -18,7 +18,9 @@ export const WeekNavigation: React.FC<WeekNavigationProps> = ({
     
     const today = new Date();
     const startOfNewWeek = new Date(newWeek);
-    startOfNewWeek.setDate(startOfNewWeek.getDate() - startOfNewWeek.getDay());
+    const dayOfWeek = startOfNewWeek.getDay();
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    startOfNewWeek.setDate(startOfNewWeek.getDate() + daysToMonday);
     
     return startOfNewWeek >= today;
   };
@@ -39,7 +41,9 @@ export const WeekNavigation: React.FC<WeekNavigationProps> = ({
 
   const formatWeekRange = (date: Date) => {
     const startOfWeek = new Date(date);
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const dayOfWeek = startOfWeek.getDay();
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    startOfWeek.setDate(startOfWeek.getDate() + daysToMonday);
     
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(endOfWeek.getDate() + 6);
