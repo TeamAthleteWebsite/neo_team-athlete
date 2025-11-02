@@ -12,15 +12,33 @@ export const WeekNavigation: React.FC<WeekNavigationProps> = ({
   currentWeek,
   onWeekChange
 }) => {
+  const getStartOfWeek = (date: Date) => {
+    const startOfWeek = new Date(date);
+    startOfWeek.setHours(0, 0, 0, 0);
+    const dayOfWeek = startOfWeek.getDay();
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    startOfWeek.setDate(startOfWeek.getDate() + daysToMonday);
+    return startOfWeek;
+  };
+
   const canGoToPreviousWeek = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const startOfCurrentWeekCalendar = getStartOfWeek(currentWeek);
+    const startOfTodayWeek = getStartOfWeek(today);
+    
+    // Si on est dans une semaine future, on peut toujours revenir (au moins jusqu'à la semaine actuelle)
+    if (startOfCurrentWeekCalendar > startOfTodayWeek) {
+      return true;
+    }
+    
+    // Sinon, on peut revenir uniquement si la semaine précédente n'est pas dans le passé
     const newWeek = new Date(currentWeek);
     newWeek.setDate(newWeek.getDate() - 7);
+    const startOfNewWeek = getStartOfWeek(newWeek);
     
-    const today = new Date();
-    const startOfNewWeek = new Date(newWeek);
-    startOfNewWeek.setDate(startOfNewWeek.getDate() - startOfNewWeek.getDay());
-    
-    return startOfNewWeek >= today;
+    return startOfNewWeek >= startOfTodayWeek;
   };
 
   const handlePreviousWeek = () => {
@@ -38,9 +56,7 @@ export const WeekNavigation: React.FC<WeekNavigationProps> = ({
   };
 
   const formatWeekRange = (date: Date) => {
-    const startOfWeek = new Date(date);
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-    
+    const startOfWeek = getStartOfWeek(date);
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(endOfWeek.getDate() + 6);
     

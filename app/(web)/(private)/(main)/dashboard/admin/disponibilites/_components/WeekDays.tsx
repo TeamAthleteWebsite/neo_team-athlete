@@ -17,7 +17,9 @@ export const WeekDays: React.FC<WeekDaysProps> = ({
 }) => {
   const getWeekDays = (date: Date) => {
     const startOfWeek = new Date(date);
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const dayOfWeek = startOfWeek.getDay();
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    startOfWeek.setDate(startOfWeek.getDate() + daysToMonday);
     
     const days = [];
     for (let i = 0; i < 7; i++) {

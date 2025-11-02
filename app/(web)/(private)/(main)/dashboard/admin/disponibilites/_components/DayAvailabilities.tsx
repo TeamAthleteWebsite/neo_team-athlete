@@ -102,11 +102,13 @@ export const DayAvailabilities: React.FC<DayAvailabilitiesProps> = ({
 
   return (
     <div className="bg-black/30 rounded-lg p-6">
-      <h3 className="text-lg font-semibold text-accent mb-4">
+      <h3 className="text-lg font-semibold text-accent mb-6">
         {formatDate(selectedDate)}
       </h3>
       
-      <div className="space-y-3">
+      {/* Conteneur avec défilement vertical */}
+      <div className="max-h-[600px] overflow-y-auto hide-scrollbar">
+        <div className="space-y-3">
         {sortedAvailabilities.map((availability) => {
           const hasExistingSession = sessionsExist[availability.id] || false;
           
@@ -114,10 +116,10 @@ export const DayAvailabilities: React.FC<DayAvailabilitiesProps> = ({
             <div
               key={availability.id}
               onClick={() => !hasExistingSession && onAvailabilityClick(availability)}
-              className={`flex items-center gap-4 p-4 bg-black/70 rounded-lg transition-colors ${
+              className={`flex items-center gap-4 p-4 bg-black/70 rounded-lg transition-colors duration-200 ${
                 hasExistingSession
                   ? 'opacity-50 cursor-not-allowed'
-                  : 'cursor-pointer hover:bg-black/80'
+                  : 'cursor-pointer hover:bg-black/80 hover:scale-[1.02] transform'
               }`}
             >
               <Avatar className="h-12 w-12">
@@ -125,14 +127,14 @@ export const DayAvailabilities: React.FC<DayAvailabilitiesProps> = ({
                   src={availability.client.image || undefined} 
                   alt={getClientFullName(availability.client)}
                 />
-                <AvatarFallback className="bg-primary/10 text-primary">
+                <AvatarFallback className="bg-primary/10 text-primary text-base">
                   {getClientInitials(availability.client)}
                 </AvatarFallback>
               </Avatar>
               
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h4 className="font-medium text-white">
+                  <h4 className="font-medium text-white text-base">
                     {getClientFullName(availability.client)}
                   </h4>
                   {hasExistingSession && (
@@ -148,6 +150,7 @@ export const DayAvailabilities: React.FC<DayAvailabilitiesProps> = ({
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );
