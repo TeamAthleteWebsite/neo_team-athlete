@@ -259,6 +259,29 @@ export const getAvailabilitiesByCoachId = async (coachId: string) => {
   }
 };
 
+export const getAvailabilitiesByClientId = async (clientId: string) => {
+  try {
+    const now = new Date();
+    
+    const availabilities = await prisma.availability.findMany({
+      where: {
+        clientId: clientId,
+        endTime: {
+          gt: now // endTime > maintenant (disponibilités dans le futur)
+        }
+      },
+      orderBy: {
+        startTime: "asc"
+      }
+    });
+
+    return availabilities;
+  } catch (error) {
+    console.error("Erreur lors de la récupération des disponibilités du client:", error);
+    throw new Error("Impossible de récupérer les disponibilités");
+  }
+};
+
 export const checkSessionExistsForAvailability = async (clientId: string, dateTime: Date) => {
   try {
     const session = await prisma.planning.findFirst({

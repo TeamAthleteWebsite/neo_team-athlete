@@ -9,6 +9,7 @@ export default function DashboardPage() {
   
   // Vérifier si l'utilisateur a accès à la section admin
   const hasAdminAccess = session?.user?.role === "ADMIN" || session?.user?.role === "COACH";
+  const isClient = session?.user?.role === "CLIENT";
 
   if (isPending) {
     return (
@@ -45,6 +46,14 @@ export default function DashboardPage() {
             iconName="ShieldEllipsis"
             title="Espace Coach"
             route="/dashboard/admin"
+          />
+        )}
+        
+        {isClient && (
+          <DashboardNavItem
+            iconName="UserCircle"
+            title="Mon profil"
+            route="/dashboard/client"
           />
         )}
       </div>
