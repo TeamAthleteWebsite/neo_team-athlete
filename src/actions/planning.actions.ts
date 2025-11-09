@@ -480,3 +480,35 @@ export const checkSessionExistsForAvailability = async (clientId: string, dateTi
     return false;
   }
 };
+
+export const deletePlanningSession = async (planningId: string) => {
+  try {
+    // Vérifier que la séance existe
+    const planning = await prisma.planning.findUnique({
+      where: { id: planningId },
+    });
+
+    if (!planning) {
+      return {
+        success: false,
+        error: "Séance non trouvée",
+      };
+    }
+
+    // Supprimer la séance
+    await prisma.planning.delete({
+      where: { id: planningId },
+    });
+
+    return {
+      success: true,
+      message: "La séance a été supprimée avec succès.",
+    };
+  } catch (error) {
+    console.error("Erreur lors de la suppression de la séance:", error);
+    return {
+      success: false,
+      error: "Impossible de supprimer la séance. Veuillez réessayer plus tard.",
+    };
+  }
+};

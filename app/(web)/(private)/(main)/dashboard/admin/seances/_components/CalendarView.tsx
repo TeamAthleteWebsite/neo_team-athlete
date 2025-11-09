@@ -15,11 +15,12 @@ interface CalendarViewProps {
 
 type ViewMode = "day" | "week";
 
-export const CalendarView: React.FC<CalendarViewProps> = ({ sessions }) => {
+export const CalendarView: React.FC<CalendarViewProps> = ({ sessions: initialSessions }) => {
   const today = new Date();
   const [currentWeek, setCurrentWeek] = useState(today);
   const [selectedDate, setSelectedDate] = useState(today);
   const [viewMode, setViewMode] = useState<ViewMode>("day");
+  const [sessions, setSessions] = useState<PlanningWithClient[]>(initialSessions);
 
   // Filtrer les séances pour la date sélectionnée
   const isPastDate = (date: Date) => {
@@ -46,6 +47,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ sessions }) => {
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode);
     // Ne pas réinitialiser la date sélectionnée lors du changement de vue
+  };
+
+  const handleSessionDeleted = (deletedSessionId: string) => {
+    // Mettre à jour l'état local en filtrant la session supprimée
+    setSessions((prevSessions) => 
+      prevSessions.filter((session) => session.id !== deletedSessionId)
+    );
   };
 
   const selectedDateSessions = getSessionsForDate(selectedDate);
@@ -115,6 +123,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ sessions }) => {
           <TimeSlotCalendar
             sessions={selectedDateSessions}
             selectedDate={selectedDate}
+            onSessionDeleted={(sessionId) => handleSessionDeleted(sessionId)}
           />
         </>
       ) : (
@@ -123,6 +132,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ sessions }) => {
           selectedDate={selectedDate}
           onDateSelect={handleDateSelect}
           sessions={sessions}
+          onSessionDeleted={(sessionId) => handleSessionDeleted(sessionId)}
         />
       )}
     </div>
