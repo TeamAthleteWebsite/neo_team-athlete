@@ -343,6 +343,81 @@ export const cancelPlanningSession = async (planningId: string) => {
   }
 };
 
+export const createAvailability = async (
+  clientId: string,
+  date: Date,
+  startTime: Date,
+  endTime: Date,
+) => {
+  try {
+    // Vérifier que l'heure de fin est postérieure à l'heure de début
+    if (endTime <= startTime) {
+      return {
+        success: false,
+        error: "L'heure de fin doit être postérieure à l'heure de début",
+      };
+    }
+
+    // Vérifier qu'aucune autre disponibilité ne chevauche le créneau
+    const overlappingAvailability = await prisma.availability.findFirst({
+      where: {
+        clientId: clientId,
+        OR: [
+          // Le nouveau créneau commence pendant une disponibilité existante
+          {
+            startTime: { lte: startTime },
+            endTime: { gt: startTime },
+          },
+          // Le nouveau créneau se termine pendant une disponibilité existante
+          {
+            startTime: { lt: endTime },
+            endTime: { gte: endTime },
+          },
+          // Le nouveau créneau englobe une disponibilité existante
+          {
+            startTime: { gte: startTime },
+            endTime: { lte: endTime },
+          },
+          // Une disponibilité existante englobe le nouveau créneau
+          {
+            startTime: { lte: startTime },
+            endTime: { gte: endTime },
+          },
+        ],
+      },
+    });
+
+    if (overlappingAvailability) {
+      return {
+        success: false,
+        error: "Ce créneau chevauche une disponibilité existante",
+      };
+    }
+
+    // Créer la disponibilité
+    const availability = await prisma.availability.create({
+      data: {
+        clientId: clientId,
+        date: date,
+        startTime: startTime,
+        endTime: endTime,
+      },
+    });
+
+    return {
+      success: true,
+      data: availability,
+      message: "Disponibilité créée avec succès",
+    };
+  } catch (error) {
+    console.error("Erreur lors de la création de la disponibilité:", error);
+    return {
+      success: false,
+      error: "Impossible de créer la disponibilité",
+    };
+  }
+};
+
 export const checkSessionExistsForAvailability = async (clientId: string, dateTime: Date) => {
   try {
     const session = await prisma.planning.findFirst({
@@ -354,6 +429,10 @@ export const checkSessionExistsForAvailability = async (clientId: string, dateTi
         date: {
           gte: new Date(dateTime.getFullYear(), dateTime.getMonth(), dateTime.getDate()),
           lt: new Date(dateTime.getFullYear(), dateTime.getMonth(), dateTime.getDate() + 1)
+        },
+        // Exclure les séances annulées
+        status: {
+          not: "CANCELLED"
         }
       }
     });

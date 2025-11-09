@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { ClientProfileInfo } from "./ClientProfileInfo";
 import { ContractInfoClient } from "./ContractInfoClient";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
@@ -40,14 +41,22 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 	plannings,
 	availabilities,
 }) => {
+	const router = useRouter();
 	const [activeTab, setActiveTab] = useState("planning");
 	const [refreshKey, setRefreshKey] = useState(0);
 
 	const handlePlanningUpdate = () => {
 		// Forcer le rafraîchissement en changeant la clé
 		setRefreshKey((prev) => prev + 1);
-		// Rafraîchir la page pour récupérer les données à jour
-		window.location.reload();
+		// Rafraîchir les données serveur sans perdre l'état client (onglet actif)
+		router.refresh();
+	};
+
+	const handleAvailabilityUpdate = () => {
+		// S'assurer qu'on reste sur l'onglet disponibilités
+		setActiveTab("disponibilites");
+		// Rafraîchir les données serveur
+		router.refresh();
 	};
 
 	const getInitials = (name: string) => {
@@ -209,7 +218,11 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 									</TabsContent>
 									
 									<TabsContent value="disponibilites" className="mt-6">
-										<ClientAvailabilitiesList availabilities={availabilities} />
+										<ClientAvailabilitiesList
+											availabilities={availabilities}
+											clientId={client.id}
+											onAvailabilityAdded={handleAvailabilityUpdate}
+										/>
 									</TabsContent>
 									
 									<TabsContent value="paiement" className="mt-6">

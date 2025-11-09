@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarCheck, Clock } from "lucide-react";
-import { checkSessionExistsForAvailability } from "@/src/actions/planning.actions";
+import { CalendarCheck, Clock, Plus } from "lucide-react";
+import { AddAvailabilityPopup } from "./AddAvailabilityPopup";
 
 interface Availability {
 	id: string;
@@ -14,14 +14,19 @@ interface Availability {
 
 interface ClientAvailabilitiesListProps {
 	availabilities: Availability[];
+	clientId: string;
+	onAvailabilityAdded?: () => void;
 }
 
 export const ClientAvailabilitiesList: React.FC<ClientAvailabilitiesListProps> = ({
 	availabilities,
+	clientId,
+	onAvailabilityAdded,
 }) => {
 	const [sessionsExist, setSessionsExist] = useState<Record<string, boolean>>(
 		{},
 	);
+	const [isAddPopupOpen, setIsAddPopupOpen] = useState(false);
 
 	// Vérifier l'existence de séances pour chaque disponibilité
 	useEffect(() => {
@@ -30,11 +35,23 @@ export const ClientAvailabilitiesList: React.FC<ClientAvailabilitiesListProps> =
 
 			for (const availability of availabilities) {
 				try {
-					const hasSession = await checkSessionExistsForAvailability(
-						availability.clientId,
-						availability.startTime,
-					);
-					sessionChecks[availability.id] = hasSession;
+					const response = await fetch("/api/planning/check-session-exists", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({
+							clientId: availability.clientId,
+							dateTime: new Date(availability.startTime).toISOString(),
+						}),
+					});
+
+					if (response.ok) {
+						const result = await response.json();
+						sessionChecks[availability.id] = result.hasSession || false;
+					} else {
+						sessionChecks[availability.id] = false;
+					}
 				} catch (error) {
 					console.error(
 						"Erreur lors de la vérification de la séance:",
@@ -86,81 +103,116 @@ export const ClientAvailabilitiesList: React.FC<ClientAvailabilitiesListProps> =
 		return new Date(a).getTime() - new Date(b).getTime();
 	});
 
-	if (availabilities.length === 0) {
-		return (
-			<div className="text-center py-12">
-				<div className="text-white/60 text-lg">
-					Aucune disponibilité renseignée
-				</div>
-			</div>
-		);
-	}
+	const handleAddAvailability = () => {
+		setIsAddPopupOpen(true);
+	};
+
+	const handleClosePopup = () => {
+		setIsAddPopupOpen(false);
+	};
+
+	const handleAvailabilityAdded = () => {
+		if (onAvailabilityAdded) {
+			onAvailabilityAdded();
+		}
+	};
 
 	return (
-		<div className="space-y-6">
-			{sortedDates.map((dateKey) => {
-				const dayAvailabilities = groupedAvailabilities[dateKey];
-				const firstAvailability = dayAvailabilities[0];
-				const sortedDayAvailabilities = [...dayAvailabilities].sort(
-					(a, b) =>
-						new Date(a.startTime).getTime() -
-						new Date(b.startTime).getTime(),
-				);
-
-				return (
-					<div
-						key={dateKey}
-						className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden"
+		<>
+			<div className="space-y-6">
+				{/* Header with Add Button */}
+				<div className="flex justify-end">
+					<button
+						onClick={handleAddAvailability}
+						className="flex items-center gap-2 bg-blue-600/50 hover:bg-blue-700/100 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-200 hover:scale-105"
 					>
-						<div className="p-4 bg-white/5 border-b border-white/10">
-							<h3 className="text-white font-semibold text-lg">
-								{formatDate(firstAvailability.startTime)}
-							</h3>
-						</div>
-						<div className="p-4 space-y-3">
-							{sortedDayAvailabilities.map((availability) => {
-								const hasExistingSession =
-									sessionsExist[availability.id] || false;
+						<Plus className="w-5 h-5" />
+						<span>Ajouter une disponibilité</span>
+					</button>
+				</div>
 
-								return (
-									<div
-										key={availability.id}
-										className={`flex items-center gap-4 p-4 bg-white/5 rounded-lg border ${
-											hasExistingSession
-												? "border-green-500/30 bg-green-500/5"
-												: "border-white/10"
-										} transition-colors`}
-									>
-										<div className="flex items-center gap-3 flex-1">
-											<Clock className="w-5 h-5 text-blue-400 flex-shrink-0" />
-											<div className="flex-1">
-												<div className="flex items-center gap-2">
-													<span className="text-white font-medium">
-														{formatTime(availability.startTime)} -{" "}
-														{formatTime(availability.endTime)}
-													</span>
-													{hasExistingSession && (
-														<div
-															className="flex items-center gap-1 text-green-400"
-															title="Séance déjà planifiée"
-														>
-															<CalendarCheck className="h-4 w-4" />
-															<span className="text-xs font-medium">
-																Séance planifiée
-															</span>
-														</div>
-													)}
-												</div>
-											</div>
-										</div>
-									</div>
-								);
-							})}
+				{availabilities.length === 0 ? (
+					<div className="text-center py-12">
+						<div className="text-white/60 text-lg">
+							Aucune disponibilité renseignée
 						</div>
 					</div>
-				);
-			})}
-		</div>
+				) : (
+					<div className="space-y-6">
+						{sortedDates.map((dateKey) => {
+							const dayAvailabilities = groupedAvailabilities[dateKey];
+							const firstAvailability = dayAvailabilities[0];
+							const sortedDayAvailabilities = [...dayAvailabilities].sort(
+								(a, b) =>
+									new Date(a.startTime).getTime() -
+									new Date(b.startTime).getTime(),
+							);
+
+							return (
+								<div
+									key={dateKey}
+									className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden"
+								>
+									<div className="p-4 bg-white/5 border-b border-white/10">
+										<h3 className="text-white font-semibold text-lg">
+											{formatDate(firstAvailability.startTime)}
+										</h3>
+									</div>
+									<div className="p-4 space-y-3">
+										{sortedDayAvailabilities.map((availability) => {
+											const hasExistingSession =
+												sessionsExist[availability.id] || false;
+
+											return (
+												<div
+													key={availability.id}
+													className={`flex items-center gap-4 p-4 bg-white/5 rounded-lg border ${
+														hasExistingSession
+															? "border-green-500/30 bg-green-500/5"
+															: "border-white/10"
+													} transition-colors`}
+												>
+													<div className="flex items-center gap-3 flex-1">
+														<Clock className="w-5 h-5 text-blue-400 flex-shrink-0" />
+														<div className="flex-1">
+															<div className="flex items-center gap-2">
+																<span className="text-white font-medium">
+																	{formatTime(availability.startTime)} -{" "}
+																	{formatTime(availability.endTime)}
+																</span>
+																{hasExistingSession && (
+																	<div
+																		className="flex items-center gap-1 text-green-400"
+																		title="Séance déjà planifiée"
+																	>
+																		<CalendarCheck className="h-4 w-4" />
+																		<span className="text-xs font-medium">
+																			Séance planifiée
+																		</span>
+																	</div>
+																)}
+															</div>
+														</div>
+													</div>
+												</div>
+											);
+										})}
+									</div>
+								</div>
+							);
+						})}
+					</div>
+				)}
+			</div>
+
+			{/* Add Availability Popup */}
+			<AddAvailabilityPopup
+				isOpen={isAddPopupOpen}
+				onClose={handleClosePopup}
+				clientId={clientId}
+				onAvailabilityAdded={handleAvailabilityAdded}
+			/>
+		</>
 	);
 };
 
