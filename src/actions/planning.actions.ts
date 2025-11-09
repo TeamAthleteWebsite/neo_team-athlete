@@ -266,8 +266,8 @@ export const getAvailabilitiesByClientId = async (clientId: string) => {
     const availabilities = await prisma.availability.findMany({
       where: {
         clientId: clientId,
-        endTime: {
-          gt: now // endTime > maintenant (disponibilités dans le futur)
+        startTime: {
+          gt: now // startTime > maintenant (disponibilités qui n'ont pas encore commencé)
         }
       },
       orderBy: {
@@ -414,6 +414,43 @@ export const createAvailability = async (
     return {
       success: false,
       error: "Impossible de créer la disponibilité",
+    };
+  }
+};
+
+export const deleteAvailability = async (availabilityId: string, clientId: string) => {
+  try {
+    // Vérifier que la disponibilité appartient bien au client
+    const availability = await prisma.availability.findFirst({
+      where: {
+        id: availabilityId,
+        clientId: clientId,
+      },
+    });
+
+    if (!availability) {
+      return {
+        success: false,
+        error: "Disponibilité non trouvée ou vous n'avez pas l'autorisation de la supprimer",
+      };
+    }
+
+    // Supprimer la disponibilité
+    await prisma.availability.delete({
+      where: {
+        id: availabilityId,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Disponibilité supprimée avec succès",
+    };
+  } catch (error) {
+    console.error("Erreur lors de la suppression de la disponibilité:", error);
+    return {
+      success: false,
+      error: "Impossible de supprimer la disponibilité",
     };
   }
 };

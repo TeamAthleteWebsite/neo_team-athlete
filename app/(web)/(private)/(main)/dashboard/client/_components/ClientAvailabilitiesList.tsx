@@ -3,6 +3,16 @@
 import { useEffect, useState } from "react";
 import { CalendarCheck, Clock, Plus } from "lucide-react";
 import { AddAvailabilityPopup } from "./AddAvailabilityPopup";
+import { toast } from "sonner";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface Availability {
 	id: string;
@@ -27,6 +37,10 @@ export const ClientAvailabilitiesList: React.FC<ClientAvailabilitiesListProps> =
 		{},
 	);
 	const [isAddPopupOpen, setIsAddPopupOpen] = useState(false);
+	const [selectedAvailability, setSelectedAvailability] =
+		useState<Availability | null>(null);
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	// Vérifier l'existence de séances pour chaque disponibilité
 	useEffect(() => {
@@ -117,6 +131,48 @@ export const ClientAvailabilitiesList: React.FC<ClientAvailabilitiesListProps> =
 		}
 	};
 
+	const handleAvailabilityClick = (availability: Availability) => {
+		setSelectedAvailability(availability);
+		setIsDeleteDialogOpen(true);
+	};
+
+	const handleDeleteAvailability = async () => {
+		if (!selectedAvailability) return;
+
+		setIsDeleting(true);
+		try {
+			const response = await fetch("/api/availability/delete", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					availabilityId: selectedAvailability.id,
+				}),
+			});
+
+			const result = await response.json();
+
+			if (result.success) {
+				toast.success(result.message || "Disponibilité supprimée avec succès");
+				setIsDeleteDialogOpen(false);
+				setSelectedAvailability(null);
+
+				// Notifier le parent pour rafraîchir les données
+				if (onAvailabilityAdded) {
+					onAvailabilityAdded();
+				}
+			} else {
+				toast.error(result.error || "Erreur lors de la suppression");
+			}
+		} catch (error) {
+			console.error("Erreur lors de la suppression:", error);
+			toast.error("Une erreur est survenue");
+		} finally {
+			setIsDeleting(false);
+		}
+	};
+
 	return (
 		<>
 			<div className="space-y-6">
@@ -166,11 +222,12 @@ export const ClientAvailabilitiesList: React.FC<ClientAvailabilitiesListProps> =
 											return (
 												<div
 													key={availability.id}
+													onClick={() => handleAvailabilityClick(availability)}
 													className={`flex items-center gap-4 p-4 bg-white/5 rounded-lg border ${
 														hasExistingSession
 															? "border-green-500/30 bg-green-500/5"
 															: "border-white/10"
-													} transition-colors`}
+													} transition-colors cursor-pointer hover:bg-white/10 hover:border-blue-500/30`}
 												>
 													<div className="flex items-center gap-3 flex-1">
 														<Clock className="w-5 h-5 text-blue-400 flex-shrink-0" />
@@ -212,6 +269,48 @@ export const ClientAvailabilitiesList: React.FC<ClientAvailabilitiesListProps> =
 				clientId={clientId}
 				onAvailabilityAdded={handleAvailabilityAdded}
 			/>
+
+			{/* Delete Confirmation Dialog */}
+			<Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+				<DialogContent className="bg-gray-900 border-white/20 text-white">
+					<DialogHeader>
+						<DialogTitle>Supprimer la disponibilité</DialogTitle>
+						<DialogDescription className="text-white/70">
+							{selectedAvailability && (
+								<>
+									Souhaitez-vous vraiment supprimer cette disponibilité du{" "}
+									<strong>
+										{formatDate(selectedAvailability.startTime)} de{" "}
+										{formatTime(selectedAvailability.startTime)} à{" "}
+										{formatTime(selectedAvailability.endTime)}
+									</strong>
+									?
+								</>
+							)}
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => {
+								setIsDeleteDialogOpen(false);
+								setSelectedAvailability(null);
+							}}
+							disabled={isDeleting}
+							className="bg-gray-600 text-white hover:bg-gray-700 border-white/20"
+						>
+							Annuler
+						</Button>
+						<Button
+							onClick={handleDeleteAvailability}
+							disabled={isDeleting}
+							className="bg-red-600 hover:bg-red-700 text-white"
+						>
+							{isDeleting ? "Suppression..." : "Confirmer la suppression"}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</>
 	);
 };
