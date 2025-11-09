@@ -15,13 +15,14 @@ interface ClientDetailsProps {
 	plannings: PlanningWithContract[];
 }
 
-export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings }) => {
+export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings: initialPlannings }) => {
 	const router = useRouter();
 	const { data: session } = useSession();
 	const [isOfferPopupOpen, setIsOfferPopupOpen] = useState(false);
 	const [hasContract, setHasContract] = useState(false);
 	const [activeTab, setActiveTab] = useState("planning");
 	const [isAddSessionPopupOpen, setIsAddSessionPopupOpen] = useState(false);
+	const [plannings, setPlannings] = useState<PlanningWithContract[]>(initialPlannings);
 
 	const handleClose = () => {
 		router.back();
@@ -51,6 +52,17 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 
 	const handleCloseAddSessionPopup = () => {
 		setIsAddSessionPopupOpen(false);
+	};
+
+	const handleSessionDeleted = (sessionId: string) => {
+		// Mettre à jour l'état local en filtrant la session supprimée
+		setPlannings((prevPlannings) => 
+			prevPlannings.filter((planning) => planning.id !== sessionId)
+		);
+	};
+
+	const getClientFullName = () => {
+		return `${client.name} ${client.lastName || ""}`.trim();
 	};
 
 	const getInitials = (name: string) => {
@@ -225,7 +237,12 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({ client, plannings 
 									</TabsList>
 									
 									<TabsContent value="planning" className="mt-6">
-										<PlanningList plannings={plannings} onAddSession={handleAddSession} />
+										<PlanningList 
+											plannings={plannings} 
+											onAddSession={handleAddSession}
+											onSessionDeleted={handleSessionDeleted}
+											clientName={getClientFullName()}
+										/>
 									</TabsContent>
 									
 									<TabsContent value="seances" className="mt-6">

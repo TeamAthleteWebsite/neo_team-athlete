@@ -4,6 +4,7 @@ import { type PlanningWithContract } from "@/src/actions/planning.actions";
 import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
+import { DeleteSessionDialog } from "@/app/(web)/(private)/(main)/dashboard/admin/seances/_components/DeleteSessionDialog";
 
 // Définition locale de PlanningStatus
 enum PlanningStatus {
@@ -15,10 +16,19 @@ enum PlanningStatus {
 interface PlanningListProps {
   plannings: PlanningWithContract[];
   onAddSession?: () => void;
+  onSessionDeleted?: (sessionId: string) => void;
+  clientName?: string;
 }
 
-export const PlanningList: React.FC<PlanningListProps> = ({ plannings, onAddSession }) => {
+export const PlanningList: React.FC<PlanningListProps> = ({ 
+  plannings, 
+  onAddSession,
+  onSessionDeleted,
+  clientName = "le client"
+}) => {
   const [selectedStatus, setSelectedStatus] = useState<string>(PlanningStatus.PLANNED);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedPlanning, setSelectedPlanning] = useState<PlanningWithContract | null>(null);
 
   const statusOptions = [
     { value: "all", label: "Tous les statuts" },
@@ -29,6 +39,19 @@ export const PlanningList: React.FC<PlanningListProps> = ({ plannings, onAddSess
 
   const handleStatusChange = (value: string) => {
     setSelectedStatus(value);
+  };
+
+  const handleSessionClick = (planning: PlanningWithContract) => {
+    setSelectedPlanning(planning);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirmed = () => {
+    if (selectedPlanning && onSessionDeleted) {
+      onSessionDeleted(selectedPlanning.id);
+    }
+    setDeleteDialogOpen(false);
+    setSelectedPlanning(null);
   };
 
   const filteredPlannings = selectedStatus === "all" 
@@ -155,7 +178,17 @@ export const PlanningList: React.FC<PlanningListProps> = ({ plannings, onAddSess
           sortedPlannings.map((planning) => (
             <div
               key={planning.id}
-              className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4 flex items-center justify-between hover:bg-white/10 transition-colors"
+              className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4 flex items-center justify-between hover:bg-white/10 transition-colors cursor-pointer"
+              onClick={() => handleSessionClick(planning)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleSessionClick(planning);
+                }
+              }}
+              aria-label={`Supprimer la séance du ${formatDate(planning.date)}`}
             >
               <div className="flex-1">
                 <div className="text-white font-medium text-lg">
@@ -172,6 +205,19 @@ export const PlanningList: React.FC<PlanningListProps> = ({ plannings, onAddSess
           ))
         )}
       </div>
+      
+      {selectedPlanning && (
+        <DeleteSessionDialog
+          isOpen={deleteDialogOpen}
+          onClose={() => {
+            setDeleteDialogOpen(false);
+            setSelectedPlanning(null);
+          }}
+          sessionId={selectedPlanning.id}
+          clientName={clientName}
+          onDeleted={handleDeleteConfirmed}
+        />
+      )}
     </div>
   );
 };
