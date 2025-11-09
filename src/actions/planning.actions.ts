@@ -282,6 +282,67 @@ export const getAvailabilitiesByClientId = async (clientId: string) => {
   }
 };
 
+export const cancelPlanningSession = async (planningId: string) => {
+  try {
+    // Vérifier que la séance existe et est en statut PLANNED
+    const planning = await prisma.planning.findUnique({
+      where: { id: planningId },
+      include: {
+        contract: {
+          select: {
+            clientId: true,
+          },
+        },
+      },
+    });
+
+    if (!planning) {
+      return {
+        success: false,
+        error: "Séance non trouvée",
+      };
+    }
+
+    if (planning.status !== "PLANNED") {
+      return {
+        success: false,
+        error: "Seules les séances prévues peuvent être annulées",
+      };
+    }
+
+    // Vérifier que la séance est dans 48h ou plus
+    const now = new Date();
+    const sessionDate = new Date(planning.date);
+    const hoursUntilSession = (sessionDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+    if (hoursUntilSession < 48) {
+      return {
+        success: false,
+        error: "L'annulation n'est possible que 48h avant la séance",
+      };
+    }
+
+    // Mettre à jour le statut à CANCELLED
+    await prisma.planning.update({
+      where: { id: planningId },
+      data: {
+        status: "CANCELLED",
+      },
+    });
+
+    return {
+      success: true,
+      message: "Séance annulée avec succès",
+    };
+  } catch (error) {
+    console.error("Erreur lors de l'annulation de la séance:", error);
+    return {
+      success: false,
+      error: "Impossible d'annuler la séance",
+    };
+  }
+};
+
 export const checkSessionExistsForAvailability = async (clientId: string, dateTime: Date) => {
   try {
     const session = await prisma.planning.findFirst({

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { ClientProfileInfo } from "./ClientProfileInfo";
 import { ContractInfoClient } from "./ContractInfoClient";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
-import { PlanningList } from "@/app/(web)/(private)/(main)/dashboard/admin/clients/[id]/_components/PlanningList";
+import { ClientPlanningList } from "./ClientPlanningList";
 import { ClientAvailabilitiesList } from "./ClientAvailabilitiesList";
 import { ClientPaymentTab } from "./ClientPaymentTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,6 +41,14 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 	availabilities,
 }) => {
 	const [activeTab, setActiveTab] = useState("planning");
+	const [refreshKey, setRefreshKey] = useState(0);
+
+	const handlePlanningUpdate = () => {
+		// Forcer le rafraîchissement en changeant la clé
+		setRefreshKey((prev) => prev + 1);
+		// Rafraîchir la page pour récupérer les données à jour
+		window.location.reload();
+	};
 
 	const getInitials = (name: string) => {
 		return name
@@ -193,7 +201,11 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 									</TabsList>
 									
 									<TabsContent value="planning" className="mt-6">
-										<PlanningList plannings={plannings} />
+										<ClientPlanningList
+											key={refreshKey}
+											plannings={plannings}
+											onPlanningUpdate={handlePlanningUpdate}
+										/>
 									</TabsContent>
 									
 									<TabsContent value="disponibilites" className="mt-6">
