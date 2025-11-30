@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 export const SessionTest = () => {
   const { data: session, isPending, error } = useExtendedSession();
-  const [sessionInfo, setSessionInfo] = useState<any>(null);
+  const [sessionInfo, setSessionInfo] = useState<{ user?: string; session?: string; role?: string; status?: string; userId?: string; isOnboarded?: string; userEmail?: string; error?: string } | null>(null);
 
   useEffect(() => {
     // Logs dans la console pour déboguer

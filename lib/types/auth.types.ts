@@ -34,5 +34,5 @@ export interface ExtendedSession {
 export interface UseExtendedSession {
   data: ExtendedSession | null;
   isPending: boolean;
-  error: any;
+  error: Error | null;
 }

@@ -4,7 +4,7 @@ import { useExtendedSession } from "@/lib/hooks/useExtendedSession";
 import { DashboardNavItem } from "./DashboardNavItem";
 
 export const RoleBasedNavigation = () => {
-  const { data: session, isPending, error } = useExtendedSession();
+  const { data: session, isPending } = useExtendedSession();
   
   if (isPending) {
     return null;

@@ -6,7 +6,7 @@ import { ArrowLeft, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ProgramItem } from "./components/ProgramItem";
-import { ServerAccessControl } from "@/components/features/ServerAccessControl";
+import { AccessControl } from "@/components/features/AccessControl";
 
 export default function AdminPage() {
 	const [programs, setPrograms] = useState<Program[]>([]);
@@ -46,7 +46,7 @@ export default function AdminPage() {
 	}
 
 	return (
-		<ServerAccessControl allowedRoles={["ADMIN", "COACH"]}>
+		<AccessControl allowedRoles={["ADMIN", "COACH"]}>
 			<div className="w-full">
 				<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
 					<div className="flex items-center gap-3">
@@ -86,6 +86,6 @@ export default function AdminPage() {
 					</div>
 				)}
 			</div>
-		</ServerAccessControl>
+		</AccessControl>
 	);
 }

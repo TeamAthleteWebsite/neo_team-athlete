@@ -12,9 +12,20 @@ interface ExtendedUser {
   image?: string | null;
 }
 
+interface SessionInfo {
+  id: string;
+  userId: string;
+  expiresAt: Date;
+  token: string;
+  createdAt: Date;
+  updatedAt: Date;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+}
+
 interface ExtendedSession {
   user: ExtendedUser;
-  session: any;
+  session: SessionInfo;
 }
 
 export const useExtendedSession = () => {
@@ -56,7 +67,7 @@ export const useExtendedSession = () => {
         setLoading(false);
       });
     }
-  }, [session?.user?.id, extendedSession]);
+  }, [session, extendedSession]);
 
   return {
     data: extendedSession,

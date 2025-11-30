@@ -44,26 +44,26 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
   const [contractMessage, setContractMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   useEffect(() => {
+    const fetchOffers = async () => {
+      setIsLoadingOffers(true);
+      try {
+        const result = await getOffersByCoachAction(coachId);
+        if (result.success && result.data) {
+          setOffers(result.data);
+        } else {
+          console.error("Erreur lors du chargement des offres");
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des offres:", error);
+      } finally {
+        setIsLoadingOffers(false);
+      }
+    };
     if (isOpen && coachId) {
-      loadOffers();
+      fetchOffers();
     }
   }, [isOpen, coachId]);
 
-  const loadOffers = async () => {
-    setIsLoadingOffers(true);
-    try {
-      const result = await getOffersByCoachAction(coachId);
-      if (result.success && result.data) {
-        setOffers(result.data);
-      } else {
-        console.error("Erreur lors du chargement des offres");
-      }
-    } catch (error) {
-      console.error("Erreur lors du chargement des offres:", error);
-    } finally {
-      setIsLoadingOffers(false);
-    }
-  };
 
   const handleOfferSelection = (offerId: string) => {
     setSelectedOfferId(offerId);
@@ -191,7 +191,7 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
         {/* Type d'offres */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="text-white font-medium">Type d'offres</h4>
+            <h4 className="text-white font-medium">Type d&apos;offres</h4>
             <div className="flex bg-zinc-800 rounded-lg p-1">
               <button
                 onClick={() => setShowCommitmentOffers(true)}
@@ -362,7 +362,7 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
                 </div>
               </div>
               {!selectedOfferId && (
-                <p className="text-xs text-zinc-500">Veuillez d'abord sélectionner une offre</p>
+                <p className="text-xs text-zinc-500">Veuillez d&apos;abord sélectionner une offre</p>
               )}
             </div>
 
@@ -393,7 +393,7 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
                 </div>
               </div>
               {!selectedOfferId && (
-                <p className="text-xs text-zinc-500">Veuillez d'abord sélectionner une offre</p>
+                <p className="text-xs text-zinc-500">Veuillez d&apos;abord sélectionner une offre</p>
               )}
             </div>
           </div>
@@ -406,7 +406,7 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
             <div className="flex items-center gap-3">
               <span className="text-white text-sm font-medium">Horaires flexibles</span>
               <span className="text-zinc-400 text-xs">
-                Permet au client de définir des horaires flexibles pour ces séances
+                Permet au client de définir des horaires flexibles pour ses séances
               </span>
             </div>
             <button
@@ -442,7 +442,7 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
           </div>
         )}
 
-        {/* Boutons d'action */}
+        {/* Boutons d action */}
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}

@@ -447,7 +447,7 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
           {selectedOfferId && (
             <div className="mt-3 p-3 bg-green-500/20 border border-green-500/30 rounded-md">
               <p className="text-green-400 text-sm">
-                ✓ Une offre a été sélectionnée. Cliquez sur "Enregistrer les modifications" pour confirmer votre choix.
+                ✓ Une offre a été sélectionnée. Cliquez sur &quot;Enregistrer les modifications&quot; pour confirmer votre choix.
               </p>
             </div>
           )}
@@ -553,7 +553,7 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 
                 {/* Toggle pour afficher les offres avec ou sans engagement */}
                 <div className="flex items-center justify-between bg-zinc-800 rounded-lg p-4">
-                  <span className="text-white font-medium">Type d'offres</span>
+                  <span className="text-white font-medium">Type d&apos;offres</span>
                   <div className="flex items-center space-x-2">
                     <button
                       type="button"

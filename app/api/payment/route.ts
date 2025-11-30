@@ -9,9 +9,6 @@ const createPaymentSchema = z.object({
   comment: z.string().optional(),
 });
 
-const getPaymentsSchema = z.object({
-  clientId: z.string().min(1, 'Client ID is required'),
-});
 
 export async function POST(request: NextRequest) {
   try {

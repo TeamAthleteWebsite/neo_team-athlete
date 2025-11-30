@@ -21,7 +21,7 @@ export const OfferSelectionDemo: React.FC = () => {
   return (
     <div className="p-8">
       <div className="max-w-md mx-auto space-y-4">
-        <h2 className="text-2xl font-bold text-white">Test de la Popup de Sélection d'Offres</h2>
+        <h2 className="text-2xl font-bold text-white">Test de la Popup de Sélection d&apos;Offres</h2>
         
         <button
           onClick={handleOpen}
@@ -40,6 +40,7 @@ export const OfferSelectionDemo: React.FC = () => {
           isOpen={isOpen}
           onClose={handleClose}
           coachId={testCoachId}
+          clientId="test-client-id"
           onOfferSelect={handleOfferSelect}
         />
       </div>

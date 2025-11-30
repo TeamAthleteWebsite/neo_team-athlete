@@ -23,7 +23,7 @@ export default function TestPopupPage() {
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-white mb-4">
-            Test de la Popup de Sélection d'Offres
+            Test de la Popup de Sélection d&apos;Offres
           </h1>
           <p className="text-white/80 text-lg">
             Cette page permet de tester le composant OfferSelectionPopup
@@ -41,14 +41,14 @@ export default function TestPopupPage() {
                 onClick={handleOpen}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-lg font-medium transition-colors text-lg"
               >
-                Ouvrir la Popup de Sélection d'Offres
+                Ouvrir la Popup de Sélection d&apos;Offres
               </button>
             </div>
 
             {selectedOfferId && (
               <div className="bg-green-600 text-white p-6 rounded-lg text-center">
                 <h3 className="text-xl font-bold mb-2">Offre Sélectionnée !</h3>
-                <p className="text-lg">ID de l'offre : {selectedOfferId}</p>
+                <p className="text-lg">ID de l&apos;offre : {selectedOfferId}</p>
                 <p className="text-sm opacity-90 mt-2">
                   Vérifiez la console pour plus de détails
                 </p>
@@ -58,12 +58,12 @@ export default function TestPopupPage() {
             <div className="bg-zinc-800 rounded-lg p-6">
               <h3 className="text-white font-semibold mb-4">Instructions de Test</h3>
               <div className="text-zinc-300 space-y-2 text-sm">
-                <p>1. Cliquez sur "Ouvrir la Popup de Sélection d'Offres"</p>
-                <p>2. Testez les différents types d'offres (Avec/Sans engagement)</p>
+                <p>1. Cliquez sur &quot;Ouvrir la Popup de Sélection d&apos;Offres&quot;</p>
+                <p>2. Testez les différents types d&apos;offres (Avec/Sans engagement)</p>
                 <p>3. Testez les différents types de programmes</p>
                 <p>4. Sélectionnez une offre dans le tableau</p>
                 <p>5. Confirmez la sélection</p>
-                <p>6. Vérifiez que l'ID de l'offre s'affiche ci-dessus</p>
+                <p>6. Vérifiez que l&apos;ID de l&apos;offre s&apos;affiche ci-dessus</p>
               </div>
             </div>
 
@@ -77,7 +77,7 @@ export default function TestPopupPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="text-zinc-300">Toggle des types d'offres</span>
+                    <span className="text-zinc-300">Toggle des types d&apos;offres</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
@@ -87,7 +87,7 @@ export default function TestPopupPage() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="text-zinc-300">Sélection d'offres</span>
+                    <span className="text-zinc-300">Sélection d&apos;offres</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
@@ -108,6 +108,7 @@ export default function TestPopupPage() {
           isOpen={isOpen}
           onClose={handleClose}
           coachId={testCoachId}
+          clientId="test-client-id"
           onOfferSelect={handleOfferSelect}
         />
       </div>

@@ -60,7 +60,7 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({ planni
     firstMonday.setDate(firstDayOfMonth.getDate() - daysToMonday);
     
     // Calculer toutes les semaines qui touchent ce mois
-    let currentWeekStart = new Date(firstMonday);
+    const currentWeekStart = new Date(firstMonday);
     
     while (currentWeekStart <= lastDayOfMonth) {
       const currentWeekEnd = new Date(currentWeekStart);

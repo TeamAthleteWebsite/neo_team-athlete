@@ -60,12 +60,6 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 	const [error, setError] = useState<string | null>(null);
 	const [payments, setPayments] = useState<Payment[]>([]);
 
-	useEffect(() => {
-		loadContractData();
-		loadPayments();
-	}, [clientId]);
-
-	// Fonction pour charger les paiements
 	const loadPayments = async () => {
 		try {
 			if (plannings.length === 0) {
@@ -88,8 +82,8 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 					setPayments(result.data);
 				}
 			}
-		} catch (error) {
-			console.error("Erreur lors du chargement des paiements:", error);
+		} catch (err) {
+			console.error("Erreur lors du chargement des paiements:", err);
 		}
 	};
 
@@ -110,12 +104,17 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 					setError(result.error);
 				}
 			}
-		} catch (err) {
+		} catch {
 			setError("Erreur lors du chargement des contrats");
 		} finally {
 			setIsLoading(false);
 		}
 	};
+
+	useEffect(() => {
+		loadContractData();
+		loadPayments();
+	}, [clientId, plannings]);
 
 	const formatDate = (date: Date) => {
 		return date.toLocaleDateString("fr-FR", {
@@ -163,7 +162,7 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 		const contractStartDate = new Date(contractData.startDate);
 
 		// Créer un Map pour regrouper les séances par mois
-		const monthlyMap = new Map<string, any>();
+		const monthlyMap = new Map<string, { totalSessions: number; contractTotalSessions: number; isMonthCompleted: boolean }>();
 
 		// Initialiser tous les mois du contrat jusqu'au mois en cours
 		const startMonth = contractStartDate.getMonth();

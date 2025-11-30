@@ -65,7 +65,7 @@ async function getClientsFiltered() {
 	}
 
 	// Construire la requête de base
-	let whereClause: any = {
+	const whereClause: { role: { equals: UserRole }; selectedOffer?: { coachId: string } } = {
 		role: {
 			equals: UserRole.CLIENT,
 		},

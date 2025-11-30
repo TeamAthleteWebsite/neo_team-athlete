@@ -5,13 +5,12 @@ import { useEffect, useState } from "react";
 
 export const AdvancedSessionTest = () => {
   const { data: session, isPending, error } = useExtendedSession();
-  const [dbTest, setDbTest] = useState<any>(null);
+  const [dbTest, setDbTest] = useState<{ error?: string; role?: string; email?: string; name?: string; isOnboarded?: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Test direct de la base de données
   const testDatabaseAccess = async () => {
     if (!session?.user?.id) return;
-    
+
     setLoading(true);
     try {
       const response = await fetch('/api/test-user-role', {
@@ -21,7 +20,7 @@ export const AdvancedSessionTest = () => {
         },
         body: JSON.stringify({ userId: session.user.id }),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setDbTest(data);
@@ -37,9 +36,7 @@ export const AdvancedSessionTest = () => {
   };
 
   useEffect(() => {
-    if (session?.user?.id) {
-      testDatabaseAccess();
-    }
+    testDatabaseAccess();
   }, [session?.user?.id]);
 
   return (

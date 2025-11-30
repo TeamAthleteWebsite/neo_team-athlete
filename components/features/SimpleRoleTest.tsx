@@ -28,7 +28,7 @@ export const SimpleRoleTest = () => {
         
         {!session?.user && !isPending && (
           <div className="text-red-600 font-medium">
-            ⚠️ Problème: Pas d'utilisateur dans la session
+            ⚠️ Problème: Pas d&apos;utilisateur dans la session
           </div>
         )}
 

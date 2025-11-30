@@ -52,12 +52,6 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings,
   const [error, setError] = useState<string | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
 
-  useEffect(() => {
-    loadContractData();
-    loadPayments();
-  }, [clientId]);
-
-  // Fonction pour charger les paiements
   const loadPayments = async () => {
     try {
       if (plannings.length === 0) {
@@ -86,14 +80,13 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings,
   const loadContractData = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const result = await getClientContractsAction(clientId);
-      
+
       if (result.success && result.data) {
         setContractData(result.data as ContractData);
         setContractType(result.type || null);
-        // Notifier le composant parent de l'état du contrat
         onContractUpdate?.(true);
       } else {
         setContractData(null);
@@ -103,13 +96,18 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings,
           setError(result.error);
         }
       }
-    } catch (err) {
+    } catch {
       setError("Erreur lors du chargement des contrats");
       onContractUpdate?.(false);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadContractData();
+    loadPayments();
+  }, [clientId, plannings, onContractUpdate]);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('fr-FR', {
@@ -155,7 +153,7 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings,
     const contractStartDate = new Date(contractData.startDate);
     
     // Créer un Map pour regrouper les séances par mois
-    const monthlyMap = new Map<string, any>();
+    const monthlyMap = new Map<string, { totalSessions: number; contractTotalSessions: number; isMonthCompleted: boolean }>();
     
     // Initialiser tous les mois du contrat jusqu'au mois en cours
     const startMonth = contractStartDate.getMonth();

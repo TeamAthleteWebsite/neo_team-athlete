@@ -15,7 +15,7 @@ export const SubPagesAccessTest = () => {
       const response = await fetch(route, { method: 'HEAD' });
       const result = response.ok ? "✅ Accessible" : "❌ Non accessible";
       setTestResults(prev => ({ ...prev, [pageName]: result }));
-    } catch (error) {
+    } catch {
       setTestResults(prev => ({ ...prev, [pageName]: "❌ Erreur" }));
     }
   };
@@ -39,7 +39,7 @@ export const SubPagesAccessTest = () => {
 
   return (
     <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-4">
-      <h4 className="font-semibold text-indigo-900 mb-2">Test d'Accès aux Sous-Pages Admin</h4>
+      <h4 className="font-semibold text-indigo-900 mb-2">Test d&apos;Accès aux Sous-Pages Admin</h4>
       
       <div className="space-y-3">
         <div className="flex space-x-2">

@@ -30,11 +30,6 @@ interface DayData {
   isToday: boolean;
 }
 
-interface TimeSlot {
-  hour: number;
-  label: string;
-  sessions: PlanningWithClient[];
-}
 
 export const WeekViewCalendar: React.FC<WeekViewCalendarProps> = ({
   currentWeek,
@@ -76,25 +71,6 @@ export const WeekViewCalendar: React.FC<WeekViewCalendarProps> = ({
     setSelectedSession(null);
   };
 
-  // Générer les créneaux horaires pour un jour donné
-  const generateTimeSlotsForDay = (daySessions: PlanningWithClient[]): TimeSlot[] => {
-    const timeSlots: TimeSlot[] = [];
-    
-    for (let hour = 7; hour <= 22; hour++) {
-      const sessionsInSlot = daySessions.filter(session => {
-        const sessionHour = new Date(session.date).getHours();
-        return sessionHour === hour;
-      });
-
-      timeSlots.push({
-        hour,
-        label: `${hour.toString().padStart(2, '0')}:00`,
-        sessions: sessionsInSlot
-      });
-    }
-
-    return timeSlots;
-  };
 
   // Générer les données pour les 7 jours de la semaine
   const generateWeekData = (): DayData[] => {

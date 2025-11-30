@@ -4,7 +4,7 @@ import { useExtendedSession } from "@/lib/hooks/useExtendedSession";
 import { AccessControl } from "./AccessControl";
 
 export const PermissionDemo = () => {
-  const { data: session, isPending, error } = useExtendedSession();
+  const { data: session, isPending } = useExtendedSession();
   
   if (isPending) {
     return (

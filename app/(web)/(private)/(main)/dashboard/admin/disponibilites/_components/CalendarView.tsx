@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { WeekNavigation } from "./WeekNavigation";
 import { WeekDays } from "./WeekDays";
 import { DayAvailabilities } from "./DayAvailabilities";

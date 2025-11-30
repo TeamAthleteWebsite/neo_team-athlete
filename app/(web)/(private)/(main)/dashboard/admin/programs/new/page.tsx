@@ -3,11 +3,11 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { ProgramForm } from "../components/ProgramForm";
-import { ServerAccessControl } from "@/components/features/ServerAccessControl";
+import { AccessControl } from "@/components/features/AccessControl";
 
 export default function NewProgramPage() {
 	return (
-		<ServerAccessControl allowedRoles={["ADMIN", "COACH"]}>
+		<AccessControl allowedRoles={["ADMIN", "COACH"]}>
 			<div className="w-full">
 				<div className="max-w-2xl mx-auto">
 					<h1 className="text-2xl font-bold mb-6 text-accent">
@@ -25,6 +25,6 @@ export default function NewProgramPage() {
 					</div>
 				</div>
 			</div>
-		</ServerAccessControl>
+		</AccessControl>
 	);
 }

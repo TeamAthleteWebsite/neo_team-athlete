@@ -40,7 +40,7 @@ export const AdminAccessTest = () => {
 
   return (
     <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
-      <h4 className="font-semibold text-orange-900 mb-2">Test d'Accès Admin</h4>
+      <h4 className="font-semibold text-orange-900 mb-2">Test d&apos;Accès Admin</h4>
       
       <div className="text-sm text-orange-800 space-y-2 mb-4">
         <div><strong>Status:</strong> {isPending ? "loading" : "authenticated"}</div>

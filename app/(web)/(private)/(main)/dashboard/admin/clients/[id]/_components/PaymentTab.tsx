@@ -90,7 +90,42 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({ plannings }) => {
 
   // Charger les paiements au montage du composant
   useEffect(() => {
-    loadPayments();
+    const fetchPayments = async () => {
+      try {
+        setLoading(true);
+        if (plannings.length === 0) {
+          setPayments([]);
+          return;
+        }
+
+        const clientId = plannings[0]?.contract.clientId;
+        if (!clientId) {
+          console.error("ClientId manquant dans le contrat");
+          setPayments([]);
+          return;
+        }
+
+        console.log("Chargement des paiements pour clientId:", clientId);
+        const response = await fetch(`/api/payment?clientId=${clientId}`);
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            console.log("Paiements chargés:", result.data);
+            setPayments(result.data);
+          } else {
+            console.error("Erreur dans la réponse API:", result.error);
+          }
+        } else {
+          const error = await response.json();
+          console.error("Erreur HTTP:", error);
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des paiements:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPayments();
   }, [plannings]);
 
   // Fonction pour calculer les données mensuelles de paiement

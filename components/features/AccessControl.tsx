@@ -61,7 +61,7 @@ export const AccessControl = ({
               Accès non autorisé
             </h2>
             <p className="text-gray-600">
-              Vous n'avez pas les permissions nécessaires pour accéder à cette page.
+              Vous n&apos;avez pas les permissions nécessaires pour accéder à cette page.
             </p>
             <div className="text-sm text-gray-500 mt-2">
               Rôle actuel: <span className="font-medium">{userRole || "Non défini"}</span>
