@@ -1,0 +1,3 @@
+bunx prisma validate
+bunx prisma format
+bunx lint-staged
