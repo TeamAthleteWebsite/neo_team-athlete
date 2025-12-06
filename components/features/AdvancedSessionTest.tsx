@@ -37,6 +37,7 @@ export const AdvancedSessionTest = () => {
 
   useEffect(() => {
     testDatabaseAccess();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id]);
 
   return (

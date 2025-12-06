@@ -114,6 +114,7 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 	useEffect(() => {
 		loadContractData();
 		loadPayments();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [clientId, plannings]);
 
 	const formatDate = (date: Date) => {

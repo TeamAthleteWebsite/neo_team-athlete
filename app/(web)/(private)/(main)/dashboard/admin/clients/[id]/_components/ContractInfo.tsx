@@ -92,7 +92,22 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings,
 
       if (result.success && result.data) {
         // Convertir les dates de string à Date si nécessaire
-        const contract = result.data as any;
+        const contract = result.data as {
+          id: string;
+          startDate: Date | string;
+          endDate: Date | string;
+          totalSessions: number;
+          amount: number;
+          status: string;
+          offer: {
+            program: {
+              name: string;
+              type: string;
+            };
+            price: number;
+            duration: number;
+          };
+        };
         const contractDataWithDates: ContractData = {
           ...contract,
           startDate: contract.startDate instanceof Date ? contract.startDate : new Date(contract.startDate),
@@ -120,7 +135,8 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings,
   useEffect(() => {
     loadContractData();
     loadPayments();
-  }, [clientId, plannings, onContractUpdate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clientId, plannings]);
 
   const handleDeleteContract = async () => {
     if (!contractData) return;
@@ -452,7 +468,7 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings,
               className="flex items-center gap-2 text-white/50 hover:text-red-400 hover:bg-red-500/10 text-sm"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              Supprimer l'abonnement
+              Supprimer l&apos;abonnement
             </Button>
           </div>
         )}
@@ -462,7 +478,7 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings,
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px] bg-gray-900 border-gray-700">
           <DialogHeader>
-            <DialogTitle className="text-white">Supprimer l'abonnement</DialogTitle>
+            <DialogTitle className="text-white">Supprimer l&apos;abonnement</DialogTitle>
             <DialogDescription className="text-gray-300">
               Êtes-vous sûr de vouloir supprimer cet abonnement ? Cette action entraînera également la suppression de toutes les séances et paiements associés. Cette action est irréversible.
             </DialogDescription>

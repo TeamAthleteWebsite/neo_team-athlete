@@ -166,13 +166,17 @@ export const addRecurringPlanningSessions = async (
     const [startHour, startMinute] = startTime.split(':').map(Number);
     
     // Extraire l'heure de fin si fournie, sinon utiliser startTime + 1h
-    let endHour: number;
-    let endMinute: number;
+    // Note: endHour et endMinute ne sont pas utilisés actuellement mais peuvent être nécessaires pour validation future
     if (endTime) {
-      [endHour, endMinute] = endTime.split(':').map(Number);
-    } else {
-      endHour = (startHour + 1) % 24;
-      endMinute = startMinute;
+      // Validation de l'heure de fin si fournie
+      const [endHour, endMinute] = endTime.split(':').map(Number);
+      if (endHour < startHour || (endHour === startHour && endMinute <= startMinute)) {
+        return {
+          success: false,
+          count: 0,
+          error: "L'heure de fin doit être postérieure à l'heure de début"
+        };
+      }
     }
 
     // Générer toutes les dates de séances

@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { getCoachesAction } from "@/src/actions/coach.actions";
 import { getOffersByCoachAction } from "@/src/actions/offer.actions";
+import Image from "next/image";
 
 type ExtendedUser = User & {
   role?: UserRole;
@@ -501,9 +502,11 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
                       >
                         <div className="w-12 h-12 rounded-full overflow-hidden bg-zinc-700 flex-shrink-0">
                           {coach.image ? (
-                            <img
+                            <Image
                               src={coach.image}
                               alt={coach.name}
+                              width={48}
+                              height={48}
                               className="w-full h-full object-cover"
                             />
                           ) : (
