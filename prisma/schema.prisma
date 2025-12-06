@@ -36,17 +36,17 @@ model User {
   goal      String?
   role      UserRole @default(PROSPECT)
 
-  isOnboarded Boolean @default(false)
-  contracts       Contract[]  @relation("ClientContracts")
-  offers          Offer[]     @relation("CoachOffers")
-  availabilities  Availability[]
+  isOnboarded    Boolean        @default(false)
+  contracts      Contract[]     @relation("ClientContracts")
+  offers         Offer[]        @relation("CoachOffers")
+  availabilities Availability[]
 
   // Offre sélectionnée par l'utilisateur
   selectedOffer   Offer?  @relation("UserSelectedOffer", fields: [selectedOfferId], references: [id])
   selectedOfferId String?
 
-  createdAt DateTime?  @default(now())
-  updatedAt DateTime?  @updatedAt
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
 
   @@unique([email])
   @@map("user")
@@ -109,13 +109,12 @@ model Program {
   name        String
   description String      @db.Text
   imageUrl    String?
-  
-  createdAt   DateTime?    @default(now())
-  updatedAt   DateTime?    @updatedAt
 
-  isPublished Boolean   @default(false)
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+
+  isPublished Boolean @default(false)
   offers      Offer[]
-  
 
   @@index([type])
 }
@@ -156,15 +155,15 @@ model Notification {
   id        String           @id @default(cuid())
   type      NotificationType
   title     String
-  message   String          @db.Text
-  isRead    Boolean         @default(false)
+  message   String           @db.Text
+  isRead    Boolean          @default(false)
   userId    String
-  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime?       // Pour les notifications temporaires
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime? // Pour les notifications temporaires
   metadata  Json?
 
-  createdAt DateTime?  @default(now())
-  updatedAt DateTime?  @updatedAt
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
 
   @@index([userId])
   @@index([createdAt])
@@ -173,29 +172,29 @@ model Notification {
 }
 
 model Offer {
-  id          String   @id @default(cuid())
-  coach       User     @relation("CoachOffers", fields: [coachId], references: [id])
+  id          String     @id @default(cuid())
+  coach       User       @relation("CoachOffers", fields: [coachId], references: [id])
   coachId     String
-  program     Program  @relation(fields: [programId], references: [id])
+  program     Program    @relation(fields: [programId], references: [id])
   programId   String
   sessions    Int
   price       Float
-  duration    Int      // en mois
-  isPublished Boolean  @default(false)
+  duration    Int // en mois
+  isPublished Boolean    @default(false)
   contracts   Contract[]
 
   // Utilisateurs qui ont sélectionné cette offre
   selectedByUsers User[] @relation("UserSelectedOffer")
 
-  createdAt DateTime?  @default(now())
-  updatedAt DateTime?  @updatedAt
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
 }
 
 model Contract {
-  id            String   @id @default(cuid())
-  client        User     @relation("ClientContracts", fields: [clientId], references: [id])
+  id            String         @id @default(cuid())
+  client        User           @relation("ClientContracts", fields: [clientId], references: [id])
   clientId      String
-  offer         Offer    @relation(fields: [offerId], references: [id])
+  offer         Offer          @relation(fields: [offerId], references: [id])
   offerId       String
   startDate     DateTime
   endDate       DateTime
@@ -206,8 +205,8 @@ model Contract {
   plannings     Planning[]
   payments      Payment[]
 
-  createdAt DateTime?  @default(now())
-  updatedAt DateTime?  @updatedAt
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
 }
 
 model Planning {
@@ -217,8 +216,8 @@ model Planning {
   date       DateTime
   status     PlanningStatus
 
-  createdAt DateTime?  @default(now())
-  updatedAt DateTime?  @updatedAt
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
 }
 
 model Payment {
@@ -229,8 +228,8 @@ model Payment {
   paymentDate DateTime
   comment     String?
 
-  createdAt DateTime?  @default(now())
-  updatedAt DateTime?  @updatedAt
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
 }
 
 model Availability {
@@ -241,6 +240,6 @@ model Availability {
   startTime DateTime
   endTime   DateTime
 
-  createdAt DateTime?  @default(now())
-  updatedAt DateTime?  @updatedAt
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
 }
