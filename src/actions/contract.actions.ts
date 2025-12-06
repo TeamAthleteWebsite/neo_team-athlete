@@ -163,3 +163,60 @@ export async function getClientContractsAction(clientId: string) {
     };
   }
 }
+
+export async function deleteContractAction(contractId: string) {
+  try {
+    // Vérifier que le contrat existe et qu'il est ACTIVE
+    const contract = await prisma.contract.findUnique({
+      where: { id: contractId },
+      select: {
+        id: true,
+        status: true,
+        clientId: true,
+      },
+    });
+
+    if (!contract) {
+      return {
+        success: false,
+        error: "Contrat non trouvé",
+      };
+    }
+
+    if (contract.status !== "ACTIVE") {
+      return {
+        success: false,
+        error: "Seuls les contrats actifs peuvent être supprimés",
+      };
+    }
+
+    // Supprimer le contrat et toutes les données associées dans une transaction
+    await prisma.$transaction(async (tx) => {
+      // Supprimer toutes les séances (plannings) associées au contrat
+      await tx.planning.deleteMany({
+        where: { contractId: contractId },
+      });
+
+      // Supprimer tous les paiements associés au contrat
+      await tx.payment.deleteMany({
+        where: { contractId: contractId },
+      });
+
+      // Supprimer le contrat
+      await tx.contract.delete({
+        where: { id: contractId },
+      });
+    });
+
+    return {
+      success: true,
+      message: "L'abonnement et toutes les données associées ont été supprimés avec succès.",
+    };
+  } catch (error) {
+    console.error("Erreur lors de la suppression du contrat:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Une erreur est survenue lors de la suppression du contrat",
+    };
+  }
+}

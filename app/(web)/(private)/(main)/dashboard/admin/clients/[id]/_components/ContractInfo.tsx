@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { getClientContractsAction } from "@/src/actions/contract.actions";
-import { Calendar, Clock, DollarSign, Package, Dumbbell, CreditCard } from "lucide-react";
+import { Calendar, Clock, DollarSign, Package, Dumbbell, CreditCard, Trash2 } from "lucide-react";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface ContractInfoProps {
   clientId: string;
@@ -18,6 +21,7 @@ interface ContractData {
   endDate: Date;
   totalSessions: number;
   amount: number;
+  status: string;
   offer: {
     program: {
       name: string;
@@ -51,6 +55,8 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings,
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadPayments = async () => {
     try {
@@ -85,7 +91,14 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings,
       const result = await getClientContractsAction(clientId);
 
       if (result.success && result.data) {
-        setContractData(result.data as ContractData);
+        // Convertir les dates de string à Date si nécessaire
+        const contract = result.data as any;
+        const contractDataWithDates: ContractData = {
+          ...contract,
+          startDate: contract.startDate instanceof Date ? contract.startDate : new Date(contract.startDate),
+          endDate: contract.endDate instanceof Date ? contract.endDate : new Date(contract.endDate),
+        };
+        setContractData(contractDataWithDates);
         setContractType(result.type || null);
         onContractUpdate?.(true);
       } else {
@@ -108,6 +121,42 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings,
     loadContractData();
     loadPayments();
   }, [clientId, plannings, onContractUpdate]);
+
+  const handleDeleteContract = async () => {
+    if (!contractData) return;
+
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch("/api/contract/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contractId: contractData.id,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(result.message || "L'abonnement et toutes les données associées ont été supprimés avec succès.");
+        setIsDeleteDialogOpen(false);
+        // Recharger les données du contrat (qui sera maintenant null)
+        await loadContractData();
+        // Recharger les paiements
+        await loadPayments();
+      } else {
+        toast.error(result.error || "Erreur lors de la suppression de l'abonnement");
+      }
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'abonnement:", error);
+      toast.error("Une erreur est survenue lors de la suppression de l'abonnement");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('fr-FR', {
@@ -393,7 +442,50 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings,
             }
           </p>
         </div>
+
+        {/* Bouton de suppression - uniquement si le contrat est ACTIVE */}
+        {contractData.status === "ACTIVE" && (
+          <div className="flex justify-center pt-2">
+            <Button
+              variant="ghost"
+              onClick={() => setIsDeleteDialogOpen(true)}
+              className="flex items-center gap-2 text-white/50 hover:text-red-400 hover:bg-red-500/10 text-sm"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Supprimer l'abonnement
+            </Button>
+          </div>
+        )}
       </div>
+
+      {/* Dialog de confirmation de suppression */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-gray-900 border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="text-white">Supprimer l'abonnement</DialogTitle>
+            <DialogDescription className="text-gray-300">
+              Êtes-vous sûr de vouloir supprimer cet abonnement ? Cette action entraînera également la suppression de toutes les séances et paiements associés. Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+              className="border-gray-600 text-gray-300 hover:bg-gray-800"
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteContract}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Suppression..." : "Confirmer la suppression"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
