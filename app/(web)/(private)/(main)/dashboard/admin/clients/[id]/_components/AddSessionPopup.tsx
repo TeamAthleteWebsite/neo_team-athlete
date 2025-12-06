@@ -2,6 +2,7 @@
 
 import { Calendar, Clock, RotateCcw, X, Repeat } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface AddSessionPopupProps {
   isOpen: boolean;
@@ -36,25 +37,83 @@ export const AddSessionPopup: React.FC<AddSessionPopupProps> = ({ isOpen, onClos
     );
   };
 
+  const resetForm = () => {
+    setSelectedDate("");
+    setSelectedTime("");
+    setSessionCount(1);
+    setSelectedDays([]);
+    setIsRecurringEnabled(false);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
+  // Validation des conditions de récurrence
+  const isRecurrenceValid = () => {
+    if (!isRecurringEnabled) return true; // Pas de validation si la récurrence n'est pas activée
+    
+    return (
+      selectedDate !== "" &&
+      selectedTime !== "" &&
+      sessionCount > 0 &&
+      selectedDays.length > 0
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!selectedDate || !selectedTime) {
-      alert("Veuillez sélectionner une date et une heure");
+      toast.error("Veuillez sélectionner une date et une heure");
+      return;
+    }
+
+    // Validation des conditions de récurrence si activée
+    if (isRecurringEnabled && !isRecurrenceValid()) {
+      toast.error("Pour activer la récurrence, veuillez sélectionner une date, une heure, un nombre de semaines supérieur à 0 et au moins un jour de la semaine");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Combiner date et heure
-      const dateTime = new Date(`${selectedDate}T${selectedTime}`);
-      
-      if (isRecurringEnabled && selectedDays.length > 0) {
-        // Logique pour les séances récurrentes (à implémenter plus tard)
-        console.log("Séances récurrentes à implémenter");
+      if (isRecurringEnabled && isRecurrenceValid()) {
+        // Créer des séances récurrentes
+        const startDate = new Date(`${selectedDate}T${selectedTime}`);
+        
+        const response = await fetch('/api/planning/add-recurring-sessions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            clientId,
+            startDate: startDate.toISOString(),
+            startTime: selectedTime,
+            endTime: null, // Optionnel pour l'instant
+            numberOfWeeks: sessionCount,
+            selectedDays: selectedDays
+          })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Erreur lors de la création des séances récurrentes');
+        }
+
+        toast.success(result.message || "Séances récurrentes créées avec succès.");
+        
+        // Notifier le parent que les séances ont été ajoutées
+        if (onSessionAdded) {
+          onSessionAdded();
+        }
       } else {
         // Ajouter une seule séance via l'API
+        const dateTime = new Date(`${selectedDate}T${selectedTime}`);
+        
         const response = await fetch('/api/planning/add-session', {
           method: 'POST',
           headers: {
@@ -71,16 +130,19 @@ export const AddSessionPopup: React.FC<AddSessionPopupProps> = ({ isOpen, onClos
           throw new Error(errorData.error || 'Erreur lors de l\'ajout de la séance');
         }
         
+        toast.success("Séance créée avec succès");
+        
         // Notifier le parent que la séance a été ajoutée
         if (onSessionAdded) {
           onSessionAdded();
         }
       }
       
-      onClose();
+      // Fermer et réinitialiser le formulaire
+      handleClose();
     } catch (error) {
       console.error("Erreur lors de l'ajout de la séance:", error);
-      alert("Erreur lors de l'ajout de la séance");
+      toast.error(error instanceof Error ? error.message : "Erreur lors de l'ajout de la séance");
     } finally {
       setIsSubmitting(false);
     }
@@ -95,7 +157,7 @@ export const AddSessionPopup: React.FC<AddSessionPopupProps> = ({ isOpen, onClos
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-white text-2xl font-bold">Nouvelle séance</h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-white/60 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
           >
             <X className="w-6 h-6" />
@@ -218,6 +280,11 @@ export const AddSessionPopup: React.FC<AddSessionPopupProps> = ({ isOpen, onClos
                   Jours sélectionnés: {selectedDays.map(id => daysOfWeek.find(d => d.id === id)?.fullName).join(', ')}
                 </div>
               )}
+              {isRecurringEnabled && selectedDays.length === 0 && (
+                <div className="text-orange-400 text-xs">
+                  Veuillez sélectionner au moins un jour de la semaine
+                </div>
+              )}
             </div>
           )}
 
@@ -225,14 +292,14 @@ export const AddSessionPopup: React.FC<AddSessionPopupProps> = ({ isOpen, onClos
           <div className="flex gap-3 pt-4">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="flex-1 bg-white/10 hover:bg-white/20 text-white py-3 rounded-lg transition-colors"
             >
               Annuler
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || (isRecurringEnabled && !isRecurrenceValid())}
               className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 disabled:cursor-not-allowed text-white py-3 rounded-lg transition-colors"
             >
               {isSubmitting ? "Ajout..." : "Ajouter"}

@@ -137,6 +137,113 @@ export const addPlanningSession = async (
   }
 };
 
+export const addRecurringPlanningSessions = async (
+  clientId: string,
+  startDate: Date,
+  startTime: string,
+  endTime: string | null,
+  numberOfWeeks: number,
+  selectedDays: number[]
+): Promise<{ success: boolean; count: number; error?: string }> => {
+  try {
+    // Trouver le contrat actif du client
+    const activeContract = await prisma.contract.findFirst({
+      where: {
+        clientId: clientId,
+        status: "ACTIVE"
+      }
+    });
+
+    if (!activeContract) {
+      return {
+        success: false,
+        count: 0,
+        error: "Aucun contrat actif trouvé pour ce client"
+      };
+    }
+
+    // Extraire l'heure de début (HH:MM)
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    
+    // Extraire l'heure de fin si fournie, sinon utiliser startTime + 1h
+    let endHour: number;
+    let endMinute: number;
+    if (endTime) {
+      [endHour, endMinute] = endTime.split(':').map(Number);
+    } else {
+      endHour = (startHour + 1) % 24;
+      endMinute = startMinute;
+    }
+
+    // Générer toutes les dates de séances
+    const sessionsToCreate: Date[] = [];
+    const now = new Date();
+    const baseDate = new Date(startDate);
+    const startDayOfWeek = baseDate.getDay();
+
+    // Pour chaque semaine (0 à numberOfWeeks-1)
+    for (let week = 0; week < numberOfWeeks; week++) {
+      // Pour chaque jour sélectionné
+      for (const targetDayOfWeek of selectedDays) {
+        // Calculer le décalage pour atteindre le jour cible
+        // Si le jour cible est dans le passé de la semaine de départ, on prend celui de la semaine suivante
+        let daysToAdd = targetDayOfWeek - startDayOfWeek;
+        if (daysToAdd < 0) {
+          daysToAdd += 7;
+        }
+        
+        // Ajouter le nombre de semaines
+        daysToAdd += week * 7;
+
+        // Créer la date de la séance
+        const sessionDate = new Date(baseDate);
+        sessionDate.setDate(baseDate.getDate() + daysToAdd);
+        
+        // Définir l'heure de début
+        const sessionDateTime = new Date(sessionDate);
+        sessionDateTime.setHours(startHour, startMinute, 0, 0);
+
+        // Ajouter la séance
+        sessionsToCreate.push(sessionDateTime);
+      }
+    }
+
+    // Trier les dates pour éviter les doublons et organiser
+    const uniqueSessions = Array.from(
+      new Set(sessionsToCreate.map(d => d.getTime()))
+    )
+      .map(time => new Date(time))
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    // Créer toutes les séances en une seule transaction
+    const createdSessions = await prisma.$transaction(
+      uniqueSessions.map(sessionDateTime => {
+        const status = sessionDateTime > now ? "PLANNED" : "DONE";
+        return prisma.planning.create({
+          data: {
+            contractId: activeContract.id,
+            date: sessionDateTime,
+            status: status
+          }
+        });
+      })
+    );
+
+    return {
+      success: true,
+      count: createdSessions.length
+    };
+
+  } catch (error) {
+    console.error("Erreur lors de l'ajout des séances récurrentes:", error);
+    return {
+      success: false,
+      count: 0,
+      error: "Impossible d'ajouter les séances récurrentes"
+    };
+  }
+};
+
 export const updateExpiredSessions = async (): Promise<void> => {
   try {
     const now = new Date();
