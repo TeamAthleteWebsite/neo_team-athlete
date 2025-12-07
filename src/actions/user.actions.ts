@@ -131,7 +131,8 @@ export async function getClients() {
 			height: client.height,
 			weight: client.weight,
 			goal: client.goal,
-			trainingType: client.contracts[0]?.offer?.program?.type || "Personal Training",
+			trainingType:
+				client.contracts[0]?.offer?.program?.type || "Personal Training",
 		}));
 	} catch (error) {
 		console.error("Error fetching clients:", error);
@@ -181,9 +182,26 @@ export async function getClientById(id: string) {
 							select: {
 								program: {
 									select: {
+										name: true,
 										type: true,
 									},
 								},
+							},
+						},
+					},
+				},
+				selectedOffer: {
+					select: {
+						program: {
+							select: {
+								name: true,
+							},
+						},
+						coach: {
+							select: {
+								id: true,
+								name: true,
+								email: true,
 							},
 						},
 					},
@@ -195,16 +213,25 @@ export async function getClientById(id: string) {
 			return null;
 		}
 
+		// Priorité 1: Programme du contrat actif
+		const activeContract = client.contracts[0];
+		const programTitle =
+			activeContract?.offer?.program?.name ||
+			client.selectedOffer?.program?.name ||
+			"Aucun programme";
+
 		return {
 			id: client.id,
 			name: `${client.name} ${client.lastName || ""}`.trim(),
+			lastName: client.lastName,
 			image: client.image,
 			email: client.email,
 			phone: client.phone,
 			height: client.height,
 			weight: client.weight,
 			goal: client.goal,
-			trainingType: client.contracts[0]?.offer?.program?.type || "Personal Training",
+			programTitle,
+			coach: client.selectedOffer?.coach || null,
 		};
 	} catch (error) {
 		console.error("Error fetching client by id:", error);
