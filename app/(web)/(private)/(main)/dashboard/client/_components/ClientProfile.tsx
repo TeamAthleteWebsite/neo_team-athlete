@@ -1,15 +1,15 @@
 "use client";
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { type PlanningWithContract } from "@/src/actions/planning.actions";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ClientProfileInfo } from "./ClientProfileInfo";
-import { ContractInfoClient } from "./ContractInfoClient";
-import { type PlanningWithContract } from "@/src/actions/planning.actions";
-import { ClientPlanningList } from "./ClientPlanningList";
+import { useState } from "react";
 import { ClientAvailabilitiesList } from "./ClientAvailabilitiesList";
 import { ClientPaymentTab } from "./ClientPaymentTab";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
+import { ClientPlanningList } from "./ClientPlanningList";
+import { ClientProfileInfo } from "./ClientProfileInfo";
+import { ContractInfoClient } from "./ContractInfoClient";
 
 interface Client {
 	id: string;
@@ -96,30 +96,30 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 			{/* Content */}
 			<div className="relative z-10 min-h-screen flex flex-col">
 				{/* Main Content */}
-				<main className="flex-1 flex items-center justify-center px-6 py-6">
-					<div className="w-full max-w-5xl space-y-8">
+				<main className="flex-1 flex items-start sm:items-center justify-center px-4 sm:px-6 pb-4 sm:pb-6">
+					<div className="w-full max-w-5xl space-y-4 sm:space-y-8">
 						{/* Profile Card */}
-						<div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
+						<div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
 							<div className="flex flex-col lg:flex-row">
 								{/* Left Side - Profile Section */}
-								<div className="lg:w-1/2 p-8 lg:p-12 text-center lg:text-left bg-gradient-to-br from-white/5 to-white/10">
+								<div className="lg:w-1/2 p-4 sm:p-6 lg:p-12 text-center lg:text-left bg-gradient-to-br from-white/5 to-white/10">
 									{/* Profile Picture */}
-									<div className="flex justify-center lg:justify-start mb-8">
+									<div className="flex justify-center lg:justify-start mb-4 sm:mb-6 lg:mb-8">
 										{client.image ? (
 											<Image
 												src={client.image}
 												alt={client.name}
 												width={140}
 												height={140}
-												className="w-35 h-35 rounded-full object-cover border-4 border-white/20 shadow-lg"
+												className="w-24 h-24 sm:w-32 sm:h-32 lg:w-[140px] lg:h-[140px] rounded-full object-cover border-4 border-white/20 shadow-lg"
 											/>
 										) : (
 											<div
-												className={`w-35 h-35 rounded-full ${getAvatarColor(
+												className={`w-24 h-24 sm:w-32 sm:h-32 lg:w-[140px] lg:h-[140px] rounded-full ${getAvatarColor(
 													client.name,
 												)} flex items-center justify-center border-4 border-white/20 shadow-lg`}
 											>
-												<span className="text-white font-bold text-4xl">
+												<span className="text-white font-bold text-2xl sm:text-3xl lg:text-4xl">
 													{getInitials(client.name)}
 												</span>
 											</div>
@@ -127,7 +127,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 									</div>
 
 									{/* Name */}
-									<h1 className="text-white text-4xl font-bold mb-6">
+									<h1 className="text-white text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6">
 										{client.name}
 									</h1>
 
@@ -136,14 +136,14 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 								</div>
 
 								{/* Right Side - Details Section */}
-								<div className="lg:w-1/2 p-8 lg:p-12 bg-gradient-to-br from-white/5 to-transparent">
-									<div className="space-y-8">
+								<div className="lg:w-1/2 p-4 sm:p-6 lg:p-12 bg-gradient-to-br from-white/5 to-transparent">
+									<div className="space-y-4 sm:space-y-6 lg:space-y-8">
 										{/* Weight */}
-										<div className="flex items-center justify-between">
-											<span className="text-white/90 text-xl font-semibold">
+										<div className="flex items-center justify-between flex-wrap gap-2">
+											<span className="text-white/90 text-base sm:text-lg lg:text-xl font-semibold">
 												Poids
 											</span>
-											<span className="text-white text-xl font-medium">
+											<span className="text-white text-base sm:text-lg lg:text-xl font-medium">
 												{client.weight
 													? `${client.weight} kg`
 													: "Non renseigné"}
@@ -151,11 +151,11 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 										</div>
 
 										{/* Height */}
-										<div className="flex items-center justify-between">
-											<span className="text-blue-400 text-xl font-semibold">
+										<div className="flex items-center justify-between flex-wrap gap-2">
+											<span className="text-blue-400 text-base sm:text-lg lg:text-xl font-semibold">
 												Taille
 											</span>
-											<span className="text-white text-xl font-medium">
+											<span className="text-white text-base sm:text-lg lg:text-xl font-medium">
 												{client.height
 													? `${client.height} cm`
 													: "Non renseigné"}
@@ -163,12 +163,12 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 										</div>
 
 										{/* Objective */}
-										<div className="flex items-start justify-between">
-											<span className="text-white/90 text-xl font-semibold">
+										<div className="flex items-start justify-between flex-wrap gap-2">
+											<span className="text-white/90 text-base sm:text-lg lg:text-xl font-semibold">
 												Objectif
 											</span>
-											<div className="text-right max-w-xs">
-												<span className="text-white text-xl font-medium leading-relaxed">
+											<div className="text-right max-w-xs w-full sm:w-auto">
+												<span className="text-white text-base sm:text-lg lg:text-xl font-medium leading-relaxed break-words">
 													{client.goal || "Non renseigné"}
 												</span>
 											</div>
@@ -185,47 +185,51 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 						</div>
 
 						{/* Planning, Availability and Payment Section */}
-						<div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
-							<div className="p-8">
-								<Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+						<div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
+							<div className="p-4 sm:p-6 lg:p-8">
+								<Tabs
+									value={activeTab}
+									onValueChange={setActiveTab}
+									className="w-full"
+								>
 									<TabsList className="grid w-full grid-cols-3 bg-white/10 border border-white/20">
-										<TabsTrigger 
+										<TabsTrigger
 											value="planning"
-											className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/80 hover:text-white transition-colors"
+											className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/80 hover:text-white transition-colors text-xs sm:text-sm"
 										>
 											Planning
 										</TabsTrigger>
-										<TabsTrigger 
+										<TabsTrigger
 											value="disponibilites"
-											className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/80 hover:text-white transition-colors"
+											className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/80 hover:text-white transition-colors text-xs sm:text-sm"
 										>
 											Disponibilités
 										</TabsTrigger>
-										<TabsTrigger 
+										<TabsTrigger
 											value="paiement"
-											className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/80 hover:text-white transition-colors"
+											className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/80 hover:text-white transition-colors text-xs sm:text-sm"
 										>
 											Paiement
 										</TabsTrigger>
 									</TabsList>
-									
-									<TabsContent value="planning" className="mt-6">
+
+									<TabsContent value="planning" className="mt-4 sm:mt-6">
 										<ClientPlanningList
 											key={refreshKey}
 											plannings={plannings}
 											onPlanningUpdate={handlePlanningUpdate}
 										/>
 									</TabsContent>
-									
-									<TabsContent value="disponibilites" className="mt-6">
+
+									<TabsContent value="disponibilites" className="mt-4 sm:mt-6">
 										<ClientAvailabilitiesList
 											availabilities={availabilities}
 											clientId={client.id}
 											onAvailabilityAdded={handleAvailabilityUpdate}
 										/>
 									</TabsContent>
-									
-									<TabsContent value="paiement" className="mt-6">
+
+									<TabsContent value="paiement" className="mt-4 sm:mt-6">
 										<ClientPaymentTab plannings={plannings} />
 									</TabsContent>
 								</Tabs>
@@ -237,4 +241,3 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 		</div>
 	);
 };
-

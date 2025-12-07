@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { HandCoins, BanknoteArrowUp, BanknoteX } from "lucide-react";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
+import { BanknoteArrowUp, BanknoteX, HandCoins } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface ClientPaymentTabProps {
 	plannings: PlanningWithContract[];
@@ -61,7 +61,6 @@ export const ClientPaymentTab: React.FC<ClientPaymentTabProps> = ({
 		];
 		return months[monthIndex];
 	};
-
 
 	// Charger les paiements au montage du composant
 	useEffect(() => {
@@ -128,10 +127,8 @@ export const ClientPaymentTab: React.FC<ClientPaymentTabProps> = ({
 			for (let month = monthStart; month <= monthEnd; month++) {
 				const key = `${year}-${month}`;
 				const isPastMonth =
-					year < currentYear ||
-					(year === currentYear && month < currentMonth);
-				const isCurrentMonth =
-					year === currentYear && month === currentMonth;
+					year < currentYear || (year === currentYear && month < currentMonth);
+				const isCurrentMonth = year === currentYear && month === currentMonth;
 
 				monthlyMap.set(key, {
 					month: getMonthName(month),
@@ -169,14 +166,16 @@ export const ClientPaymentTab: React.FC<ClientPaymentTabProps> = ({
 	// Fonction pour obtenir l'icône appropriée
 	const getPaymentIcon = (monthData: MonthlyPaymentData) => {
 		if (monthData.isPaid) {
-			return <BanknoteArrowUp className="w-7 h-7 text-green-400" />;
+			return (
+				<BanknoteArrowUp className="w-5 h-5 sm:w-7 sm:h-7 text-green-400" />
+			);
 		}
 
 		if (monthData.isPastMonth) {
-			return <BanknoteX className="w-7 h-7 text-red-400" />;
+			return <BanknoteX className="w-5 h-5 sm:w-7 sm:h-7 text-red-400" />;
 		}
 
-		return <HandCoins className="w-7 h-7 text-white/60" />;
+		return <HandCoins className="w-5 h-5 sm:w-7 sm:h-7 text-white/60" />;
 	};
 
 	// Fonction pour obtenir la classe CSS du conteneur
@@ -195,22 +194,22 @@ export const ClientPaymentTab: React.FC<ClientPaymentTabProps> = ({
 	// Fonction pour obtenir la classe CSS du header
 	const getHeaderClass = (monthData: MonthlyPaymentData) => {
 		if (monthData.isPaid) {
-			return "p-4 flex items-center justify-between";
+			return "p-4 flex items-center justify-between hover:bg-green-500/10 transition-colors cursor-pointer";
 		}
 
 		if (monthData.isPastMonth) {
-			return "p-4 flex items-center justify-between";
+			return "p-4 flex items-center justify-between hover:bg-red-500/10 transition-colors cursor-pointer";
 		}
 
-		return "p-4 flex items-center justify-between";
+		return "p-4 flex items-center justify-between hover:bg-white/10 transition-colors cursor-pointer";
 	};
 
 	const monthlyData = calculateMonthlyPaymentData();
 
 	if (loading) {
 		return (
-			<div className="text-center py-12">
-				<div className="text-white/60 text-lg">
+			<div className="text-center py-8 sm:py-12">
+				<div className="text-white/60 text-base sm:text-lg px-4">
 					Chargement des paiements...
 				</div>
 			</div>
@@ -219,8 +218,8 @@ export const ClientPaymentTab: React.FC<ClientPaymentTabProps> = ({
 
 	if (monthlyData.length === 0) {
 		return (
-			<div className="text-center py-12">
-				<div className="text-white/60 text-lg">
+			<div className="text-center py-8 sm:py-12">
+				<div className="text-white/60 text-base sm:text-lg px-4">
 					Aucun contrat trouvé
 				</div>
 			</div>
@@ -228,44 +227,38 @@ export const ClientPaymentTab: React.FC<ClientPaymentTabProps> = ({
 	}
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-3 sm:space-y-4">
 			{monthlyData.map((monthData) => {
 				const monthKey = `${monthData.year}-${monthData.monthIndex}`;
 
 				return (
-					<div
-						key={monthKey}
-						className={getContainerClass(monthData)}
-					>
+					<div key={monthKey} className={getContainerClass(monthData)}>
 						{/* En-tête du mois */}
 						<div className={getHeaderClass(monthData)}>
-							<div className="flex items-center gap-4">
-								<div className="text-white font-medium text-lg">
+							<div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 flex-1 min-w-0">
+								<div className="text-white font-medium text-base sm:text-lg">
 									{monthData.month} {monthData.year}
 								</div>
-								<div className="text-white font-semibold text-base">
-									{monthData.amount}€
-								</div>
-								{monthData.isPaid && monthData.paymentDate && (() => {
-									const payment = payments.find(
-										(p) => p.id === monthData.paymentId,
-									);
-									const paymentDate = payment?.createdAt
-										? new Date(payment.createdAt).toLocaleDateString(
-												"fr-FR",
-											)
-										: "Date inconnue";
+								{monthData.isPaid &&
+									monthData.paymentDate &&
+									(() => {
+										const payment = payments.find(
+											(p) => p.id === monthData.paymentId,
+										);
+										const paymentDate = payment?.createdAt
+											? new Date(payment.createdAt).toLocaleDateString("fr-FR")
+											: "Date inconnue";
 
-									return (
-										<div className="text-sm text-white/70">
-											Payé le {paymentDate}
-										</div>
-									);
-								})()}
+										return (
+											<div className="text-xs sm:text-sm text-white/70">
+												Payé le {paymentDate}
+											</div>
+										);
+									})()}
 							</div>
 
 							{/* Icône de paiement */}
-							<div className="flex items-center gap-2">
+							<div className="flex items-center gap-2 flex-shrink-0">
 								{getPaymentIcon(monthData)}
 							</div>
 						</div>
@@ -275,4 +268,3 @@ export const ClientPaymentTab: React.FC<ClientPaymentTabProps> = ({
 		</div>
 	);
 };
-

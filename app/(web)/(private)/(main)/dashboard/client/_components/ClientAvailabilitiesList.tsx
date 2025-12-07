@@ -1,9 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { CalendarCheck, Clock, Plus } from "lucide-react";
-import { AddAvailabilityPopup } from "./AddAvailabilityPopup";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -12,7 +9,10 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { CalendarCheck, Clock, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { AddAvailabilityPopup } from "./AddAvailabilityPopup";
 
 interface Availability {
 	id: string;
@@ -28,11 +28,9 @@ interface ClientAvailabilitiesListProps {
 	onAvailabilityAdded?: () => void;
 }
 
-export const ClientAvailabilitiesList: React.FC<ClientAvailabilitiesListProps> = ({
-	availabilities,
-	clientId,
-	onAvailabilityAdded,
-}) => {
+export const ClientAvailabilitiesList: React.FC<
+	ClientAvailabilitiesListProps
+> = ({ availabilities, clientId, onAvailabilityAdded }) => {
 	const [sessionsExist, setSessionsExist] = useState<Record<string, boolean>>(
 		{},
 	);
@@ -67,10 +65,7 @@ export const ClientAvailabilitiesList: React.FC<ClientAvailabilitiesListProps> =
 						sessionChecks[availability.id] = false;
 					}
 				} catch (error) {
-					console.error(
-						"Erreur lors de la vérification de la séance:",
-						error,
-					);
+					console.error("Erreur lors de la vérification de la séance:", error);
 					sessionChecks[availability.id] = false;
 				}
 			}
@@ -175,26 +170,27 @@ export const ClientAvailabilitiesList: React.FC<ClientAvailabilitiesListProps> =
 
 	return (
 		<>
-			<div className="space-y-6">
+			<div className="space-y-4 sm:space-y-6">
 				{/* Header with Add Button */}
 				<div className="flex justify-end">
 					<button
 						onClick={handleAddAvailability}
-						className="flex items-center gap-2 bg-blue-600/50 hover:bg-blue-700/100 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-200 hover:scale-105"
+						className="flex items-center gap-2 bg-blue-600/50 hover:bg-blue-700/100 text-white px-3 sm:px-4 py-2 rounded-lg shadow-lg transition-all duration-200 hover:scale-105 text-sm sm:text-base"
 					>
-						<Plus className="w-5 h-5" />
-						<span>Ajouter une disponibilité</span>
+						<Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+						<span className="hidden sm:inline">Ajouter une disponibilité</span>
+						<span className="sm:hidden">Ajouter</span>
 					</button>
 				</div>
 
 				{availabilities.length === 0 ? (
-					<div className="text-center py-12">
-						<div className="text-white/60 text-lg">
+					<div className="text-center py-8 sm:py-12">
+						<div className="text-white/60 text-base sm:text-lg px-4">
 							Aucune disponibilité renseignée
 						</div>
 					</div>
 				) : (
-					<div className="space-y-6">
+					<div className="space-y-4 sm:space-y-6">
 						{sortedDates.map((dateKey) => {
 							const dayAvailabilities = groupedAvailabilities[dateKey];
 							const firstAvailability = dayAvailabilities[0];
@@ -209,12 +205,12 @@ export const ClientAvailabilitiesList: React.FC<ClientAvailabilitiesListProps> =
 									key={dateKey}
 									className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden"
 								>
-									<div className="p-4 bg-white/5 border-b border-white/10">
-										<h3 className="text-white font-semibold text-lg">
+									<div className="p-3 sm:p-4 bg-white/5 border-b border-white/10">
+										<h3 className="text-white font-semibold text-base sm:text-lg">
 											{formatDate(firstAvailability.startTime)}
 										</h3>
 									</div>
-									<div className="p-4 space-y-3">
+									<div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
 										{sortedDayAvailabilities.map((availability) => {
 											const hasExistingSession =
 												sessionsExist[availability.id] || false;
@@ -223,17 +219,17 @@ export const ClientAvailabilitiesList: React.FC<ClientAvailabilitiesListProps> =
 												<div
 													key={availability.id}
 													onClick={() => handleAvailabilityClick(availability)}
-													className={`flex items-center gap-4 p-4 bg-white/5 rounded-lg border ${
+													className={`flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white/5 rounded-lg border ${
 														hasExistingSession
 															? "border-green-500/30 bg-green-500/5"
 															: "border-white/10"
 													} transition-colors cursor-pointer hover:bg-white/10 hover:border-blue-500/30`}
 												>
-													<div className="flex items-center gap-3 flex-1">
-														<Clock className="w-5 h-5 text-blue-400 flex-shrink-0" />
-														<div className="flex-1">
-															<div className="flex items-center gap-2">
-																<span className="text-white font-medium">
+													<div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+														<Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 flex-shrink-0" />
+														<div className="flex-1 min-w-0">
+															<div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
+																<span className="text-white font-medium text-sm sm:text-base break-words">
 																	{formatTime(availability.startTime)} -{" "}
 																	{formatTime(availability.endTime)}
 																</span>
@@ -242,7 +238,7 @@ export const ClientAvailabilitiesList: React.FC<ClientAvailabilitiesListProps> =
 																		className="flex items-center gap-1 text-green-400"
 																		title="Séance déjà planifiée"
 																	>
-																		<CalendarCheck className="h-4 w-4" />
+																		<CalendarCheck className="h-3 w-3 sm:h-4 sm:w-4" />
 																		<span className="text-xs font-medium">
 																			Séance planifiée
 																		</span>
@@ -314,4 +310,3 @@ export const ClientAvailabilitiesList: React.FC<ClientAvailabilitiesListProps> =
 		</>
 	);
 };
-

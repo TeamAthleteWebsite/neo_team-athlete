@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { getClientContractsAction } from "@/src/actions/contract.actions";
+import { type PlanningWithContract } from "@/src/actions/planning.actions";
 import {
 	Calendar,
 	Clock,
-	DollarSign,
-	Package,
-	Dumbbell,
 	CreditCard,
+	DollarSign,
+	Dumbbell,
+	Package,
 } from "lucide-react";
-import { type PlanningWithContract } from "@/src/actions/planning.actions";
+import { useEffect, useState } from "react";
 
 interface ContractInfoClientProps {
 	clientId: string;
@@ -163,7 +163,14 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 		const contractStartDate = new Date(contractData.startDate);
 
 		// Créer un Map pour regrouper les séances par mois
-		const monthlyMap = new Map<string, { totalSessions: number; contractTotalSessions: number; isMonthCompleted: boolean }>();
+		const monthlyMap = new Map<
+			string,
+			{
+				totalSessions: number;
+				contractTotalSessions: number;
+				isMonthCompleted: boolean;
+			}
+		>();
 
 		// Initialiser tous les mois du contrat jusqu'au mois en cours
 		const startMonth = contractStartDate.getMonth();
@@ -243,9 +250,11 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 
 	if (isLoading) {
 		return (
-			<div className="pt-6 border-t border-white/10">
-				<div className="text-center space-y-4">
-					<h3 className="text-white text-2xl font-bold">Abonnement</h3>
+			<div className="pt-4 sm:pt-6 border-t border-white/10">
+				<div className="text-center space-y-3 sm:space-y-4">
+					<h3 className="text-white text-xl sm:text-2xl font-bold">
+						Abonnement
+					</h3>
 					<div className="animate-pulse">
 						<div className="h-4 bg-white/20 rounded w-3/4 mx-auto mb-2"></div>
 						<div className="h-4 bg-white/20 rounded w-1/2 mx-auto"></div>
@@ -257,10 +266,12 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 
 	if (error) {
 		return (
-			<div className="pt-6 border-t border-white/10">
-				<div className="text-center space-y-4">
-					<h3 className="text-white text-2xl font-bold">Abonnement</h3>
-					<p className="text-red-400 text-sm">{error}</p>
+			<div className="pt-4 sm:pt-6 border-t border-white/10">
+				<div className="text-center space-y-3 sm:space-y-4">
+					<h3 className="text-white text-xl sm:text-2xl font-bold">
+						Abonnement
+					</h3>
+					<p className="text-red-400 text-sm px-4">{error}</p>
 				</div>
 			</div>
 		);
@@ -268,21 +279,27 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 
 	if (!contractData) {
 		return (
-			<div className="pt-6 border-t border-white/10">
-				<div className="text-center space-y-4">
-					<h3 className="text-white text-2xl font-bold">Abonnement</h3>
-					<p className="text-white text-lg">Aucun abonnement en cours...</p>
+			<div className="pt-4 sm:pt-6 border-t border-white/10">
+				<div className="text-center space-y-3 sm:space-y-4">
+					<h3 className="text-white text-xl sm:text-2xl font-bold">
+						Abonnement
+					</h3>
+					<p className="text-white text-base sm:text-lg px-4">
+						Aucun abonnement en cours...
+					</p>
 				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="pt-6 border-t border-white/10">
-			<div className="space-y-6">
+		<div className="pt-4 sm:pt-6 border-t border-white/10">
+			<div className="space-y-4 sm:space-y-6">
 				{/* Header avec type de contrat */}
 				<div className="text-center">
-					<h3 className="text-white text-2xl font-bold mb-2">Abonnement</h3>
+					<h3 className="text-white text-xl sm:text-2xl font-bold mb-2">
+						Abonnement
+					</h3>
 					{contractType === "active" && (
 						<span className="inline-block bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-medium border border-green-500/30">
 							Contrat en cours
@@ -296,78 +313,85 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 				</div>
 
 				{/* Informations du contrat */}
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 					{/* Type de programme */}
-					<div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-						<Package className="w-5 h-5 text-blue-400" />
-						<div>
-							<p className="text-white/60 text-sm">Type de programme</p>
-							<p className="text-white font-medium">
+					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+						<Package className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 flex-shrink-0" />
+						<div className="min-w-0 flex-1">
+							<p className="text-white/60 text-xs sm:text-sm">
+								Type de programme
+							</p>
+							<p className="text-white font-medium text-sm sm:text-base truncate">
 								{contractData.offer.program.type}
 							</p>
 						</div>
 					</div>
 
 					{/* Durée du contrat */}
-					<div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-						<Clock className="w-5 h-5 text-yellow-400" />
-						<div>
-							<p className="text-white font-medium">
-								{calculateDuration(contractData.startDate, contractData.endDate)}
+					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+						<Clock className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 flex-shrink-0" />
+						<div className="min-w-0 flex-1">
+							<p className="text-white font-medium text-sm sm:text-base">
+								{calculateDuration(
+									contractData.startDate,
+									contractData.endDate,
+								)}
 							</p>
 						</div>
 					</div>
 
 					{/* Date de début */}
-					<div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-						<Calendar className="w-5 h-5 text-purple-400" />
-						<div>
-							<p className="text-white/60 text-sm">Date de début</p>
-							<p className="text-white font-medium">
+					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+						<Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 flex-shrink-0" />
+						<div className="min-w-0 flex-1">
+							<p className="text-white/60 text-xs sm:text-sm">Date de début</p>
+							<p className="text-white font-medium text-sm sm:text-base">
 								{formatDate(contractData.startDate)}
 							</p>
 						</div>
 					</div>
 
 					{/* Date de fin */}
-					<div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-						<Calendar className="w-5 h-5 text-orange-400" />
-						<div>
-							<p className="text-white/60 text-sm">Date de fin</p>
-							<p className="text-white font-medium">
+					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+						<Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 flex-shrink-0" />
+						<div className="min-w-0 flex-1">
+							<p className="text-white/60 text-xs sm:text-sm">Date de fin</p>
+							<p className="text-white font-medium text-sm sm:text-base">
 								{formatDate(contractData.endDate)}
 							</p>
 						</div>
 					</div>
 
 					{/* Nombre de sessions */}
-					<div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-						<Dumbbell className="w-5 h-5 text-green-400" />
-						<div>
-							<p className="text-white/60 text-sm">Séances / mois</p>
-							<p className="text-white font-medium">
+					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+						<Dumbbell className="w-4 h-4 sm:w-5 sm:h-5 text-green-400 flex-shrink-0" />
+						<div className="min-w-0 flex-1">
+							<p className="text-white/60 text-xs sm:text-sm">Séances / mois</p>
+							<p className="text-white font-medium text-sm sm:text-base">
 								{contractData.totalSessions}
 							</p>
 						</div>
 					</div>
 
 					{/* Séances restantes */}
-					<div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-						<Clock className="w-5 h-5 text-orange-400" />
-						<div>
-							<p className="text-white/60 text-sm">Séances restantes</p>
-							<p className="text-white font-medium">
+					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+						<Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 flex-shrink-0" />
+						<div className="min-w-0 flex-1">
+							<p className="text-white/60 text-xs sm:text-sm">
+								Séances restantes
+							</p>
+							<p className="text-white font-medium text-sm sm:text-base">
 								{calculateRemainingSessions(contractData)}
 							</p>
 						</div>
 					</div>
 
 					{/* Prix par mois */}
-					<div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-						<DollarSign className="w-5 h-5 text-emerald-400" />
-						<div>
-							<p className="text-white/60 text-sm">Prix par mois</p>
-							<p className="text-white font-medium">
+					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+						<DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0" />
+						<div className="min-w-0 flex-1">
+							<p className="text-white/60 text-xs sm:text-sm">Prix par mois</p>
+							<p className="text-white font-medium text-sm sm:text-base break-words">
 								{contractData.offer.duration > 0
 									? `${contractData.amount}€ /mois`
 									: `${contractData.amount}€ (prix unique)`}
@@ -377,11 +401,13 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 
 					{/* Montant restant à payer */}
 					{contractData.offer.duration > 0 && (
-						<div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-							<CreditCard className="w-5 h-5 text-orange-400" />
-							<div>
-								<p className="text-white/60 text-sm">Montant restant</p>
-								<p className="text-white font-medium">
+						<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+							<CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 flex-shrink-0" />
+							<div className="min-w-0 flex-1">
+								<p className="text-white/60 text-xs sm:text-sm">
+									Montant restant
+								</p>
+								<p className="text-white font-medium text-sm sm:text-base">
 									{calculateRemainingAmount(contractData).toFixed(2)}€
 								</p>
 							</div>
@@ -390,9 +416,11 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 				</div>
 
 				{/* Prix total du contrat */}
-				<div className="text-center p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
-					<p className="text-blue-400 text-sm mb-1">Prix total du contrat</p>
-					<p className="text-white text-2xl font-bold">
+				<div className="text-center p-3 sm:p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+					<p className="text-blue-400 text-xs sm:text-sm mb-1">
+						Prix total du contrat
+					</p>
+					<p className="text-white text-xl sm:text-2xl font-bold">
 						{contractData.offer.duration > 0
 							? `${(contractData.amount * contractData.offer.duration).toFixed(2)}€`
 							: `${contractData.amount}€`}
@@ -402,4 +430,3 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 		</div>
 	);
 };
-

@@ -1,16 +1,6 @@
 "use client";
 
-import { type PlanningWithContract } from "@/src/actions/planning.actions";
-import { useState, useEffect } from "react";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import { AlertCircle } from "lucide-react";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -19,7 +9,16 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { type PlanningWithContract } from "@/src/actions/planning.actions";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 // Définition locale de PlanningStatus
 enum PlanningStatus {
@@ -66,9 +65,7 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 	const filteredPlannings =
 		selectedStatus === "all"
 			? localPlannings
-			: localPlannings.filter(
-					(planning) => planning.status === selectedStatus,
-				);
+			: localPlannings.filter((planning) => planning.status === selectedStatus);
 
 	// Trier les séances par ordre croissant de date
 	const sortedPlannings = filteredPlannings.sort(
@@ -133,7 +130,7 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 
 		return (
 			<span
-				className={`px-3 py-1 rounded-full text-sm font-medium border ${config.className}`}
+				className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border ${config.className}`}
 			>
 				{config.label}
 			</span>
@@ -155,7 +152,10 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 	};
 
 	const handlePlanningClick = (planning: PlanningWithContract) => {
-		if (planning.status === PlanningStatus.PLANNED && canCancelSession(planning)) {
+		if (
+			planning.status === PlanningStatus.PLANNED &&
+			canCancelSession(planning)
+		) {
 			setSelectedPlanning(planning);
 			setIsCancelDialogOpen(true);
 		}
@@ -209,8 +209,8 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 
 	if (localPlannings.length === 0) {
 		return (
-			<div className="text-center py-12">
-				<div className="text-white/60 text-lg">
+			<div className="text-center py-8 sm:py-12">
+				<div className="text-white/60 text-base sm:text-lg px-4">
 					Aucune séance planifiée
 				</div>
 			</div>
@@ -219,16 +219,13 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 
 	return (
 		<>
-			<div className="space-y-6">
+			<div className="space-y-4 sm:space-y-6">
 				{/* Filtre par statut */}
-				<div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-					<div className="flex items-center justify-between">
-						<div className="flex items-center gap-4">
-							<span className="text-white font-medium text-sm">
-								Filtrer par statut :
-							</span>
+				<div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-3 sm:p-4">
+					<div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+						<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 flex-1 min-w-0">
 							<Select value={selectedStatus} onValueChange={handleStatusChange}>
-								<SelectTrigger className="w-48 bg-white/10 border-white/20 text-white">
+								<SelectTrigger className="w-full sm:w-48 bg-white/10 border-white/20 text-white text-sm">
 									<SelectValue placeholder="Sélectionner un statut" />
 								</SelectTrigger>
 								<SelectContent className="bg-gray-900 border-white/20">
@@ -267,34 +264,19 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 								<div
 									key={planning.id}
 									onClick={() => isClickable && handlePlanningClick(planning)}
-									className={`bg-white/5 backdrop-blur-sm rounded-xl border p-4 flex items-center justify-between transition-colors ${
-										planning.status === PlanningStatus.CANCELLED
-											? "border-gray-500/30 opacity-60"
-											: "border-white/10"
-									} ${
-										isClickable
-											? "cursor-pointer hover:bg-white/10 hover:border-blue-500/30"
-											: "cursor-default"
+									className={`bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4 flex items-center justify-between hover:bg-white/10 transition-colors ${
+										isClickable ? "cursor-pointer" : "cursor-default"
 									}`}
 								>
-									<div className="flex-1">
-										<div className="flex items-center gap-3">
-											<div className="text-white font-medium text-lg">
-												{formatDayAndTime(planning.date)}
-											</div>
-											{planning.status === PlanningStatus.PLANNED &&
-												!canCancel && (
-													<div className="flex items-center gap-1 text-orange-400 text-xs">
-														<AlertCircle className="w-4 h-4" />
-														
-													</div>
-												)}
+									<div className="flex-1 min-w-0">
+										<div className="text-white font-medium text-base sm:text-lg break-words">
+											{formatDayAndTime(planning.date)}
 										</div>
-										<div className="text-white/70 text-sm mt-1">
+										<div className="text-white/70 text-xs sm:text-sm mt-1">
 											{formatDate(planning.date)}
 										</div>
 									</div>
-									<div className="ml-4">
+									<div className="ml-0 sm:ml-4 flex-shrink-0">
 										{getStatusBadge(planning.status)}
 									</div>
 								</div>
@@ -347,4 +329,3 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 		</>
 	);
 };
-
