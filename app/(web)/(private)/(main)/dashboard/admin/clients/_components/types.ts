@@ -8,10 +8,10 @@ export interface Client {
 	height: number | null;
 	weight: number | null;
 	goal: string | null;
-	trainingType: string;
+	programTitle: string;
 	coach?: {
 		id: string;
 		name: string;
 		email: string;
 	} | null;
-} 
+}

@@ -1,12 +1,11 @@
-
-import { prisma } from "@/lib/prisma";
-import { UserRole } from "@/prisma/generated";
-import { ClientsClient } from "./_components/ClientsClient";
-import { LoadingClients } from "./_components/LoadingClients";
-import { Suspense } from "react";
 import { ServerAccessControl } from "@/components/features/ServerAccessControl";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { UserRole } from "@/prisma/generated";
 import { headers } from "next/headers";
+import { Suspense } from "react";
+import { ClientsClient } from "./_components/ClientsClient";
+import { LoadingClients } from "./_components/LoadingClients";
 
 export default async function ClientsPage() {
 	return (
@@ -65,7 +64,10 @@ async function getClientsFiltered() {
 	}
 
 	// Construire la requête de base
-	const whereClause: { role: { equals: UserRole }; selectedOffer?: { coachId: string } } = {
+	const whereClause: {
+		role: { equals: UserRole };
+		selectedOffer?: { coachId: string };
+	} = {
 		role: {
 			equals: UserRole.CLIENT,
 		},
@@ -91,10 +93,32 @@ async function getClientsFiltered() {
 			height: true,
 			weight: true,
 			goal: true,
+			contracts: {
+				where: {
+					status: "ACTIVE",
+				},
+				select: {
+					offer: {
+						select: {
+							program: {
+								select: {
+									name: true,
+									type: true,
+								},
+							},
+						},
+					},
+				},
+				take: 1,
+				orderBy: {
+					startDate: "desc",
+				},
+			},
 			selectedOffer: {
 				select: {
 					program: {
 						select: {
+							name: true,
 							type: true,
 						},
 					},
@@ -113,16 +137,25 @@ async function getClientsFiltered() {
 		},
 	});
 
-	return clients.map((client) => ({
-		id: client.id,
-		name: `${client.name} ${client.lastName || ""}`.trim(),
-		image: client.image,
-		email: client.email,
-		phone: client.phone,
-		height: client.height,
-		weight: client.weight,
-		goal: client.goal,
-		trainingType: client.selectedOffer?.program?.type || "Personal Training",
-		coach: client.selectedOffer?.coach || null,
-	}));
-} 
+	return clients.map((client) => {
+		// Priorité 1: Programme du contrat actif
+		const activeContract = client.contracts[0];
+		const programTitle =
+			activeContract?.offer?.program?.name ||
+			client.selectedOffer?.program?.name ||
+			"Aucun programme";
+
+		return {
+			id: client.id,
+			name: `${client.name} ${client.lastName || ""}`.trim(),
+			image: client.image,
+			email: client.email,
+			phone: client.phone,
+			height: client.height,
+			weight: client.weight,
+			goal: client.goal,
+			programTitle,
+			coach: client.selectedOffer?.coach || null,
+		};
+	});
+}
