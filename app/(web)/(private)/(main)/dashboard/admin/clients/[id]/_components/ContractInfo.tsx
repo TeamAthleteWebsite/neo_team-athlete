@@ -1,507 +1,579 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getClientContractsAction } from "@/src/actions/contract.actions";
-import { Calendar, Clock, DollarSign, Package, Dumbbell, CreditCard, Trash2 } from "lucide-react";
-import { type PlanningWithContract } from "@/src/actions/planning.actions";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { getClientContractsAction } from "@/src/actions/contract.actions";
+import { type PlanningWithContract } from "@/src/actions/planning.actions";
+import {
+	Calendar,
+	Clock,
+	CreditCard,
+	DollarSign,
+	Dumbbell,
+	Package,
+	Trash2,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface ContractInfoProps {
-  clientId: string;
-  plannings: PlanningWithContract[];
-  onContractUpdate?: (hasContractData: boolean) => void;
-  onOpenOfferPopup?: () => void;
+	clientId: string;
+	plannings: PlanningWithContract[];
+	onContractUpdate?: (hasContractData: boolean) => void;
+	onOpenOfferPopup?: () => void;
 }
 
 interface ContractData {
-  id: string;
-  startDate: Date;
-  endDate: Date;
-  totalSessions: number;
-  amount: number;
-  status: string;
-  offer: {
-    program: {
-      name: string;
-      type: string;
-    };
-    price: number;
-    duration: number;
-  };
+	id: string;
+	startDate: Date;
+	endDate: Date;
+	totalSessions: number;
+	amount: number;
+	status: string;
+	offer: {
+		program: {
+			name: string;
+			type: string;
+		};
+		price: number;
+		duration: number;
+	};
 }
 
 interface Payment {
-  id: string;
-  contractId: string;
-  amount: number;
-  paymentDate: string;
-  comment?: string | null;
-  createdAt: string;
-  updatedAt: string;
-  contract: {
-    id: string;
-    clientId: string;
-    startDate: string;
-    endDate: string;
-    amount: number;
-  };
+	id: string;
+	contractId: string;
+	amount: number;
+	paymentDate: string;
+	comment?: string | null;
+	createdAt: string;
+	updatedAt: string;
+	contract: {
+		id: string;
+		clientId: string;
+		startDate: string;
+		endDate: string;
+		amount: number;
+	};
 }
 
-export const ContractInfo: React.FC<ContractInfoProps> = ({ clientId, plannings, onContractUpdate, onOpenOfferPopup }) => {
-  const [contractData, setContractData] = useState<ContractData | null>(null);
-  const [contractType, setContractType] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+export const ContractInfo: React.FC<ContractInfoProps> = ({
+	clientId,
+	plannings,
+	onContractUpdate,
+	onOpenOfferPopup,
+}) => {
+	const [contractData, setContractData] = useState<ContractData | null>(null);
+	const [contractType, setContractType] = useState<string | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+	const [payments, setPayments] = useState<Payment[]>([]);
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [isDeleting, setIsDeleting] = useState(false);
 
-  const loadPayments = async () => {
-    try {
-      if (plannings.length === 0) {
-        setPayments([]);
-        return;
-      }
+	const loadPayments = async () => {
+		try {
+			if (plannings.length === 0) {
+				setPayments([]);
+				return;
+			}
 
-      const clientIdFromPlanning = plannings[0]?.contract.clientId;
-      if (!clientIdFromPlanning) {
-        setPayments([]);
-        return;
-      }
+			const clientIdFromPlanning = plannings[0]?.contract.clientId;
+			if (!clientIdFromPlanning) {
+				setPayments([]);
+				return;
+			}
 
-      const response = await fetch(`/api/payment?clientId=${clientIdFromPlanning}`);
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          setPayments(result.data);
-        }
-      }
-    } catch (error) {
-      console.error("Erreur lors du chargement des paiements:", error);
-    }
-  };
+			const response = await fetch(
+				`/api/payment?clientId=${clientIdFromPlanning}`,
+			);
+			if (response.ok) {
+				const result = await response.json();
+				if (result.success) {
+					setPayments(result.data);
+				}
+			}
+		} catch (error) {
+			console.error("Erreur lors du chargement des paiements:", error);
+		}
+	};
 
-  const loadContractData = async () => {
-    setIsLoading(true);
-    setError(null);
+	const loadContractData = async () => {
+		setIsLoading(true);
+		setError(null);
 
-    try {
-      const result = await getClientContractsAction(clientId);
+		try {
+			const result = await getClientContractsAction(clientId);
 
-      if (result.success && result.data) {
-        // Convertir les dates de string à Date si nécessaire
-        const contract = result.data as {
-          id: string;
-          startDate: Date | string;
-          endDate: Date | string;
-          totalSessions: number;
-          amount: number;
-          status: string;
-          offer: {
-            program: {
-              name: string;
-              type: string;
-            };
-            price: number;
-            duration: number;
-          };
-        };
-        const contractDataWithDates: ContractData = {
-          ...contract,
-          startDate: contract.startDate instanceof Date ? contract.startDate : new Date(contract.startDate),
-          endDate: contract.endDate instanceof Date ? contract.endDate : new Date(contract.endDate),
-        };
-        setContractData(contractDataWithDates);
-        setContractType(result.type || null);
-        onContractUpdate?.(true);
-      } else {
-        setContractData(null);
-        setContractType(null);
-        onContractUpdate?.(false);
-        if (result.error) {
-          setError(result.error);
-        }
-      }
-    } catch {
-      setError("Erreur lors du chargement des contrats");
-      onContractUpdate?.(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+			if (result.success && result.data) {
+				// Convertir les dates de string à Date si nécessaire
+				const contract = result.data as {
+					id: string;
+					startDate: Date | string;
+					endDate: Date | string;
+					totalSessions: number;
+					amount: number;
+					status: string;
+					offer: {
+						program: {
+							name: string;
+							type: string;
+						};
+						price: number;
+						duration: number;
+					};
+				};
+				const contractDataWithDates: ContractData = {
+					...contract,
+					startDate:
+						contract.startDate instanceof Date
+							? contract.startDate
+							: new Date(contract.startDate),
+					endDate:
+						contract.endDate instanceof Date
+							? contract.endDate
+							: new Date(contract.endDate),
+				};
+				setContractData(contractDataWithDates);
+				setContractType(result.type || null);
+				onContractUpdate?.(true);
+			} else {
+				setContractData(null);
+				setContractType(null);
+				onContractUpdate?.(false);
+				if (result.error) {
+					setError(result.error);
+				}
+			}
+		} catch {
+			setError("Erreur lors du chargement des contrats");
+			onContractUpdate?.(false);
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
-  useEffect(() => {
-    loadContractData();
-    loadPayments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientId, plannings]);
+	useEffect(() => {
+		loadContractData();
+		loadPayments();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [clientId, plannings]);
 
-  const handleDeleteContract = async () => {
-    if (!contractData) return;
+	const handleDeleteContract = async () => {
+		if (!contractData) return;
 
-    setIsDeleting(true);
+		setIsDeleting(true);
 
-    try {
-      const response = await fetch("/api/contract/delete", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contractId: contractData.id,
-        }),
-      });
+		try {
+			const response = await fetch("/api/contract/delete", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					contractId: contractData.id,
+				}),
+			});
 
-      const result = await response.json();
+			const result = await response.json();
 
-      if (result.success) {
-        toast.success(result.message || "L'abonnement et toutes les données associées ont été supprimés avec succès.");
-        setIsDeleteDialogOpen(false);
-        // Recharger les données du contrat (qui sera maintenant null)
-        await loadContractData();
-        // Recharger les paiements
-        await loadPayments();
-      } else {
-        toast.error(result.error || "Erreur lors de la suppression de l'abonnement");
-      }
-    } catch (error) {
-      console.error("Erreur lors de la suppression de l'abonnement:", error);
-      toast.error("Une erreur est survenue lors de la suppression de l'abonnement");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+			if (result.success) {
+				toast.success(
+					result.message ||
+						"L'abonnement et toutes les données associées ont été supprimés avec succès.",
+				);
+				setIsDeleteDialogOpen(false);
+				// Recharger les données du contrat (qui sera maintenant null)
+				await loadContractData();
+				// Recharger les paiements
+				await loadPayments();
+			} else {
+				toast.error(
+					result.error || "Erreur lors de la suppression de l'abonnement",
+				);
+			}
+		} catch (error) {
+			console.error("Erreur lors de la suppression de l'abonnement:", error);
+			toast.error(
+				"Une erreur est survenue lors de la suppression de l'abonnement",
+			);
+		} finally {
+			setIsDeleting(false);
+		}
+	};
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
+	const formatDate = (date: Date) => {
+		return date.toLocaleDateString("fr-FR", {
+			day: "2-digit",
+			month: "2-digit",
+			year: "numeric",
+		});
+	};
 
-  const calculateDuration = (startDate: Date, endDate: Date) => {
-    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    // Calculer le nombre de mois (approximatif)
-    const months = Math.floor(diffDays / 30);
-    
-    if (months === 0) {
-      return "Sans engagement";
-    } else {
-      return `${months} mois`;
-    }
-  };
+	const calculateDuration = (startDate: Date, endDate: Date) => {
+		const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  // Fonction pour calculer le nombre total de séances du contrat
-  const calculateTotalSessions = (contractData: ContractData) => {
-    const diffTime = Math.abs(contractData.endDate.getTime() - contractData.startDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    const months = Math.floor(diffDays / 30);
-    
-    if (months === 0) {
-      return contractData.totalSessions; // Pour les contrats sans engagement
-    }
-    
-    return contractData.totalSessions * months;
-  };
+		// Calculer le nombre de mois (approximatif)
+		const months = Math.floor(diffDays / 30);
 
-  // Fonction pour calculer les séances restantes en utilisant la même logique que l'onglet Séances
-  const calculateRemainingSessions = (contractData: ContractData) => {
-    const totalSessions = calculateTotalSessions(contractData);
-    
-    // Calculer la somme des séances affichées par mois (même logique que getDisplaySessionCount)
-    const now = new Date();
-    const contractStartDate = new Date(contractData.startDate);
-    
-    // Créer un Map pour regrouper les séances par mois
-    const monthlyMap = new Map<string, { totalSessions: number; contractTotalSessions: number; isMonthCompleted: boolean }>();
-    
-    // Initialiser tous les mois du contrat jusqu'au mois en cours
-    const startMonth = contractStartDate.getMonth();
-    const startYear = contractStartDate.getFullYear();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    
-    for (let year = startYear; year <= currentYear; year++) {
-      const monthStart = year === startYear ? startMonth : 0;
-      const monthEnd = year === currentYear ? currentMonth : 11;
-      
-      for (let month = monthStart; month <= monthEnd; month++) {
-        const key = `${year}-${month}`;
-        monthlyMap.set(key, {
-          totalSessions: 0,
-          contractTotalSessions: contractData.totalSessions,
-          isMonthCompleted: year < currentYear || (year === currentYear && month < currentMonth)
-        });
-      }
-    }
-    
-    // Compter les séances par mois
-    plannings.forEach(planning => {
-      const sessionDate = new Date(planning.date);
-      const year = sessionDate.getFullYear();
-      const month = sessionDate.getMonth();
-      const key = `${year}-${month}`;
-      
-      const monthlyData = monthlyMap.get(key);
-      if (monthlyData) {
-        monthlyData.totalSessions++;
-      }
-    });
-    
-    // Calculer la somme des séances affichées (même logique que getDisplaySessionCount)
-    let totalDisplayedSessions = 0;
-    Array.from(monthlyMap.values()).forEach(monthData => {
-      const { totalSessions, contractTotalSessions, isMonthCompleted } = monthData;
-      
-      if (!isMonthCompleted) {
-        totalDisplayedSessions += totalSessions;
-      } else {
-        // Mois terminé - si moins que le total du contrat, afficher le total du contrat
-        if (totalSessions < contractTotalSessions) {
-          totalDisplayedSessions += contractTotalSessions;
-        } else {
-          totalDisplayedSessions += totalSessions;
-        }
-      }
-    });
-    
-    return Math.max(0, totalSessions - totalDisplayedSessions);
-  };
+		if (months === 0) {
+			return "Sans engagement";
+		} else {
+			return `${months} mois`;
+		}
+	};
 
-  // Fonction pour calculer le montant restant à payer
-  const calculateRemainingAmount = (contractData: ContractData) => {
-    if (!contractData || contractData.offer.duration <= 0) {
-      return 0; // Pour les contrats sans engagement ou prix unique
-    }
+	// Fonction pour calculer le nombre total de séances du contrat
+	const calculateTotalSessions = (contractData: ContractData) => {
+		const diffTime = Math.abs(
+			contractData.endDate.getTime() - contractData.startDate.getTime(),
+		);
+		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+		const months = Math.floor(diffDays / 30);
 
-    const totalContractAmount = contractData.amount * contractData.offer.duration;
-    
-    // Calculer le montant déjà payé en faisant la somme des montants dans la table Payment
-    // pour le contrat actif (même contrat que celui utilisé pour la liste de planning)
-    const paidAmount = payments.reduce((sum, payment) => {
-      return sum + payment.amount;
-    }, 0);
-    
-    const remainingAmount = totalContractAmount - paidAmount;
-    
-    return Math.max(0, remainingAmount);
-  };
+		if (months === 0) {
+			return contractData.totalSessions; // Pour les contrats sans engagement
+		}
 
- 
-  if (isLoading) {
-    return (
-      <div className="pt-6 border-t border-white/10">
-        <div className="text-center space-y-4">
-          <h3 className="text-white text-2xl font-bold">Abonnement</h3>
-          <div className="animate-pulse">
-            <div className="h-4 bg-white/20 rounded w-3/4 mx-auto mb-2"></div>
-            <div className="h-4 bg-white/20 rounded w-1/2 mx-auto"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+		return contractData.totalSessions * months;
+	};
 
-  if (error) {
-    return (
-      <div className="pt-6 border-t border-white/10">
-        <div className="text-center space-y-4">
-          <h3 className="text-white text-2xl font-bold">Abonnement</h3>
-          <p className="text-red-400 text-sm">{error}</p>
-        </div>
-      </div>
-    );
-  }
+	// Fonction pour calculer les séances restantes en utilisant la même logique que l'onglet Séances
+	const calculateRemainingSessions = (contractData: ContractData) => {
+		const totalSessions = calculateTotalSessions(contractData);
 
-  if (!contractData) {
-    return (
-      <div className="pt-6 border-t border-white/10">
-        <div className="text-center space-y-4">
-          <h3 className="text-white text-2xl font-bold">Abonnement</h3>
-          <p className="text-white text-lg">Aucun abonnement en cours...</p>
-          <p className="text-blue-400 text-base">Veuillez sélectionner un programme</p>
-          <button 
-            onClick={onOpenOfferPopup}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-          >
-            Sélection
-          </button>
-        </div>
-      </div>
-    );
-  }
+		// Calculer la somme des séances affichées par mois (même logique que getDisplaySessionCount)
+		const now = new Date();
+		const contractStartDate = new Date(contractData.startDate);
 
-  return (
-    <div className="pt-6 border-t border-white/10">
-      <div className="space-y-6">
-        {/* Header avec type de contrat */}
-        <div className="text-center">
-          <h3 className="text-white text-2xl font-bold mb-2">Abonnement</h3>
-          {contractType === "active" && (
-            <span className="inline-block bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-medium border border-green-500/30">
-              Contrat en cours
-            </span>
-          )}
-          {contractType === "future" && (
-            <span className="inline-block bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-sm font-medium border border-blue-500/30">
-              Contrat futur
-            </span>
-          )}
-        </div>
+		// Créer un Map pour regrouper les séances par mois
+		const monthlyMap = new Map<
+			string,
+			{
+				totalSessions: number;
+				contractTotalSessions: number;
+				isMonthCompleted: boolean;
+			}
+		>();
 
-        {/* Informations du contrat */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Type de programme */}
-          <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-            <Package className="w-5 h-5 text-blue-400" />
-            <div>
-              <p className="text-white/60 text-sm">Type de programme</p>
-              <p className="text-white font-medium">{contractData.offer.program.type}</p>
-            </div>
-          </div>
+		// Initialiser tous les mois du contrat jusqu'au mois en cours
+		const startMonth = contractStartDate.getMonth();
+		const startYear = contractStartDate.getFullYear();
+		const currentMonth = now.getMonth();
+		const currentYear = now.getFullYear();
 
-          {/* Durée du contrat */}
-          <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-            <Clock className="w-5 h-5 text-yellow-400" />
-            <div>
-              <p className="text-white font-medium">{calculateDuration(contractData.startDate, contractData.endDate)}</p>
-            </div>
-          </div>
+		for (let year = startYear; year <= currentYear; year++) {
+			const monthStart = year === startYear ? startMonth : 0;
+			const monthEnd = year === currentYear ? currentMonth : 11;
 
-          
+			for (let month = monthStart; month <= monthEnd; month++) {
+				const key = `${year}-${month}`;
+				monthlyMap.set(key, {
+					totalSessions: 0,
+					contractTotalSessions: contractData.totalSessions,
+					isMonthCompleted:
+						year < currentYear ||
+						(year === currentYear && month < currentMonth),
+				});
+			}
+		}
 
-          {/* Date de début */}
-          <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-            <Calendar className="w-5 h-5 text-purple-400" />
-            <div>
-              <p className="text-white font-medium">{formatDate(contractData.startDate)}</p>
-            </div>
-          </div>
+		// Compter les séances par mois
+		plannings.forEach((planning) => {
+			const sessionDate = new Date(planning.date);
+			const year = sessionDate.getFullYear();
+			const month = sessionDate.getMonth();
+			const key = `${year}-${month}`;
 
-          {/* Date de fin */}
-          <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-            <Calendar className="w-5 h-5 text-orange-400" />
-            <div>
-    
-              <p className="text-white font-medium">{formatDate(contractData.endDate)}</p>
-            </div>
-          </div>
+			const monthlyData = monthlyMap.get(key);
+			if (monthlyData) {
+				monthlyData.totalSessions++;
+			}
+		});
 
+		// Calculer la somme des séances affichées (même logique que getDisplaySessionCount)
+		let totalDisplayedSessions = 0;
+		Array.from(monthlyMap.values()).forEach((monthData) => {
+			const { totalSessions, contractTotalSessions, isMonthCompleted } =
+				monthData;
 
-          {/* Nombre de sessions */}
-          <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-            <Dumbbell className="w-5 h-5 text-green-400" />
-            <div>
-            <p className="text-white/60 text-sm"> séances / mois</p>
-              <p className="text-white font-medium">{contractData.totalSessions}</p>
-            </div>
-          </div>
+			if (!isMonthCompleted) {
+				totalDisplayedSessions += totalSessions;
+			} else {
+				// Mois terminé - si moins que le total du contrat, afficher le total du contrat
+				if (totalSessions < contractTotalSessions) {
+					totalDisplayedSessions += contractTotalSessions;
+				} else {
+					totalDisplayedSessions += totalSessions;
+				}
+			}
+		});
 
-          
+		return Math.max(0, totalSessions - totalDisplayedSessions);
+	};
 
-         
+	// Fonction pour calculer le montant restant à payer
+	const calculateRemainingAmount = (contractData: ContractData) => {
+		if (!contractData || contractData.offer.duration <= 0) {
+			return 0; // Pour les contrats sans engagement ou prix unique
+		}
 
+		const totalContractAmount =
+			contractData.amount * contractData.offer.duration;
 
-          {/* Séances restantes */}
-          <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-            <Clock className="w-5 h-5 text-orange-400" />
-            <div>
-              <p className="text-white/60 text-sm">Séances restantes</p>
-              <p className="text-white font-medium">{calculateRemainingSessions(contractData)}</p>
-            </div>
-          </div>
+		// Calculer le montant déjà payé en faisant la somme des montants dans la table Payment
+		// pour le contrat actif (même contrat que celui utilisé pour la liste de planning)
+		const paidAmount = payments.reduce((sum, payment) => {
+			return sum + payment.amount;
+		}, 0);
 
-            {/* Prix par mois */}
-          <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-            <DollarSign className="w-5 h-5 text-emerald-400" />
-            <div>
-              <p className="text-white font-medium">
-                {contractData.offer.duration > 0 
-                  ? `${contractData.amount}€ /mois`
-                  : `${contractData.amount}€ (prix unique)`
-                }
-              </p>
-            </div>
-          </div>
+		const remainingAmount = totalContractAmount - paidAmount;
 
-          {/* Montant restant à payer */}
-          {contractData.offer.duration > 0 && (
-            <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg border border-white/10">
-              <CreditCard className="w-5 h-5 text-orange-400" />
-              <div>
-                <p className="text-white/60 text-sm">Montant restant</p>
-                <p className="text-white font-medium">
-                  {calculateRemainingAmount(contractData).toFixed(2)}€
-                </p>
-              </div>
-            </div>
-          )}
+		return Math.max(0, remainingAmount);
+	};
 
+	if (isLoading) {
+		return (
+			<div className="pt-4 sm:pt-6 border-t border-white/10">
+				<div className="text-center space-y-3 sm:space-y-4">
+					<h3 className="text-white text-xl sm:text-2xl font-bold">
+						Abonnement
+					</h3>
+					<div className="animate-pulse">
+						<div className="h-4 bg-white/20 rounded w-3/4 mx-auto mb-2"></div>
+						<div className="h-4 bg-white/20 rounded w-1/2 mx-auto"></div>
+					</div>
+				</div>
+			</div>
+		);
+	}
 
+	if (error) {
+		return (
+			<div className="pt-4 sm:pt-6 border-t border-white/10">
+				<div className="text-center space-y-3 sm:space-y-4">
+					<h3 className="text-white text-xl sm:text-2xl font-bold">
+						Abonnement
+					</h3>
+					<p className="text-red-400 text-sm px-4">{error}</p>
+				</div>
+			</div>
+		);
+	}
 
-        </div>
+	if (!contractData) {
+		return (
+			<div className="pt-4 sm:pt-6 border-t border-white/10">
+				<div className="text-center space-y-3 sm:space-y-4">
+					<h3 className="text-white text-xl sm:text-2xl font-bold">
+						Abonnement
+					</h3>
+					<p className="text-white text-base sm:text-lg px-4">
+						Aucun abonnement en cours...
+					</p>
+					<p className="text-blue-400 text-sm sm:text-base px-4">
+						Veuillez sélectionner un programme
+					</p>
+					<button
+						onClick={onOpenOfferPopup}
+						className="bg-blue-500 hover:bg-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base"
+					>
+						Sélection
+					</button>
+				</div>
+			</div>
+		);
+	}
 
-        
+	return (
+		<div className="pt-4 sm:pt-6 border-t border-white/10">
+			<div className="space-y-4 sm:space-y-6">
+				{/* Header avec type de contrat */}
+				<div className="text-center">
+					<h3 className="text-white text-xl sm:text-2xl font-bold mb-2">
+						Abonnement
+					</h3>
+					{contractType === "active" && (
+						<span className="inline-block bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-medium border border-green-500/30">
+							Contrat en cours
+						</span>
+					)}
+					{contractType === "future" && (
+						<span className="inline-block bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-sm font-medium border border-blue-500/30">
+							Contrat futur
+						</span>
+					)}
+				</div>
 
-        {/* Prix total du contrat */}
-        <div className="text-center p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
-          <p className="text-blue-400 text-sm mb-1">Prix total du contrat</p>
-          <p className="text-white text-2xl font-bold">
-            {contractData.offer.duration > 0 
-              ? `${(contractData.amount * contractData.offer.duration).toFixed(2)}€`
-              : `${contractData.amount}€`
-            }
-          </p>
-        </div>
+				{/* Informations du contrat */}
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+					{/* Type de programme */}
+					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+						<Package className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 flex-shrink-0" />
+						<div className="min-w-0 flex-1">
+							<p className="text-white/60 text-xs sm:text-sm">
+								Type de programme
+							</p>
+							<p className="text-white font-medium text-sm sm:text-base truncate">
+								{contractData.offer.program.type}
+							</p>
+						</div>
+					</div>
 
-        {/* Bouton de suppression - uniquement si le contrat est ACTIVE */}
-        {contractData.status === "ACTIVE" && (
-          <div className="flex justify-center pt-2">
-            <Button
-              variant="ghost"
-              onClick={() => setIsDeleteDialogOpen(true)}
-              className="flex items-center gap-2 text-white/50 hover:text-red-400 hover:bg-red-500/10 text-sm"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Supprimer l&apos;abonnement
-            </Button>
-          </div>
-        )}
-      </div>
+					{/* Durée du contrat */}
+					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+						<Clock className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 flex-shrink-0" />
+						<div className="min-w-0 flex-1">
+							<p className="text-white font-medium text-sm sm:text-base">
+								{calculateDuration(
+									contractData.startDate,
+									contractData.endDate,
+								)}
+							</p>
+						</div>
+					</div>
 
-      {/* Dialog de confirmation de suppression */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-gray-900 border-gray-700">
-          <DialogHeader>
-            <DialogTitle className="text-white">Supprimer l&apos;abonnement</DialogTitle>
-            <DialogDescription className="text-gray-300">
-              Êtes-vous sûr de vouloir supprimer cet abonnement ? Cette action entraînera également la suppression de toutes les séances et paiements associés. Cette action est irréversible.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
-              disabled={isDeleting}
-              className="border-gray-600 text-gray-300 hover:bg-gray-800"
-            >
-              Annuler
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteContract}
-              disabled={isDeleting}
-            >
-              {isDeleting ? "Suppression..." : "Confirmer la suppression"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+					{/* Date de début */}
+					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+						<Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 flex-shrink-0" />
+						<div className="min-w-0 flex-1">
+							<p className="text-white/60 text-xs sm:text-sm">Date de début</p>
+							<p className="text-white font-medium text-sm sm:text-base">
+								{formatDate(contractData.startDate)}
+							</p>
+						</div>
+					</div>
+
+					{/* Date de fin */}
+					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+						<Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 flex-shrink-0" />
+						<div className="min-w-0 flex-1">
+							<p className="text-white/60 text-xs sm:text-sm">Date de fin</p>
+							<p className="text-white font-medium text-sm sm:text-base">
+								{formatDate(contractData.endDate)}
+							</p>
+						</div>
+					</div>
+
+					{/* Nombre de sessions */}
+					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+						<Dumbbell className="w-4 h-4 sm:w-5 sm:h-5 text-green-400 flex-shrink-0" />
+						<div className="min-w-0 flex-1">
+							<p className="text-white/60 text-xs sm:text-sm">Séances / mois</p>
+							<p className="text-white font-medium text-sm sm:text-base">
+								{contractData.totalSessions}
+							</p>
+						</div>
+					</div>
+
+					{/* Séances restantes */}
+					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+						<Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 flex-shrink-0" />
+						<div className="min-w-0 flex-1">
+							<p className="text-white/60 text-xs sm:text-sm">
+								Séances restantes
+							</p>
+							<p className="text-white font-medium text-sm sm:text-base">
+								{calculateRemainingSessions(contractData)}
+							</p>
+						</div>
+					</div>
+
+					{/* Prix par mois */}
+					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+						<DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0" />
+						<div className="min-w-0 flex-1">
+							<p className="text-white font-medium text-sm sm:text-base break-words">
+								{contractData.offer.duration > 0
+									? `${contractData.amount}€ /mois`
+									: `${contractData.amount}€ (prix unique)`}
+							</p>
+						</div>
+					</div>
+
+					{/* Montant restant à payer */}
+					{contractData.offer.duration > 0 && (
+						<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+							<CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 flex-shrink-0" />
+							<div className="min-w-0 flex-1">
+								<p className="text-white/60 text-xs sm:text-sm">
+									Montant restant
+								</p>
+								<p className="text-white font-medium text-sm sm:text-base">
+									{calculateRemainingAmount(contractData).toFixed(2)}€
+								</p>
+							</div>
+						</div>
+					)}
+				</div>
+
+				{/* Prix total du contrat */}
+				<div className="text-center p-3 sm:p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+					<p className="text-blue-400 text-xs sm:text-sm mb-1">
+						Prix total du contrat
+					</p>
+					<p className="text-white text-xl sm:text-2xl font-bold">
+						{contractData.offer.duration > 0
+							? `${(contractData.amount * contractData.offer.duration).toFixed(2)}€`
+							: `${contractData.amount}€`}
+					</p>
+				</div>
+
+				{/* Bouton de suppression - uniquement si le contrat est ACTIVE */}
+				{contractData.status === "ACTIVE" && (
+					<div className="flex justify-center pt-2">
+						<Button
+							variant="ghost"
+							onClick={() => setIsDeleteDialogOpen(true)}
+							className="flex items-center gap-2 text-white/50 hover:text-red-400 hover:bg-red-500/10 text-sm"
+						>
+							<Trash2 className="w-3.5 h-3.5" />
+							Supprimer l&apos;abonnement
+						</Button>
+					</div>
+				)}
+			</div>
+
+			{/* Dialog de confirmation de suppression */}
+			<Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+				<DialogContent className="sm:max-w-[425px] bg-gray-900 border-gray-700">
+					<DialogHeader>
+						<DialogTitle className="text-white">
+							Supprimer l&apos;abonnement
+						</DialogTitle>
+						<DialogDescription className="text-gray-300">
+							Êtes-vous sûr de vouloir supprimer cet abonnement ? Cette action
+							entraînera également la suppression de toutes les séances et
+							paiements associés. Cette action est irréversible.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter className="gap-2">
+						<Button
+							variant="outline"
+							onClick={() => setIsDeleteDialogOpen(false)}
+							disabled={isDeleting}
+							className="border-gray-600 text-gray-300 hover:bg-gray-800"
+						>
+							Annuler
+						</Button>
+						<Button
+							variant="destructive"
+							onClick={handleDeleteContract}
+							disabled={isDeleting}
+						>
+							{isDeleting ? "Suppression..." : "Confirmer la suppression"}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+		</div>
+	);
 };
