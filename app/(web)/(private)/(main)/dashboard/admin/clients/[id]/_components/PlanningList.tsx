@@ -137,14 +137,6 @@ export const PlanningList: React.FC<PlanningListProps> = ({
 		);
 	};
 
-	if (plannings.length === 0) {
-		return (
-			<div className="text-center py-12">
-				<div className="text-white/60 text-lg">Aucune séance planifiée</div>
-			</div>
-		);
-	}
-
 	return (
 		<div className="space-y-4 sm:space-y-6">
 			{/* Filtre par statut */}

@@ -1,11 +1,13 @@
 "use client";
 
+import { getClientContractsAction } from "@/src/actions/contract.actions";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
 import { BanknoteArrowUp, BanknoteX, HandCoins } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface PaymentTabProps {
 	plannings: PlanningWithContract[];
+	clientId?: string;
 }
 
 interface Payment {
@@ -37,12 +39,24 @@ interface MonthlyPaymentData {
 	paymentId?: string;
 }
 
-export const PaymentTab: React.FC<PaymentTabProps> = ({ plannings }) => {
+interface ContractData {
+	id: string;
+	startDate: Date | string;
+	endDate: Date | string;
+	amount: number;
+	clientId: string;
+}
+
+export const PaymentTab: React.FC<PaymentTabProps> = ({
+	plannings,
+	clientId,
+}) => {
 	const [payments, setPayments] = useState<Payment[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [processingPayment, setProcessingPayment] = useState<string | null>(
 		null,
 	);
+	const [contract, setContract] = useState<ContractData | null>(null);
 
 	// Fonction pour obtenir le nom du mois en français
 	const getMonthName = (monthIndex: number): string => {
@@ -63,24 +77,40 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({ plannings }) => {
 		return months[monthIndex];
 	};
 
+	// Fonction pour charger le contrat
+	const loadContract = async () => {
+		if (!clientId) return;
+
+		try {
+			const result = await getClientContractsAction(clientId);
+			if (result.success && result.data) {
+				const contractData = result.data as ContractData;
+				setContract({
+					id: contractData.id,
+					startDate: contractData.startDate,
+					endDate: contractData.endDate,
+					amount: contractData.amount,
+					clientId: contractData.clientId,
+				});
+			}
+		} catch (error) {
+			console.error("Erreur lors du chargement du contrat:", error);
+		}
+	};
+
 	// Fonction pour charger les paiements
 	const loadPayments = async () => {
 		try {
 			setLoading(true);
-			if (plannings.length === 0) {
+			const targetClientId = clientId || plannings[0]?.contract.clientId;
+			if (!targetClientId) {
+				console.error("ClientId manquant");
 				setPayments([]);
 				return;
 			}
 
-			const clientId = plannings[0]?.contract.clientId;
-			if (!clientId) {
-				console.error("ClientId manquant dans le contrat");
-				setPayments([]);
-				return;
-			}
-
-			console.log("Chargement des paiements pour clientId:", clientId);
-			const response = await fetch(`/api/payment?clientId=${clientId}`);
+			console.log("Chargement des paiements pour clientId:", targetClientId);
+			const response = await fetch(`/api/payment?clientId=${targetClientId}`);
 			if (response.ok) {
 				const result = await response.json();
 				if (result.success) {
@@ -100,55 +130,41 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({ plannings }) => {
 		}
 	};
 
-	// Charger les paiements au montage du composant
+	// Charger le contrat et les paiements au montage du composant
 	useEffect(() => {
-		const fetchPayments = async () => {
-			try {
-				setLoading(true);
-				if (plannings.length === 0) {
-					setPayments([]);
-					return;
-				}
-
-				const clientId = plannings[0]?.contract.clientId;
-				if (!clientId) {
-					console.error("ClientId manquant dans le contrat");
-					setPayments([]);
-					return;
-				}
-
-				console.log("Chargement des paiements pour clientId:", clientId);
-				const response = await fetch(`/api/payment?clientId=${clientId}`);
-				if (response.ok) {
-					const result = await response.json();
-					if (result.success) {
-						console.log("Paiements chargés:", result.data);
-						setPayments(result.data);
-					} else {
-						console.error("Erreur dans la réponse API:", result.error);
-					}
-				} else {
-					const error = await response.json();
-					console.error("Erreur HTTP:", error);
-				}
-			} catch (error) {
-				console.error("Erreur lors du chargement des paiements:", error);
-			} finally {
-				setLoading(false);
+		const fetchData = async () => {
+			if (plannings.length === 0 && clientId) {
+				// Si pas de plannings, charger le contrat directement
+				await loadContract();
 			}
+			await loadPayments();
 		};
-		fetchPayments();
-	}, [plannings]);
+		fetchData();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [plannings, clientId]);
 
 	// Fonction pour calculer les données mensuelles de paiement
 	const calculateMonthlyPaymentData = (): MonthlyPaymentData[] => {
-		if (plannings.length === 0) return [];
+		// Récupérer les informations du contrat depuis plannings ou depuis l'état
+		const contractData =
+			plannings.length > 0
+				? plannings[0]?.contract
+				: contract
+					? {
+							id: contract.id,
+							clientId: contract.clientId,
+							startDate: contract.startDate,
+							endDate: contract.endDate,
+							amount: contract.amount,
+						}
+					: null;
 
-		// Récupérer les informations du contrat
-		const contract = plannings[0]?.contract;
-		if (!contract || !contract.amount) return [];
+		if (!contractData || !contractData.amount) return [];
 
-		const contractStartDate = new Date(contract.startDate);
+		const contractStartDate =
+			contractData.startDate instanceof Date
+				? contractData.startDate
+				: new Date(contractData.startDate);
 		const now = new Date();
 
 		// Créer un Map pour regrouper les paiements par mois
@@ -174,7 +190,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({ plannings }) => {
 					month: getMonthName(month),
 					year,
 					monthIndex: month,
-					amount: contract.amount || 0,
+					amount: contractData.amount || 0,
 					isPaid: false,
 					isPastMonth,
 					isCurrentMonth,
@@ -210,9 +226,21 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({ plannings }) => {
 		try {
 			setProcessingPayment(`${monthData.year}-${monthData.monthIndex}`);
 
-			const contract = plannings[0]?.contract;
-			if (!contract || !contract.amount) {
-				console.error("Contrat ou montant manquant:", contract);
+			const contractData =
+				plannings.length > 0
+					? plannings[0]?.contract
+					: contract
+						? {
+								id: contract.id,
+								clientId: contract.clientId,
+								startDate: contract.startDate,
+								endDate: contract.endDate,
+								amount: contract.amount,
+							}
+						: null;
+
+			if (!contractData || !contractData.amount) {
+				console.error("Contrat ou montant manquant:", contractData);
 				return;
 			}
 
@@ -223,7 +251,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({ plannings }) => {
 			firstDayOfMonth.setHours(12, 0, 0, 0);
 
 			const paymentData = {
-				contractId: contract.id,
+				contractId: contractData.id,
 				amount: monthData.amount || 0,
 				paymentDate: firstDayOfMonth.toISOString(),
 				comment: `Paiement mensuel - ${monthData.month} ${monthData.year}`,

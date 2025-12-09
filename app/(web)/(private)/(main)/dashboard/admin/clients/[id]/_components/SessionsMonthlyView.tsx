@@ -1,10 +1,12 @@
 "use client";
 
+import { getClientContractsAction } from "@/src/actions/contract.actions";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface SessionsMonthlyViewProps {
 	plannings: PlanningWithContract[];
+	clientId?: string;
 }
 
 interface WeeklyData {
@@ -31,10 +33,49 @@ interface MonthlyData {
 	weeks: WeeklyData[];
 }
 
+interface ContractData {
+	id: string;
+	startDate: Date | string;
+	endDate: Date | string;
+	totalSessions: number;
+	clientId: string;
+}
+
 export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 	plannings,
+	clientId,
 }) => {
 	const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
+	const [contract, setContract] = useState<ContractData | null>(null);
+
+	// Fonction pour charger le contrat
+	const loadContract = async () => {
+		if (!clientId) return;
+
+		try {
+			const result = await getClientContractsAction(clientId);
+			if (result.success && result.data) {
+				const contractData = result.data as ContractData;
+				setContract({
+					id: contractData.id,
+					startDate: contractData.startDate,
+					endDate: contractData.endDate,
+					totalSessions: contractData.totalSessions,
+					clientId: contractData.clientId,
+				});
+			}
+		} catch (error) {
+			console.error("Erreur lors du chargement du contrat:", error);
+		}
+	};
+
+	// Charger le contrat au montage si nécessaire
+	useEffect(() => {
+		if (plannings.length === 0 && clientId) {
+			loadContract();
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [plannings, clientId]);
 
 	// Fonction pour gérer l'expansion des mois
 	const handleMonthToggle = (monthKey: string) => {
@@ -136,13 +177,26 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 
 	// Fonction pour calculer les données mensuelles
 	const calculateMonthlyData = (): MonthlyData[] => {
-		if (plannings.length === 0) return [];
+		// Récupérer les informations du contrat depuis plannings ou depuis l'état
+		const contractData =
+			plannings.length > 0
+				? plannings[0]?.contract
+				: contract
+					? {
+							id: contract.id,
+							clientId: contract.clientId,
+							startDate: contract.startDate,
+							endDate: contract.endDate,
+							totalSessions: contract.totalSessions,
+						}
+					: null;
 
-		// Récupérer les informations du contrat (on assume qu'il y a un seul contrat actif)
-		const contract = plannings[0]?.contract;
-		if (!contract) return [];
+		if (!contractData) return [];
 
-		const contractStartDate = new Date(contract.startDate);
+		const contractStartDate =
+			contractData.startDate instanceof Date
+				? contractData.startDate
+				: new Date(contractData.startDate);
 		const now = new Date();
 
 		// Créer un Map pour regrouper les séances par mois
@@ -168,7 +222,7 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 					plannedSessions: 0,
 					doneSessions: 0,
 					cancelledSessions: 0,
-					contractTotalSessions: contract.totalSessions,
+					contractTotalSessions: contractData.totalSessions,
 					isMonthCompleted:
 						year < currentYear ||
 						(year === currentYear && month < currentMonth),

@@ -288,11 +288,14 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 									</TabsContent>
 
 									<TabsContent value="seances" className="mt-4 sm:mt-6">
-										<SessionsMonthlyView plannings={plannings} />
+										<SessionsMonthlyView
+											plannings={plannings}
+											clientId={client.id}
+										/>
 									</TabsContent>
 
 									<TabsContent value="paiement" className="mt-4 sm:mt-6">
-										<PaymentTab plannings={plannings} />
+										<PaymentTab plannings={plannings} clientId={client.id} />
 									</TabsContent>
 								</Tabs>
 							</div>
