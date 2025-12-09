@@ -230,7 +230,7 @@ export const CreateSessionPopup: React.FC<CreateSessionPopupProps> = ({
 												key={session.id}
 												className="flex items-center justify-between bg-white/5 rounded p-2"
 											>
-												<div className="flex-1 min-w-0">
+												<div className="flex-1 min-w-[1px]">
 													<p className="text-white text-xs sm:text-sm font-medium truncate">
 														{getSessionClientFullName(session.contract.client)}
 													</p>

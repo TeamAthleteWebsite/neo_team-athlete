@@ -333,7 +333,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({ plannings }) => {
 								handleMonthClick(monthData)
 							}
 						>
-							<div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 flex-1 min-w-0">
+							<div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 flex-1 min-w-[1px]">
 								<div className="text-white font-medium text-base sm:text-lg">
 									{monthData.month} {monthData.year}
 								</div>

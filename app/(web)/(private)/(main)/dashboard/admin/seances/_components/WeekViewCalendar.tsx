@@ -317,7 +317,7 @@ export const WeekViewCalendar: React.FC<WeekViewCalendarProps> = ({
 																		className="flex items-center gap-1 p-1 bg-black/70 rounded hover:bg-black/80 transition-colors duration-200 hover:scale-[1.02] transform border-l-2 border-primary"
 																	>
 																		<div
-																			className="flex items-center gap-1 flex-1 min-w-0 cursor-pointer"
+																			className="flex items-center gap-1 flex-1 min-w-[1px] cursor-pointer"
 																			onClick={() =>
 																				handleViewClient(
 																					session.contract.client.id,
@@ -353,7 +353,7 @@ export const WeekViewCalendar: React.FC<WeekViewCalendarProps> = ({
 																				</AvatarFallback>
 																			</Avatar>
 
-																			<div className="flex-1 min-w-0">
+																			<div className="flex-1 min-w-[1px]">
 																				<div className="text-xs font-medium text-white truncate">
 																					{clientName}
 																				</div>
@@ -434,7 +434,7 @@ export const WeekViewCalendar: React.FC<WeekViewCalendarProps> = ({
 																		className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2 bg-black/70 rounded hover:bg-black/80 transition-colors duration-200 hover:scale-[1.02] transform border-l-2 border-primary"
 																	>
 																		<div
-																			className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0 cursor-pointer"
+																			className="flex items-center gap-1 sm:gap-2 flex-1 min-w-[1px] cursor-pointer"
 																			onClick={() =>
 																				handleViewClient(
 																					session.contract.client.id,
@@ -470,7 +470,7 @@ export const WeekViewCalendar: React.FC<WeekViewCalendarProps> = ({
 																				</AvatarFallback>
 																			</Avatar>
 
-																			<div className="flex-1 min-w-0">
+																			<div className="flex-1 min-w-[1px]">
 																				<div className="text-xs sm:text-sm font-medium text-white truncate">
 																					{clientName}
 																				</div>

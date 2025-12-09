@@ -224,7 +224,7 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 				{/* Filtre par statut */}
 				<div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-3 sm:p-4">
 					<div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
-						<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 flex-1 min-w-0">
+						<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 flex-1 min-w-[1px]">
 							<Select value={selectedStatus} onValueChange={handleStatusChange}>
 								<SelectTrigger className="w-full sm:w-48 bg-white/10 border-white/20 text-white text-sm">
 									<SelectValue placeholder="Sélectionner un statut" />
@@ -272,7 +272,7 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 										isClickable ? "cursor-pointer" : "cursor-default"
 									}`}
 								>
-									<div className="flex-1 min-w-0">
+									<div className="flex-1 min-w-[1px]">
 										<div className="flex items-center gap-2">
 											<div className="text-white font-medium text-base sm:text-lg break-words">
 												{formatDayAndTime(planning.date)}

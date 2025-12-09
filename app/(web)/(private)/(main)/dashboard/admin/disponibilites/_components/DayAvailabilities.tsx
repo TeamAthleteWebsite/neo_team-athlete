@@ -140,7 +140,7 @@ export const DayAvailabilities: React.FC<DayAvailabilitiesProps> = ({
 									</AvatarFallback>
 								</Avatar>
 
-								<div className="flex-1 min-w-0">
+								<div className="flex-1 min-w-[1px]">
 									<div className="flex items-center gap-1 sm:gap-2">
 										<h4 className="font-medium text-white text-sm sm:text-base truncate">
 											{getClientFullName(availability.client)}

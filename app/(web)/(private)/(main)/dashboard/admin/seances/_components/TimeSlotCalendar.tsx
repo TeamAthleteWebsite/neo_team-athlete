@@ -153,7 +153,7 @@ export const TimeSlotCalendar: React.FC<TimeSlotCalendarProps> = ({
 													className="flex items-center gap-2 sm:gap-4 p-2 sm:p-4 bg-black/70 rounded-lg hover:bg-black/80 transition-colors duration-200 hover:scale-[1.02] transform border-l-2 sm:border-l-4 border-primary"
 												>
 													<div
-														className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0 cursor-pointer"
+														className="flex items-center gap-2 sm:gap-4 flex-1 min-w-[1px] cursor-pointer"
 														onClick={() =>
 															handleViewClient(session.contract.client.id)
 														}
@@ -177,7 +177,7 @@ export const TimeSlotCalendar: React.FC<TimeSlotCalendarProps> = ({
 															</AvatarFallback>
 														</Avatar>
 
-														<div className="flex-1 min-w-0">
+														<div className="flex-1 min-w-[1px]">
 															<h4 className="font-medium text-white text-sm sm:text-base truncate">
 																{clientName}
 															</h4>

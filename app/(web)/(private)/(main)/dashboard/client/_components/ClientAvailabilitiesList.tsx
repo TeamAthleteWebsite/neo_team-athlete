@@ -225,9 +225,9 @@ export const ClientAvailabilitiesList: React.FC<
 															: "border-white/10"
 													} transition-colors cursor-pointer hover:bg-white/10 hover:border-blue-500/30`}
 												>
-													<div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+													<div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-[1px]">
 														<Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 flex-shrink-0" />
-														<div className="flex-1 min-w-0">
+														<div className="flex-1 min-w-[1px]">
 															<div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
 																<span className="text-white font-medium text-sm sm:text-base break-words">
 																	{formatTime(availability.startTime)} -{" "}

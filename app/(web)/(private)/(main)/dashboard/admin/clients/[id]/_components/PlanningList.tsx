@@ -209,7 +209,7 @@ export const PlanningList: React.FC<PlanningListProps> = ({
 							}}
 							aria-label={`Supprimer la séance du ${formatDate(planning.date)}`}
 						>
-							<div className="flex-1 min-w-0">
+							<div className="flex-1 min-w-[1px]">
 								<div className="text-white font-medium text-base sm:text-lg break-words">
 									{formatDayAndTime(planning.date)}
 								</div>
