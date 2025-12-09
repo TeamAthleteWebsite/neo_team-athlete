@@ -48,7 +48,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 		setIsOfferPopupOpen(false);
 	};
 
-	const handleOfferSelect = async (offerId: string) => {
+	const handleOfferSelect = async (_offerId: string) => {
 		// Rafraîchir les données après l'ajout d'un abonnement
 		await refreshPlannings();
 		// Forcer le rechargement de ContractInfo
