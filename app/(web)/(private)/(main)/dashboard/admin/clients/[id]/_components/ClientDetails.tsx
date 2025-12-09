@@ -34,6 +34,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 	const [isAddSessionPopupOpen, setIsAddSessionPopupOpen] = useState(false);
 	const [plannings, setPlannings] =
 		useState<PlanningWithContract[]>(initialPlannings);
+	const [contractRefreshKey, setContractRefreshKey] = useState(0);
 
 	const handleClose = () => {
 		router.back();
@@ -47,10 +48,13 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 		setIsOfferPopupOpen(false);
 	};
 
-	const handleOfferSelect = (offerId: string) => {
-		// TODO: Implémenter la logique de sélection d'offre
-		console.log("Offre sélectionnée:", offerId);
-		// Ici vous pourrez ajouter la logique pour associer l'offre au client
+	const handleOfferSelect = async (offerId: string) => {
+		// Rafraîchir les données après l'ajout d'un abonnement
+		await refreshPlannings();
+		// Forcer le rechargement de ContractInfo
+		setContractRefreshKey((prev) => prev + 1);
+		// Rafraîchir la page pour mettre à jour les données serveur
+		router.refresh();
 	};
 
 	const handleContractUpdate = (hasContractData: boolean) => {
@@ -70,6 +74,22 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 		setPlannings((prevPlannings) =>
 			prevPlannings.filter((planning) => planning.id !== sessionId),
 		);
+	};
+
+	const refreshPlannings = async () => {
+		try {
+			const response = await fetch(
+				`/api/planning/get-by-client?clientId=${client.id}`,
+			);
+			if (response.ok) {
+				const result = await response.json();
+				if (result.success && result.data) {
+					setPlannings(result.data);
+				}
+			}
+		} catch (error) {
+			console.error("Erreur lors du rafraîchissement des plannings:", error);
+		}
 	};
 
 	const getClientFullName = () => {
@@ -222,6 +242,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 											plannings={plannings}
 											onContractUpdate={handleContractUpdate}
 											onOpenOfferPopup={handleOpenOfferPopup}
+											refreshKey={contractRefreshKey}
 										/>
 									</div>
 								</div>
@@ -285,9 +306,11 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 				isOpen={isAddSessionPopupOpen}
 				onClose={handleCloseAddSessionPopup}
 				clientId={client.id}
-				onSessionAdded={() => {
-					// TODO: Rafraîchir la liste des plannings
-					console.log("Séance ajoutée, rafraîchir la liste");
+				onSessionAdded={async () => {
+					// Rafraîchir la liste des plannings après l'ajout d'une séance
+					await refreshPlannings();
+					// Rafraîchir la page pour mettre à jour les données serveur
+					router.refresh();
 				}}
 			/>
 

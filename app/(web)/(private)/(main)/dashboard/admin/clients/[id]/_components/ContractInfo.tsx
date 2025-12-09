@@ -28,6 +28,7 @@ interface ContractInfoProps {
 	plannings: PlanningWithContract[];
 	onContractUpdate?: (hasContractData: boolean) => void;
 	onOpenOfferPopup?: () => void;
+	refreshKey?: number;
 }
 
 interface ContractData {
@@ -69,6 +70,7 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 	plannings,
 	onContractUpdate,
 	onOpenOfferPopup,
+	refreshKey,
 }) => {
 	const [contractData, setContractData] = useState<ContractData | null>(null);
 	const [contractType, setContractType] = useState<string | null>(null);
@@ -164,7 +166,7 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 		loadContractData();
 		loadPayments();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [clientId, plannings]);
+	}, [clientId, plannings, refreshKey]);
 
 	const handleDeleteContract = async () => {
 		if (!contractData) return;
