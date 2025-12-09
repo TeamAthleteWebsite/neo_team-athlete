@@ -277,8 +277,8 @@ export const WeekViewCalendar: React.FC<WeekViewCalendarProps> = ({
 
 						return (
 							<div key={hour} className="flex gap-1 sm:gap-2">
-								{/* Label horaire */}
-								<div className="w-12 sm:w-16 md:w-20 flex-shrink-0 text-right">
+								{/* Label horaire - fixe lors du scroll horizontal */}
+								<div className="w-12 sm:w-16 md:w-20 flex-shrink-0 text-right sticky left-0 z-10 bg-black/30 pr-1 sm:pr-2">
 									<span className="text-xs sm:text-sm md:text-base font-medium text-white">
 										{timeSlotLabel}
 									</span>
