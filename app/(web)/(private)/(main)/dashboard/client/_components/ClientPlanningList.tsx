@@ -17,6 +17,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
+import { Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -260,6 +261,9 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 							const isClickable =
 								planning.status === PlanningStatus.PLANNED && canCancel;
 
+							const isNonCancellable =
+								planning.status === PlanningStatus.PLANNED && !canCancel;
+
 							return (
 								<div
 									key={planning.id}
@@ -269,8 +273,16 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 									}`}
 								>
 									<div className="flex-1 min-w-0">
-										<div className="text-white font-medium text-base sm:text-lg break-words">
-											{formatDayAndTime(planning.date)}
+										<div className="flex items-center gap-2">
+											<div className="text-white font-medium text-base sm:text-lg break-words">
+												{formatDayAndTime(planning.date)}
+											</div>
+											{isNonCancellable && (
+												<Lock
+													className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-400/50 flex-shrink-0"
+													aria-label="Séance non annulable"
+												/>
+											)}
 										</div>
 										<div className="text-white/70 text-xs sm:text-sm mt-1">
 											{formatDate(planning.date)}
