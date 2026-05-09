@@ -21,15 +21,21 @@ const ONBOARDING_STEPS = [
 		title: "Vos mensurations",
 		subtitle: "Ces informations nous permettent de suivre votre progression",
 	},
+	{
+		path: "/onboarding/coach-offer",
+		title: "Choisir un coach et une offre",
+		subtitle: "Sélectionnez l'accompagnement adapté à vos besoins",
+	},
 ] as const;
 
 interface OnboardingLayoutProps {
 	children: ReactNode;
 	title?: string;
 	subtitle?: string;
-	onNext?: () => void;
+	onNext?: () => void | boolean | Promise<void | boolean>;
 	onSkip?: () => void;
 	showNextButton?: boolean;
+	isNextDisabled?: boolean;
 }
 
 export function OnboardingLayout({
@@ -38,6 +44,7 @@ export function OnboardingLayout({
 	subtitle: customSubtitle,
 	onNext,
 	showNextButton = true,
+	isNextDisabled = false,
 }: OnboardingLayoutProps) {
 	const router = useRouter();
 	const pathname = usePathname();
@@ -59,9 +66,14 @@ export function OnboardingLayout({
 
 	const progress = (currentStep / totalSteps) * 100;
 
-	const handleNext = () => {
-		if (onNext) {
-			onNext();
+	const handleNext = async () => {
+		if (isNextDisabled) {
+			return;
+		}
+
+		const shouldContinue = onNext ? await onNext() : true;
+		if (shouldContinue === false) {
+			return;
 		}
 
 		if (currentStep < totalSteps) {
@@ -154,7 +166,7 @@ export function OnboardingLayout({
 								size="lg"
 								variant="destructive"
 								className="w-full cursor-pointer"
-								disabled={isPending}
+								disabled={isPending || isNextDisabled}
 							>
 								{currentStep === totalSteps ? "Terminer" : "Continuer"}
 							</Button>
