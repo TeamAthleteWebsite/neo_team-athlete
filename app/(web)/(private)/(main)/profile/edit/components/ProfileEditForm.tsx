@@ -1,6 +1,7 @@
 "use client";
 
 import { CoachOfferSelectionFlow } from "@/components/features/coach-offer-selection/CoachOfferSelectionFlow";
+import { CoachOfferSelectionPanel } from "@/components/features/coach-offer-selection/CoachOfferSelectionPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -344,7 +345,33 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 			{/* Popup de sélection de coach et d'offres */}
 			{isCoachPopupOpen && (
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-					<div className="bg-zinc-900 rounded-lg p-4 sm:p-6 w-full max-w-4xl mx-auto max-h-[90vh] overflow-y-auto">
+					<CoachOfferSelectionPanel
+						variant="modal"
+						footer={
+							<div className="mt-4 sm:mt-6 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
+								<button
+									type="button"
+									onClick={() => setIsCoachPopupOpen(false)}
+									className="px-3 sm:px-4 py-2 text-zinc-400 hover:text-white transition-colors text-sm sm:text-base"
+								>
+									Annuler
+								</button>
+								<button
+									type="button"
+									onClick={() => {
+										if (!selectedOfferId) {
+											toast.error("Veuillez sélectionner une offre.");
+											return;
+										}
+										setIsCoachPopupOpen(false);
+									}}
+									className="px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm sm:text-base"
+								>
+									Confirmer la sélection
+								</button>
+							</div>
+						}
+					>
 						<CoachOfferSelectionFlow
 							selectedOfferId={selectedOfferId}
 							setSelectedOfferId={setSelectedOfferId}
@@ -355,30 +382,7 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 								);
 							}}
 						/>
-
-						<div className="mt-4 sm:mt-6 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
-							<button
-								type="button"
-								onClick={() => setIsCoachPopupOpen(false)}
-								className="px-3 sm:px-4 py-2 text-zinc-400 hover:text-white transition-colors text-sm sm:text-base"
-							>
-								Annuler
-							</button>
-							<button
-								type="button"
-								onClick={() => {
-									if (!selectedOfferId) {
-										toast.error("Veuillez sélectionner une offre.");
-										return;
-									}
-									setIsCoachPopupOpen(false);
-								}}
-								className="px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm sm:text-base"
-							>
-								Confirmer la sélection
-							</button>
-						</div>
-					</div>
+					</CoachOfferSelectionPanel>
 				</div>
 			)}
 

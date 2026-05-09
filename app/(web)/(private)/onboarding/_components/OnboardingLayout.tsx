@@ -36,6 +36,8 @@ interface OnboardingLayoutProps {
 	onSkip?: () => void;
 	showNextButton?: boolean;
 	isNextDisabled?: boolean;
+	/** Contenu large (ex. tableaux d’offres) — aligné sur max-w-4xl comme la popup profil */
+	wideContent?: boolean;
 }
 
 export function OnboardingLayout({
@@ -45,7 +47,9 @@ export function OnboardingLayout({
 	onNext,
 	showNextButton = true,
 	isNextDisabled = false,
+	wideContent = false,
 }: OnboardingLayoutProps) {
+	const contentMaxWidth = wideContent ? "max-w-4xl" : "max-w-md";
 	const router = useRouter();
 	const pathname = usePathname();
 	const [isPending, startTransition] = useTransition();
@@ -116,8 +120,10 @@ export function OnboardingLayout({
 	};
 
 	return (
-		<div className="flex flex-col relative pb-24">
-			<div className="flex justify-between items-center fixed top-5 left-0 right-0 z-10 p-3 gap-3">
+		<div
+			className={`flex flex-col relative ${wideContent ? "pb-28 sm:pb-24" : "pb-24"}`}
+		>
+			<div className="flex justify-between items-center fixed top-5 left-0 right-0 z-50 p-3 gap-3">
 				<Button
 					variant="ghost"
 					size="icon"
@@ -135,7 +141,9 @@ export function OnboardingLayout({
 				</span>
 			</div>
 
-			<div className="flex-1 w-full max-w-md mx-auto space-y-8 pt-20">
+			<div
+				className={`flex-1 w-full ${contentMaxWidth} mx-auto space-y-8 pt-20 px-3 sm:px-4`}
+			>
 				<div className="text-center shadow-lg rounded-lg p-4 bg-black/50">
 					<h1 className="text-3xl font-bold tracking-tigh text-white">
 						{title}
@@ -143,11 +151,13 @@ export function OnboardingLayout({
 					{subtitle && <p className="mt-2 text-sm text-gray-100">{subtitle}</p>}
 				</div>
 
-				<div className="mt-12">{children}</div>
+				<div className={wideContent ? "mt-6 sm:mt-8 min-h-0" : "mt-12"}>
+					{children}
+				</div>
 			</div>
 
-			<div className="fixed bottom-0 left-0 right-0">
-				<div className="w-full max-w-md mx-auto px-4 mb-2">
+			<div className="fixed bottom-0 left-0 right-0 z-50">
+				<div className={`w-full ${contentMaxWidth} mx-auto px-4 mb-2`}>
 					<Button
 						onClick={handleSkip}
 						variant="ghost"
@@ -160,7 +170,7 @@ export function OnboardingLayout({
 
 				{showNextButton && (
 					<div className="p-4 bg-black/20 backdrop-blur-sm">
-						<div className="w-full max-w-md mx-auto">
+						<div className={`w-full ${contentMaxWidth} mx-auto`}>
 							<Button
 								onClick={handleNext}
 								size="lg"
