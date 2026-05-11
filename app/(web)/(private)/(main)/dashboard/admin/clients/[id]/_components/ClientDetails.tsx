@@ -324,6 +324,7 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 					onClose={handleCloseOfferPopup}
 					coachId={coachId}
 					clientId={client.id}
+					clientPreferredOfferId={client.selectedOfferId ?? null}
 					onOfferSelect={handleOfferSelect}
 				/>
 			)}

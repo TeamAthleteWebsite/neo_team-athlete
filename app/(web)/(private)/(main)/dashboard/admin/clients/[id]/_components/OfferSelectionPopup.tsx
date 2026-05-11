@@ -3,7 +3,7 @@
 import { createContractAction } from "@/src/actions/contract.actions";
 import { getOffersByCoachAction } from "@/src/actions/offer.actions";
 import { Calendar, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { type FC, useEffect, useState } from "react";
 
 interface Offer {
 	id: string;
@@ -16,19 +16,49 @@ interface Offer {
 	};
 }
 
+const getOfferButtonClassName = (
+	offerId: string,
+	coachSelectionId: string,
+	clientPreferredOfferId: string | null | undefined,
+): string => {
+	const isCoachSelected = coachSelectionId === offerId;
+	const isClientPreferred = clientPreferredOfferId === offerId;
+	const base =
+		"w-full p-1.5 sm:p-3 rounded-md transition-colors relative text-center";
+	if (isCoachSelected) {
+		const highlightPreferred = isClientPreferred
+			? " ring-2 ring-emerald-300 ring-inset"
+			: "";
+		return `${base} bg-blue-500 text-white${highlightPreferred}`;
+	}
+	if (isClientPreferred) {
+		return `${base} bg-emerald-950/50 text-white ring-2 ring-emerald-400 ring-offset-2 ring-offset-zinc-800 hover:bg-emerald-950/65`;
+	}
+	return `${base} bg-zinc-700 text-white hover:bg-zinc-600`;
+};
+
+const ClientPreferredBadge: FC = () => (
+	<span className="pointer-events-none absolute top-0.5 left-0.5 z-10 max-w-[calc(100%-0.25rem)] truncate rounded bg-emerald-600 px-1 py-px text-[7px] font-semibold uppercase leading-none tracking-wide text-white sm:top-1 sm:left-1 sm:text-[9px]">
+		Souhait client
+	</span>
+);
+
 interface OfferSelectionPopupProps {
 	isOpen: boolean;
 	onClose: () => void;
 	coachId: string;
 	clientId: string;
+	/** Offre enregistrée par le client sur son profil — présélectionnée si elle figure dans le catalogue */
+	clientPreferredOfferId?: string | null;
 	onOfferSelect: (offerId: string) => void;
 }
 
-export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
+export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 	isOpen,
 	onClose,
 	coachId,
 	clientId,
+	clientPreferredOfferId,
 	onOfferSelect,
 }) => {
 	const [offers, setOffers] = useState<Offer[]>([]);
@@ -67,6 +97,24 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
 			fetchOffers();
 		}
 	}, [isOpen, coachId]);
+
+	// À l’ouverture : présélection + onglets alignés sur l’offre souhaitée par le client (si elle existe dans le catalogue)
+	useEffect(() => {
+		if (!isOpen || offers.length === 0 || !clientPreferredOfferId) {
+			return;
+		}
+
+		const preferred = offers.find((o) => o.id === clientPreferredOfferId);
+		if (!preferred) {
+			return;
+		}
+
+		setShowCommitmentOffers(preferred.duration > 0);
+		setActiveProgramType(preferred.program.type);
+		setSelectedOfferId(preferred.id);
+		setCustomSessions(preferred.sessions);
+		setCustomPrice(preferred.price);
+	}, [isOpen, offers, clientPreferredOfferId]);
 
 	const handleOfferSelection = (offerId: string) => {
 		setSelectedOfferId(offerId);
@@ -180,6 +228,15 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
 		{ key: "PROGRAMMING", label: "Programmation" },
 		{ key: "SMALL_GROUP", label: "Small Group" },
 	];
+
+	const clientPreferredOfferIsInCatalog =
+		Boolean(clientPreferredOfferId) &&
+		offers.some((o) => o.id === clientPreferredOfferId);
+
+	const buildOfferAriaLabel = (parts: (string | null | undefined)[]) =>
+		parts
+			.filter((p): p is string => typeof p === "string" && p.length > 0)
+			.join(", ");
 
 	if (!isOpen) return null;
 
@@ -309,18 +366,38 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
 													>
 														{offer ? (
 															<button
+																type="button"
 																onClick={() => handleOfferSelection(offer.id)}
-																className={`w-full p-1.5 sm:p-3 rounded-md transition-colors ${
+																className={`${getOfferButtonClassName(offer.id, selectedOfferId, clientPreferredOfferId)} focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900`}
+																aria-pressed={selectedOfferId === offer.id}
+																aria-label={buildOfferAriaLabel([
+																	`${offer.price} euros, ${duration === 0 ? "prix unique" : "par mois"}`,
+																	clientPreferredOfferId === offer.id
+																		? "souhait du client"
+																		: null,
 																	selectedOfferId === offer.id
-																		? "bg-blue-500 text-white"
-																		: "bg-zinc-700 text-white hover:bg-zinc-600"
-																}`}
+																		? "sélectionnée pour le nouveau contrat"
+																		: null,
+																])}
 															>
-																<div className="font-semibold text-xs sm:text-lg">
-																	{offer.price}€
-																</div>
-																<div className="text-[10px] sm:text-sm opacity-80">
-																	{duration === 0 ? "prix unique" : "par mois"}
+																{clientPreferredOfferId === offer.id && (
+																	<ClientPreferredBadge />
+																)}
+																<div
+																	className={
+																		clientPreferredOfferId === offer.id
+																			? "pt-2.5 sm:pt-3"
+																			: undefined
+																	}
+																>
+																	<div className="font-semibold text-xs sm:text-lg">
+																		{offer.price}€
+																	</div>
+																	<div className="text-[10px] sm:text-sm opacity-80">
+																		{duration === 0
+																			? "prix unique"
+																			: "par mois"}
+																	</div>
 																</div>
 															</button>
 														) : (
@@ -397,30 +474,48 @@ export const OfferSelectionPopup: React.FC<OfferSelectionPopupProps> = ({
 														>
 															{offer ? (
 																<button
+																	type="button"
 																	onClick={() => handleOfferSelection(offer.id)}
-																	className={`w-full p-1.5 sm:p-3 rounded-md transition-colors ${
+																	className={`${getOfferButtonClassName(offer.id, selectedOfferId, clientPreferredOfferId)} focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900`}
+																	aria-pressed={selectedOfferId === offer.id}
+																	aria-label={buildOfferAriaLabel([
+																		`${offer.sessions} séances, ${offer.price} euros, ${duration === 0 ? "prix unique" : `${duration} mois`}`,
+																		clientPreferredOfferId === offer.id
+																			? "souhait du client"
+																			: null,
 																		selectedOfferId === offer.id
-																			? "bg-blue-500 text-white"
-																			: "bg-zinc-700 text-white hover:bg-zinc-600"
-																	}`}
+																			? "sélectionnée pour le nouveau contrat"
+																			: null,
+																	])}
 																>
-																	<div className="font-semibold text-xs sm:text-lg">
-																		{offer.price}€
+																	{clientPreferredOfferId === offer.id && (
+																		<ClientPreferredBadge />
+																	)}
+																	<div
+																		className={
+																			clientPreferredOfferId === offer.id
+																				? "pt-2.5 sm:pt-3"
+																				: undefined
+																		}
+																	>
+																		<div className="font-semibold text-xs sm:text-lg">
+																			{offer.price}€
+																		</div>
+																		<div className="text-[10px] sm:text-sm opacity-80">
+																			{duration === 0
+																				? "prix unique"
+																				: "par mois"}
+																		</div>
+																		{duration > 0 &&
+																			offer.program.type !== "PROGRAMMING" && (
+																				<div className="text-[9px] sm:text-xs opacity-60 mt-0.5">
+																					{(
+																						offer.price / offer.sessions
+																					).toFixed(2)}
+																					€ / séance
+																				</div>
+																			)}
 																	</div>
-																	<div className="text-[10px] sm:text-sm opacity-80">
-																		{duration === 0
-																			? "prix unique"
-																			: "par mois"}
-																	</div>
-																	{duration > 0 &&
-																		offer.program.type !== "PROGRAMMING" && (
-																			<div className="text-[9px] sm:text-xs opacity-60 mt-0.5">
-																				{(offer.price / offer.sessions).toFixed(
-																					2,
-																				)}
-																				€ / séance
-																			</div>
-																		)}
 																</button>
 															) : (
 																<span className="text-zinc-500 text-xs sm:text-sm">
