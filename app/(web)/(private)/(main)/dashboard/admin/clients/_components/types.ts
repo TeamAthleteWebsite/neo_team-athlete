@@ -14,4 +14,6 @@ export interface Client {
 		name: string;
 		email: string;
 	} | null;
+	/** Offre enregistrée comme souhaitée par le client (profil) */
+	selectedOfferId?: string | null;
 }
