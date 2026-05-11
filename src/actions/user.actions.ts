@@ -176,6 +176,7 @@ export async function getClientById(id: string) {
 				height: true,
 				weight: true,
 				goal: true,
+				selectedOfferId: true,
 				contracts: {
 					select: {
 						offer: {
@@ -232,6 +233,7 @@ export async function getClientById(id: string) {
 			goal: client.goal,
 			programTitle,
 			coach: client.selectedOffer?.coach || null,
+			selectedOfferId: client.selectedOfferId,
 		};
 	} catch (error) {
 		console.error("Error fetching client by id:", error);
