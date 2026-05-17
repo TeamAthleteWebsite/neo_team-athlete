@@ -34,7 +34,8 @@ export const DayAvailabilities: React.FC<DayAvailabilitiesProps> = ({
 						},
 						body: JSON.stringify({
 							clientId: availability.client.id,
-							dateTime: availability.startTime.toISOString(),
+							startTime: availability.startTime.toISOString(),
+							endTime: availability.endTime.toISOString(),
 						}),
 					});
 

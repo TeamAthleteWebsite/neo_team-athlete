@@ -1,625 +1,673 @@
 import { prisma } from "@/lib/prisma";
 
 export interface PlanningWithContract {
-  id: string;
-  date: Date;
-  status: string;
-  contract: {
-    id: string;
-    clientId: string;
-    startDate: Date;
-    endDate: Date;
-    totalSessions: number;
-    amount: number;
-  };
+	id: string;
+	date: Date;
+	status: string;
+	contract: {
+		id: string;
+		clientId: string;
+		startDate: Date;
+		endDate: Date;
+		totalSessions: number;
+		amount: number;
+	};
 }
 
 export interface PlanningWithClient {
-  id: string;
-  date: Date;
-  status: string;
-  contract: {
-    id: string;
-    startDate: Date;
-    endDate: Date;
-    totalSessions: number;
-    client: {
-      id: string;
-      name: string;
-      lastName?: string | null;
-      image?: string | null;
-    };
-  };
+	id: string;
+	date: Date;
+	status: string;
+	contract: {
+		id: string;
+		startDate: Date;
+		endDate: Date;
+		totalSessions: number;
+		client: {
+			id: string;
+			name: string;
+			lastName?: string | null;
+			image?: string | null;
+		};
+	};
 }
 
 export const getPlanningsByContractId = async (
-  contractId: string
+	contractId: string,
 ): Promise<PlanningWithContract[]> => {
-  try {
-    const plannings = await prisma.planning.findMany({
-      where: {
-        contractId: contractId,
-      },
-      include: {
-        contract: {
-          select: {
-            id: true,
-            clientId: true,
-            startDate: true,
-            endDate: true,
-            totalSessions: true,
-            amount: true,
-          },
-        },
-      },
-      orderBy: {
-        date: "desc",
-      },
-    });
+	try {
+		const plannings = await prisma.planning.findMany({
+			where: {
+				contractId: contractId,
+			},
+			include: {
+				contract: {
+					select: {
+						id: true,
+						clientId: true,
+						startDate: true,
+						endDate: true,
+						totalSessions: true,
+						amount: true,
+					},
+				},
+			},
+			orderBy: {
+				date: "desc",
+			},
+		});
 
-    return plannings;
-  } catch (error) {
-    console.error("Erreur lors de la récupération des plannings:", error);
-    throw new Error("Impossible de récupérer les plannings");
-  }
+		return plannings;
+	} catch (error) {
+		console.error("Erreur lors de la récupération des plannings:", error);
+		throw new Error("Impossible de récupérer les plannings");
+	}
 };
 
 export const getPlanningsByClientId = async (
-  clientId: string
+	clientId: string,
 ): Promise<PlanningWithContract[]> => {
-  try {
-    // Mettre à jour les séances expirées avant de récupérer les données
-    await updateExpiredSessions();
-    
-    const plannings = await prisma.planning.findMany({
-      where: {
-        contract: {
-          clientId: clientId,
-        },
-      },
-      include: {
-        contract: {
-          select: {
-            id: true,
-            clientId: true,
-            startDate: true,
-            endDate: true,
-            totalSessions: true,
-            amount: true,
-          },
-        },
-      },
-      orderBy: {
-        date: "desc",
-      },
-    });
+	try {
+		// Mettre à jour les séances expirées avant de récupérer les données
+		await updateExpiredSessions();
 
-    return plannings;
-  } catch (error) {
-    console.error("Erreur lors de la récupération des plannings:", error);
-    throw new Error("Impossible de récupérer les plannings");
-  }
+		const plannings = await prisma.planning.findMany({
+			where: {
+				contract: {
+					clientId: clientId,
+				},
+			},
+			include: {
+				contract: {
+					select: {
+						id: true,
+						clientId: true,
+						startDate: true,
+						endDate: true,
+						totalSessions: true,
+						amount: true,
+					},
+				},
+			},
+			orderBy: {
+				date: "desc",
+			},
+		});
+
+		return plannings;
+	} catch (error) {
+		console.error("Erreur lors de la récupération des plannings:", error);
+		throw new Error("Impossible de récupérer les plannings");
+	}
 };
 
 export const addPlanningSession = async (
-  clientId: string,
-  dateTime: Date
+	clientId: string,
+	dateTime: Date,
 ): Promise<void> => {
-  try {
-    // Trouver le contrat actif du client
-    const activeContract = await prisma.contract.findFirst({
-      where: {
-        clientId: clientId,
-        status: "ACTIVE"
-      }
-    });
+	try {
+		// Trouver le contrat actif du client
+		const activeContract = await prisma.contract.findFirst({
+			where: {
+				clientId: clientId,
+				status: "ACTIVE",
+			},
+		});
 
-    if (!activeContract) {
-      throw new Error("Aucun contrat actif trouvé pour ce client");
-    }
+		if (!activeContract) {
+			throw new Error("Aucun contrat actif trouvé pour ce client");
+		}
 
-    // Déterminer le statut basé sur la date
-    const now = new Date();
-    const status = dateTime > now ? "PLANNED" : "DONE";
+		// Déterminer le statut basé sur la date
+		const now = new Date();
+		const status = dateTime > now ? "PLANNED" : "DONE";
 
-    // Créer la nouvelle séance
-    await prisma.planning.create({
-      data: {
-        contractId: activeContract.id,
-        date: dateTime,
-        status: status
-      }
-    });
-
-  } catch (error) {
-    console.error("Erreur lors de l'ajout de la séance:", error);
-    throw new Error("Impossible d'ajouter la séance");
-  }
+		// Créer la nouvelle séance
+		await prisma.planning.create({
+			data: {
+				contractId: activeContract.id,
+				date: dateTime,
+				status: status,
+			},
+		});
+	} catch (error) {
+		console.error("Erreur lors de l'ajout de la séance:", error);
+		throw new Error("Impossible d'ajouter la séance");
+	}
 };
 
 export const addRecurringPlanningSessions = async (
-  clientId: string,
-  startDate: Date,
-  startTime: string,
-  endTime: string | null,
-  numberOfWeeks: number,
-  selectedDays: number[]
+	clientId: string,
+	startDate: Date,
+	startTime: string,
+	endTime: string | null,
+	numberOfWeeks: number,
+	selectedDays: number[],
 ): Promise<{ success: boolean; count: number; error?: string }> => {
-  try {
-    // Trouver le contrat actif du client
-    const activeContract = await prisma.contract.findFirst({
-      where: {
-        clientId: clientId,
-        status: "ACTIVE"
-      }
-    });
+	try {
+		// Trouver le contrat actif du client
+		const activeContract = await prisma.contract.findFirst({
+			where: {
+				clientId: clientId,
+				status: "ACTIVE",
+			},
+		});
 
-    if (!activeContract) {
-      return {
-        success: false,
-        count: 0,
-        error: "Aucun contrat actif trouvé pour ce client"
-      };
-    }
+		if (!activeContract) {
+			return {
+				success: false,
+				count: 0,
+				error: "Aucun contrat actif trouvé pour ce client",
+			};
+		}
 
-    // Extraire l'heure de début (HH:MM)
-    const [startHour, startMinute] = startTime.split(':').map(Number);
-    
-    // Extraire l'heure de fin si fournie, sinon utiliser startTime + 1h
-    // Note: endHour et endMinute ne sont pas utilisés actuellement mais peuvent être nécessaires pour validation future
-    if (endTime) {
-      // Validation de l'heure de fin si fournie
-      const [endHour, endMinute] = endTime.split(':').map(Number);
-      if (endHour < startHour || (endHour === startHour && endMinute <= startMinute)) {
-        return {
-          success: false,
-          count: 0,
-          error: "L'heure de fin doit être postérieure à l'heure de début"
-        };
-      }
-    }
+		// Extraire l'heure de début (HH:MM)
+		const [startHour, startMinute] = startTime.split(":").map(Number);
 
-    // Générer toutes les dates de séances
-    const sessionsToCreate: Date[] = [];
-    const now = new Date();
-    const baseDate = new Date(startDate);
-    const startDayOfWeek = baseDate.getDay();
+		// Extraire l'heure de fin si fournie, sinon utiliser startTime + 1h
+		// Note: endHour et endMinute ne sont pas utilisés actuellement mais peuvent être nécessaires pour validation future
+		if (endTime) {
+			// Validation de l'heure de fin si fournie
+			const [endHour, endMinute] = endTime.split(":").map(Number);
+			if (
+				endHour < startHour ||
+				(endHour === startHour && endMinute <= startMinute)
+			) {
+				return {
+					success: false,
+					count: 0,
+					error: "L'heure de fin doit être postérieure à l'heure de début",
+				};
+			}
+		}
 
-    // Pour chaque semaine (0 à numberOfWeeks-1)
-    for (let week = 0; week < numberOfWeeks; week++) {
-      // Pour chaque jour sélectionné
-      for (const targetDayOfWeek of selectedDays) {
-        // Calculer le décalage pour atteindre le jour cible
-        // Si le jour cible est dans le passé de la semaine de départ, on prend celui de la semaine suivante
-        let daysToAdd = targetDayOfWeek - startDayOfWeek;
-        if (daysToAdd < 0) {
-          daysToAdd += 7;
-        }
-        
-        // Ajouter le nombre de semaines
-        daysToAdd += week * 7;
+		// Générer toutes les dates de séances
+		const sessionsToCreate: Date[] = [];
+		const now = new Date();
+		const baseDate = new Date(startDate);
+		const startDayOfWeek = baseDate.getDay();
 
-        // Créer la date de la séance
-        const sessionDate = new Date(baseDate);
-        sessionDate.setDate(baseDate.getDate() + daysToAdd);
-        
-        // Définir l'heure de début
-        const sessionDateTime = new Date(sessionDate);
-        sessionDateTime.setHours(startHour, startMinute, 0, 0);
+		// Pour chaque semaine (0 à numberOfWeeks-1)
+		for (let week = 0; week < numberOfWeeks; week++) {
+			// Pour chaque jour sélectionné
+			for (const targetDayOfWeek of selectedDays) {
+				// Calculer le décalage pour atteindre le jour cible
+				// Si le jour cible est dans le passé de la semaine de départ, on prend celui de la semaine suivante
+				let daysToAdd = targetDayOfWeek - startDayOfWeek;
+				if (daysToAdd < 0) {
+					daysToAdd += 7;
+				}
 
-        // Ajouter la séance
-        sessionsToCreate.push(sessionDateTime);
-      }
-    }
+				// Ajouter le nombre de semaines
+				daysToAdd += week * 7;
 
-    // Trier les dates pour éviter les doublons et organiser
-    const uniqueSessions = Array.from(
-      new Set(sessionsToCreate.map(d => d.getTime()))
-    )
-      .map(time => new Date(time))
-      .sort((a, b) => a.getTime() - b.getTime());
+				// Créer la date de la séance
+				const sessionDate = new Date(baseDate);
+				sessionDate.setDate(baseDate.getDate() + daysToAdd);
 
-    // Créer toutes les séances en une seule transaction
-    const createdSessions = await prisma.$transaction(
-      uniqueSessions.map(sessionDateTime => {
-        const status = sessionDateTime > now ? "PLANNED" : "DONE";
-        return prisma.planning.create({
-          data: {
-            contractId: activeContract.id,
-            date: sessionDateTime,
-            status: status
-          }
-        });
-      })
-    );
+				// Définir l'heure de début
+				const sessionDateTime = new Date(sessionDate);
+				sessionDateTime.setHours(startHour, startMinute, 0, 0);
 
-    return {
-      success: true,
-      count: createdSessions.length
-    };
+				// Ajouter la séance
+				sessionsToCreate.push(sessionDateTime);
+			}
+		}
 
-  } catch (error) {
-    console.error("Erreur lors de l'ajout des séances récurrentes:", error);
-    return {
-      success: false,
-      count: 0,
-      error: "Impossible d'ajouter les séances récurrentes"
-    };
-  }
+		// Trier les dates pour éviter les doublons et organiser
+		const uniqueSessions = Array.from(
+			new Set(sessionsToCreate.map((d) => d.getTime())),
+		)
+			.map((time) => new Date(time))
+			.sort((a, b) => a.getTime() - b.getTime());
+
+		// Créer toutes les séances en une seule transaction
+		const createdSessions = await prisma.$transaction(
+			uniqueSessions.map((sessionDateTime) => {
+				const status = sessionDateTime > now ? "PLANNED" : "DONE";
+				return prisma.planning.create({
+					data: {
+						contractId: activeContract.id,
+						date: sessionDateTime,
+						status: status,
+					},
+				});
+			}),
+		);
+
+		return {
+			success: true,
+			count: createdSessions.length,
+		};
+	} catch (error) {
+		console.error("Erreur lors de l'ajout des séances récurrentes:", error);
+		return {
+			success: false,
+			count: 0,
+			error: "Impossible d'ajouter les séances récurrentes",
+		};
+	}
 };
 
 export const updateExpiredSessions = async (): Promise<void> => {
-  try {
-    const now = new Date();
-    
-    // Mettre à jour toutes les séances "PLANNED" dont la date est dans le passé
-    const result = await prisma.planning.updateMany({
-      where: {
-        status: "PLANNED",
-        date: {
-          lt: now // date < maintenant
-        }
-      },
-      data: {
-        status: "DONE"
-      }
-    });
+	try {
+		const now = new Date();
 
-    console.log(`${result.count} séances mises à jour de PLANNED vers DONE`);
-  } catch (error) {
-    console.error("Erreur lors de la mise à jour des séances expirées:", error);
-    throw new Error("Impossible de mettre à jour les séances expirées");
-  }
+		// Mettre à jour toutes les séances "PLANNED" dont la date est dans le passé
+		const result = await prisma.planning.updateMany({
+			where: {
+				status: "PLANNED",
+				date: {
+					lt: now, // date < maintenant
+				},
+			},
+			data: {
+				status: "DONE",
+			},
+		});
+
+		console.log(`${result.count} séances mises à jour de PLANNED vers DONE`);
+	} catch (error) {
+		console.error("Erreur lors de la mise à jour des séances expirées:", error);
+		throw new Error("Impossible de mettre à jour les séances expirées");
+	}
 };
 
 export const getPlanningsByCoachId = async (coachId: string) => {
-  try {
-    // Mettre à jour les séances expirées avant de récupérer les données
-    await updateExpiredSessions();
-    
-    const plannings = await prisma.planning.findMany({
-      where: {
-        status: "PLANNED",
-        contract: {
-          offer: {
-            coachId: coachId
-          }
-        }
-      },
-      include: {
-        contract: {
-          select: {
-            id: true,
-            startDate: true,
-            endDate: true,
-            totalSessions: true,
-            client: {
-              select: {
-                id: true,
-                name: true,
-                lastName: true,
-                image: true
-              }
-            }
-          }
-        }
-      },
-      orderBy: {
-        date: "asc"
-      }
-    });
+	try {
+		// Mettre à jour les séances expirées avant de récupérer les données
+		await updateExpiredSessions();
 
-    return plannings;
-  } catch (error) {
-    console.error("Erreur lors de la récupération des plannings du coach:", error);
-    throw new Error("Impossible de récupérer les plannings du coach");
-  }
+		const plannings = await prisma.planning.findMany({
+			where: {
+				status: "PLANNED",
+				contract: {
+					offer: {
+						coachId: coachId,
+					},
+				},
+			},
+			include: {
+				contract: {
+					select: {
+						id: true,
+						startDate: true,
+						endDate: true,
+						totalSessions: true,
+						client: {
+							select: {
+								id: true,
+								name: true,
+								lastName: true,
+								image: true,
+							},
+						},
+					},
+				},
+			},
+			orderBy: {
+				date: "asc",
+			},
+		});
+
+		return plannings;
+	} catch (error) {
+		console.error(
+			"Erreur lors de la récupération des plannings du coach:",
+			error,
+		);
+		throw new Error("Impossible de récupérer les plannings du coach");
+	}
 };
 
 export interface AvailabilityWithClient {
-  id: string;
-  date: Date;
-  startTime: Date;
-  endTime: Date;
-  client: {
-    id: string;
-    name: string;
-    lastName?: string | null;
-    image?: string | null;
-  };
+	id: string;
+	date: Date;
+	startTime: Date;
+	endTime: Date;
+	client: {
+		id: string;
+		name: string;
+		lastName?: string | null;
+		image?: string | null;
+	};
 }
 
 export const getAvailabilitiesByCoachId = async (coachId: string) => {
-  try {
-    const now = new Date();
-    
-    const availabilities = await prisma.availability.findMany({
-      where: {
-        endTime: {
-          gt: now // endTime > maintenant (disponibilités dans le futur)
-        },
-        client: {
-          contracts: {
-            some: {
-              offer: {
-                coachId: coachId
-              }
-            }
-          }
-        }
-      },
-      include: {
-        client: {
-          select: {
-            id: true,
-            name: true,
-            lastName: true,
-            image: true
-          }
-        }
-      },
-      orderBy: {
-        date: "asc"
-      }
-    });
+	try {
+		const now = new Date();
 
-    return availabilities;
-  } catch (error) {
-    console.error("Erreur lors de la récupération des disponibilités:", error);
-    throw new Error("Impossible de récupérer les disponibilités");
-  }
+		const availabilities = await prisma.availability.findMany({
+			where: {
+				endTime: {
+					gt: now, // endTime > maintenant (disponibilités dans le futur)
+				},
+				client: {
+					contracts: {
+						some: {
+							offer: {
+								coachId: coachId,
+							},
+						},
+					},
+				},
+			},
+			include: {
+				client: {
+					select: {
+						id: true,
+						name: true,
+						lastName: true,
+						image: true,
+					},
+				},
+			},
+			orderBy: {
+				date: "asc",
+			},
+		});
+
+		return availabilities;
+	} catch (error) {
+		console.error("Erreur lors de la récupération des disponibilités:", error);
+		throw new Error("Impossible de récupérer les disponibilités");
+	}
 };
 
 export const getAvailabilitiesByClientId = async (clientId: string) => {
-  try {
-    const now = new Date();
-    
-    const availabilities = await prisma.availability.findMany({
-      where: {
-        clientId: clientId,
-        startTime: {
-          gt: now // startTime > maintenant (disponibilités qui n'ont pas encore commencé)
-        }
-      },
-      orderBy: {
-        startTime: "asc"
-      }
-    });
+	try {
+		const now = new Date();
 
-    return availabilities;
-  } catch (error) {
-    console.error("Erreur lors de la récupération des disponibilités du client:", error);
-    throw new Error("Impossible de récupérer les disponibilités");
-  }
+		const availabilities = await prisma.availability.findMany({
+			where: {
+				clientId: clientId,
+				startTime: {
+					gt: now, // startTime > maintenant (disponibilités qui n'ont pas encore commencé)
+				},
+			},
+			orderBy: {
+				startTime: "asc",
+			},
+		});
+
+		return availabilities;
+	} catch (error) {
+		console.error(
+			"Erreur lors de la récupération des disponibilités du client:",
+			error,
+		);
+		throw new Error("Impossible de récupérer les disponibilités");
+	}
 };
 
 export const cancelPlanningSession = async (planningId: string) => {
-  try {
-    // Vérifier que la séance existe et est en statut PLANNED
-    const planning = await prisma.planning.findUnique({
-      where: { id: planningId },
-      include: {
-        contract: {
-          select: {
-            clientId: true,
-          },
-        },
-      },
-    });
+	try {
+		// Vérifier que la séance existe et est en statut PLANNED
+		const planning = await prisma.planning.findUnique({
+			where: { id: planningId },
+			include: {
+				contract: {
+					select: {
+						clientId: true,
+					},
+				},
+			},
+		});
 
-    if (!planning) {
-      return {
-        success: false,
-        error: "Séance non trouvée",
-      };
-    }
+		if (!planning) {
+			return {
+				success: false,
+				error: "Séance non trouvée",
+			};
+		}
 
-    if (planning.status !== "PLANNED") {
-      return {
-        success: false,
-        error: "Seules les séances prévues peuvent être annulées",
-      };
-    }
+		if (planning.status !== "PLANNED") {
+			return {
+				success: false,
+				error: "Seules les séances prévues peuvent être annulées",
+			};
+		}
 
-    // Vérifier que la séance est dans 48h ou plus
-    const now = new Date();
-    const sessionDate = new Date(planning.date);
-    const hoursUntilSession = (sessionDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+		// Vérifier que la séance est dans 48h ou plus
+		const now = new Date();
+		const sessionDate = new Date(planning.date);
+		const hoursUntilSession =
+			(sessionDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
-    if (hoursUntilSession < 48) {
-      return {
-        success: false,
-        error: "L'annulation n'est possible que 48h avant la séance",
-      };
-    }
+		if (hoursUntilSession < 48) {
+			return {
+				success: false,
+				error: "L'annulation n'est possible que 48h avant la séance",
+			};
+		}
 
-    // Mettre à jour le statut à CANCELLED
-    await prisma.planning.update({
-      where: { id: planningId },
-      data: {
-        status: "CANCELLED",
-      },
-    });
+		// Mettre à jour le statut à CANCELLED
+		await prisma.planning.update({
+			where: { id: planningId },
+			data: {
+				status: "CANCELLED",
+			},
+		});
 
-    return {
-      success: true,
-      message: "Séance annulée avec succès",
-    };
-  } catch (error) {
-    console.error("Erreur lors de l'annulation de la séance:", error);
-    return {
-      success: false,
-      error: "Impossible d'annuler la séance",
-    };
-  }
+		return {
+			success: true,
+			message: "Séance annulée avec succès",
+		};
+	} catch (error) {
+		console.error("Erreur lors de l'annulation de la séance:", error);
+		return {
+			success: false,
+			error: "Impossible d'annuler la séance",
+		};
+	}
 };
 
 export const createAvailability = async (
-  clientId: string,
-  date: Date,
-  startTime: Date,
-  endTime: Date,
+	clientId: string,
+	date: Date,
+	startTime: Date,
+	endTime: Date,
 ) => {
-  try {
-    // Vérifier que l'heure de fin est postérieure à l'heure de début
-    if (endTime <= startTime) {
-      return {
-        success: false,
-        error: "L'heure de fin doit être postérieure à l'heure de début",
-      };
-    }
+	try {
+		// Vérifier que l'heure de fin est postérieure à l'heure de début
+		if (endTime <= startTime) {
+			return {
+				success: false,
+				error: "L'heure de fin doit être postérieure à l'heure de début",
+			};
+		}
 
-    // Vérifier qu'aucune autre disponibilité ne chevauche le créneau
-    const overlappingAvailability = await prisma.availability.findFirst({
-      where: {
-        clientId: clientId,
-        OR: [
-          // Le nouveau créneau commence pendant une disponibilité existante
-          {
-            startTime: { lte: startTime },
-            endTime: { gt: startTime },
-          },
-          // Le nouveau créneau se termine pendant une disponibilité existante
-          {
-            startTime: { lt: endTime },
-            endTime: { gte: endTime },
-          },
-          // Le nouveau créneau englobe une disponibilité existante
-          {
-            startTime: { gte: startTime },
-            endTime: { lte: endTime },
-          },
-          // Une disponibilité existante englobe le nouveau créneau
-          {
-            startTime: { lte: startTime },
-            endTime: { gte: endTime },
-          },
-        ],
-      },
-    });
+		// Vérifier qu'aucune autre disponibilité ne chevauche le créneau
+		const overlappingAvailability = await prisma.availability.findFirst({
+			where: {
+				clientId: clientId,
+				OR: [
+					// Le nouveau créneau commence pendant une disponibilité existante
+					{
+						startTime: { lte: startTime },
+						endTime: { gt: startTime },
+					},
+					// Le nouveau créneau se termine pendant une disponibilité existante
+					{
+						startTime: { lt: endTime },
+						endTime: { gte: endTime },
+					},
+					// Le nouveau créneau englobe une disponibilité existante
+					{
+						startTime: { gte: startTime },
+						endTime: { lte: endTime },
+					},
+					// Une disponibilité existante englobe le nouveau créneau
+					{
+						startTime: { lte: startTime },
+						endTime: { gte: endTime },
+					},
+				],
+			},
+		});
 
-    if (overlappingAvailability) {
-      return {
-        success: false,
-        error: "Ce créneau chevauche une disponibilité existante",
-      };
-    }
+		if (overlappingAvailability) {
+			return {
+				success: false,
+				error: "Ce créneau chevauche une disponibilité existante",
+			};
+		}
 
-    // Créer la disponibilité
-    const availability = await prisma.availability.create({
-      data: {
-        clientId: clientId,
-        date: date,
-        startTime: startTime,
-        endTime: endTime,
-      },
-    });
+		// Créer la disponibilité
+		const availability = await prisma.availability.create({
+			data: {
+				clientId: clientId,
+				date: date,
+				startTime: startTime,
+				endTime: endTime,
+			},
+		});
 
-    return {
-      success: true,
-      data: availability,
-      message: "Disponibilité créée avec succès",
-    };
-  } catch (error) {
-    console.error("Erreur lors de la création de la disponibilité:", error);
-    return {
-      success: false,
-      error: "Impossible de créer la disponibilité",
-    };
-  }
+		return {
+			success: true,
+			data: availability,
+			message: "Disponibilité créée avec succès",
+		};
+	} catch (error) {
+		console.error("Erreur lors de la création de la disponibilité:", error);
+		return {
+			success: false,
+			error: "Impossible de créer la disponibilité",
+		};
+	}
 };
 
-export const deleteAvailability = async (availabilityId: string, clientId: string) => {
-  try {
-    // Vérifier que la disponibilité appartient bien au client
-    const availability = await prisma.availability.findFirst({
-      where: {
-        id: availabilityId,
-        clientId: clientId,
-      },
-    });
+export const deleteAvailability = async (
+	availabilityId: string,
+	clientId: string,
+) => {
+	try {
+		// Vérifier que la disponibilité appartient bien au client
+		const availability = await prisma.availability.findFirst({
+			where: {
+				id: availabilityId,
+				clientId: clientId,
+			},
+		});
 
-    if (!availability) {
-      return {
-        success: false,
-        error: "Disponibilité non trouvée ou vous n'avez pas l'autorisation de la supprimer",
-      };
-    }
+		if (!availability) {
+			return {
+				success: false,
+				error:
+					"Disponibilité non trouvée ou vous n'avez pas l'autorisation de la supprimer",
+			};
+		}
 
-    // Supprimer la disponibilité
-    await prisma.availability.delete({
-      where: {
-        id: availabilityId,
-      },
-    });
+		// Supprimer la disponibilité
+		await prisma.availability.delete({
+			where: {
+				id: availabilityId,
+			},
+		});
 
-    return {
-      success: true,
-      message: "Disponibilité supprimée avec succès",
-    };
-  } catch (error) {
-    console.error("Erreur lors de la suppression de la disponibilité:", error);
-    return {
-      success: false,
-      error: "Impossible de supprimer la disponibilité",
-    };
-  }
+		return {
+			success: true,
+			message: "Disponibilité supprimée avec succès",
+		};
+	} catch (error) {
+		console.error("Erreur lors de la suppression de la disponibilité:", error);
+		return {
+			success: false,
+			error: "Impossible de supprimer la disponibilité",
+		};
+	}
 };
 
-export const checkSessionExistsForAvailability = async (clientId: string, dateTime: Date) => {
-  try {
-    const session = await prisma.planning.findFirst({
-      where: {
-        contract: {
-          clientId: clientId,
-          status: "ACTIVE"
-        },
-        date: {
-          gte: new Date(dateTime.getFullYear(), dateTime.getMonth(), dateTime.getDate()),
-          lt: new Date(dateTime.getFullYear(), dateTime.getMonth(), dateTime.getDate() + 1)
-        },
-        // Exclure les séances annulées
-        status: {
-          not: "CANCELLED"
-        }
-      }
-    });
+/** Durée par défaut d'une séance (1 h), alignée sur l'affichage des séances admin */
+const PLANNING_SESSION_DURATION_MS = 60 * 60 * 1000;
 
-    return !!session;
-  } catch (error) {
-    console.error("Erreur lors de la vérification de l'existence d'une séance:", error);
-    return false;
-  }
+const doTimeRangesOverlap = (
+	rangeAStart: Date,
+	rangeAEnd: Date,
+	rangeBStart: Date,
+	rangeBEnd: Date,
+): boolean => rangeAStart < rangeBEnd && rangeBStart < rangeAEnd;
+
+export const checkSessionExistsForAvailability = async (
+	clientId: string,
+	availabilityStartTime: Date,
+	availabilityEndTime: Date,
+): Promise<boolean> => {
+	try {
+		const dayStart = new Date(
+			availabilityStartTime.getFullYear(),
+			availabilityStartTime.getMonth(),
+			availabilityStartTime.getDate(),
+		);
+		const dayEnd = new Date(dayStart);
+		dayEnd.setDate(dayEnd.getDate() + 1);
+
+		const sessions = await prisma.planning.findMany({
+			where: {
+				contract: {
+					clientId,
+					status: "ACTIVE",
+				},
+				date: {
+					gte: dayStart,
+					lt: dayEnd,
+				},
+				status: {
+					not: "CANCELLED",
+				},
+			},
+		});
+
+		return sessions.some((session) => {
+			const sessionStart = new Date(session.date);
+			const sessionEnd = new Date(
+				sessionStart.getTime() + PLANNING_SESSION_DURATION_MS,
+			);
+
+			return doTimeRangesOverlap(
+				sessionStart,
+				sessionEnd,
+				availabilityStartTime,
+				availabilityEndTime,
+			);
+		});
+	} catch (error) {
+		console.error(
+			"Erreur lors de la vérification de l'existence d'une séance:",
+			error,
+		);
+		return false;
+	}
 };
 
 export const deletePlanningSession = async (planningId: string) => {
-  try {
-    // Vérifier que la séance existe
-    const planning = await prisma.planning.findUnique({
-      where: { id: planningId },
-    });
+	try {
+		// Vérifier que la séance existe
+		const planning = await prisma.planning.findUnique({
+			where: { id: planningId },
+		});
 
-    if (!planning) {
-      return {
-        success: false,
-        error: "Séance non trouvée",
-      };
-    }
+		if (!planning) {
+			return {
+				success: false,
+				error: "Séance non trouvée",
+			};
+		}
 
-    // Supprimer la séance
-    await prisma.planning.delete({
-      where: { id: planningId },
-    });
+		// Supprimer la séance
+		await prisma.planning.delete({
+			where: { id: planningId },
+		});
 
-    return {
-      success: true,
-      message: "La séance a été supprimée avec succès.",
-    };
-  } catch (error) {
-    console.error("Erreur lors de la suppression de la séance:", error);
-    return {
-      success: false,
-      error: "Impossible de supprimer la séance. Veuillez réessayer plus tard.",
-    };
-  }
+		return {
+			success: true,
+			message: "La séance a été supprimée avec succès.",
+		};
+	} catch (error) {
+		console.error("Erreur lors de la suppression de la séance:", error);
+		return {
+			success: false,
+			error: "Impossible de supprimer la séance. Veuillez réessayer plus tard.",
+		};
+	}
 };

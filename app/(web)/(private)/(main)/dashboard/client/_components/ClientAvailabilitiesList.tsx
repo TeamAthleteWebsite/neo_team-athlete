@@ -54,7 +54,8 @@ export const ClientAvailabilitiesList: React.FC<
 						},
 						body: JSON.stringify({
 							clientId: availability.clientId,
-							dateTime: new Date(availability.startTime).toISOString(),
+							startTime: new Date(availability.startTime).toISOString(),
+							endTime: new Date(availability.endTime).toISOString(),
 						}),
 					});
 
