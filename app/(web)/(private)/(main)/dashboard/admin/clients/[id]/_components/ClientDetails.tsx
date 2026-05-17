@@ -61,6 +61,10 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 		setHasContract(hasContractData);
 	};
 
+	const handlePaymentValidated = () => {
+		setContractRefreshKey((prev) => prev + 1);
+	};
+
 	const handleAddSession = () => {
 		setIsAddSessionPopupOpen(true);
 	};
@@ -295,7 +299,11 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 									</TabsContent>
 
 									<TabsContent value="paiement" className="mt-4 sm:mt-6">
-										<PaymentTab plannings={plannings} clientId={client.id} />
+										<PaymentTab
+											plannings={plannings}
+											clientId={client.id}
+											onPaymentValidated={handlePaymentValidated}
+										/>
 									</TabsContent>
 								</Tabs>
 							</div>

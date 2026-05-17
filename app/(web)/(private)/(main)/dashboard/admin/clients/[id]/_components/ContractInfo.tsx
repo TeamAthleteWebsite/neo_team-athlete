@@ -82,20 +82,13 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 
 	const loadPayments = async () => {
 		try {
-			if (plannings.length === 0) {
+			const targetClientId = clientId || plannings[0]?.contract.clientId;
+			if (!targetClientId) {
 				setPayments([]);
 				return;
 			}
 
-			const clientIdFromPlanning = plannings[0]?.contract.clientId;
-			if (!clientIdFromPlanning) {
-				setPayments([]);
-				return;
-			}
-
-			const response = await fetch(
-				`/api/payment?clientId=${clientIdFromPlanning}`,
-			);
+			const response = await fetch(`/api/payment?clientId=${targetClientId}`);
 			if (response.ok) {
 				const result = await response.json();
 				if (result.success) {

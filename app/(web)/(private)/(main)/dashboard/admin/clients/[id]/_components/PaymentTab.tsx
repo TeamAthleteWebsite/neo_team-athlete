@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 interface PaymentTabProps {
 	plannings: PlanningWithContract[];
 	clientId?: string;
+	onPaymentValidated?: () => void;
 }
 
 interface Payment {
@@ -50,6 +51,7 @@ interface ContractData {
 export const PaymentTab: React.FC<PaymentTabProps> = ({
 	plannings,
 	clientId,
+	onPaymentValidated,
 }) => {
 	const [payments, setPayments] = useState<Payment[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -268,8 +270,8 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 			});
 
 			if (response.ok) {
-				// Recharger les paiements
 				await loadPayments();
+				onPaymentValidated?.();
 			} else {
 				const error = await response.json();
 				console.error("Erreur lors de la création du paiement:", error);
