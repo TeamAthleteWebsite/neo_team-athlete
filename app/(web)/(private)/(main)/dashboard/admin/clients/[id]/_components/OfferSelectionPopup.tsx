@@ -229,10 +229,6 @@ export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 		{ key: "SMALL_GROUP", label: "Small Group" },
 	];
 
-	const clientPreferredOfferIsInCatalog =
-		Boolean(clientPreferredOfferId) &&
-		offers.some((o) => o.id === clientPreferredOfferId);
-
 	const buildOfferAriaLabel = (parts: (string | null | undefined)[]) =>
 		parts
 			.filter((p): p is string => typeof p === "string" && p.length > 0)
