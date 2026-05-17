@@ -83,7 +83,7 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 	} = useForm<ProfileFormData>({
 		resolver: zodResolver(profileSchema),
 		defaultValues: {
-			firstName: user?.name.split(" ")[0] || "",
+			firstName: user?.name || "",
 			lastName: user?.lastName || "",
 			email: user?.email || "",
 			phone: user?.phone || "",
