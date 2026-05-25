@@ -1,5 +1,17 @@
 import { prisma } from "@/lib/prisma";
 
+/** Durée par défaut d'une séance (1 h), alignée sur l'affichage du planning admin */
+const PLANNING_SESSION_DURATION_MS = 60 * 60 * 1000;
+
+const getSessionEndDateTime = (startDateTime: Date): Date =>
+	new Date(startDateTime.getTime() + PLANNING_SESSION_DURATION_MS);
+
+const getPlanningStatusForSessionStart = (
+	startDateTime: Date,
+	now: Date = new Date(),
+): "PLANNED" | "DONE" =>
+	getSessionEndDateTime(startDateTime) > now ? "PLANNED" : "DONE";
+
 export interface PlanningWithContract {
 	id: string;
 	date: Date;
@@ -118,9 +130,7 @@ export const addPlanningSession = async (
 			throw new Error("Aucun contrat actif trouvé pour ce client");
 		}
 
-		// Déterminer le statut basé sur la date
-		const now = new Date();
-		const status = dateTime > now ? "PLANNED" : "DONE";
+		const status = getPlanningStatusForSessionStart(dateTime);
 
 		// Créer la nouvelle séance
 		await prisma.planning.create({
@@ -224,7 +234,7 @@ export const addRecurringPlanningSessions = async (
 		// Créer toutes les séances en une seule transaction
 		const createdSessions = await prisma.$transaction(
 			uniqueSessions.map((sessionDateTime) => {
-				const status = sessionDateTime > now ? "PLANNED" : "DONE";
+				const status = getPlanningStatusForSessionStart(sessionDateTime, now);
 				return prisma.planning.create({
 					data: {
 						contractId: activeContract.id,
@@ -252,13 +262,16 @@ export const addRecurringPlanningSessions = async (
 export const updateExpiredSessions = async (): Promise<void> => {
 	try {
 		const now = new Date();
+		const expiredStartBefore = new Date(
+			now.getTime() - PLANNING_SESSION_DURATION_MS,
+		);
 
-		// Mettre à jour toutes les séances "PLANNED" dont la date est dans le passé
+		// Mettre à jour les séances PLANNED dont l'heure de fin (début + 1 h) est passée
 		const result = await prisma.planning.updateMany({
 			where: {
 				status: "PLANNED",
 				date: {
-					lt: now, // date < maintenant
+					lt: expiredStartBefore,
 				},
 			},
 			data: {
@@ -577,9 +590,6 @@ export const deleteAvailability = async (
 		};
 	}
 };
-
-/** Durée par défaut d'une séance (1 h), alignée sur l'affichage des séances admin */
-const PLANNING_SESSION_DURATION_MS = 60 * 60 * 1000;
 
 const doTimeRangesOverlap = (
 	rangeAStart: Date,
