@@ -1,12 +1,12 @@
 "use client";
 
-import { type PlanningWithClient } from "@/src/actions/planning.actions";
+import type { CalendarSession } from "@/lib/types/calendar-session.types";
 
 interface WeekDaysProps {
 	currentWeek: Date;
 	selectedDate: Date;
 	onDateSelect: (date: Date) => void;
-	sessions: PlanningWithClient[];
+	sessions: CalendarSession[];
 }
 
 export const WeekDays: React.FC<WeekDaysProps> = ({

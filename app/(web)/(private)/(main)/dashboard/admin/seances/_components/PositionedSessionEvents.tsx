@@ -5,14 +5,16 @@ import {
 	getSessionLayoutStyles,
 	isSessionInCalendarRange,
 } from "@/lib/calendar/session-calendar.utils";
+import type { CalendarSession } from "@/lib/types/calendar-session.types";
 import { type PlanningWithClient } from "@/src/actions/planning.actions";
 import { type FC, type MouseEvent, useMemo } from "react";
 import { SessionCalendarEvent } from "./SessionCalendarEvent";
+import { SmallGroupCalendarEvent } from "./SmallGroupCalendarEvent";
 
 type PositionedSessionEventsSize = "day" | "week";
 
 interface PositionedSessionEventsProps {
-	sessions: PlanningWithClient[];
+	sessions: CalendarSession[];
 	size: PositionedSessionEventsSize;
 	getClientFullName: (
 		client: PlanningWithClient["contract"]["client"],
@@ -51,7 +53,6 @@ export const PositionedSessionEvents: FC<PositionedSessionEventsProps> = ({
 	return (
 		<>
 			{visibleSessions.map((session) => {
-				const clientName = getClientFullName(session.contract.client);
 				const overlapLayout = overlapLayouts.get(session.id) ?? {
 					column: 0,
 					totalColumns: 1,
@@ -59,21 +60,30 @@ export const PositionedSessionEvents: FC<PositionedSessionEventsProps> = ({
 
 				return (
 					<div
-						key={session.id}
+						key={`${session.type}-${session.id}`}
 						className={`absolute z-10 box-border ${horizontalPadding}`}
 						style={getSessionLayoutStyles(
 							new Date(session.date),
 							overlapLayout,
 						)}
 					>
-						<SessionCalendarEvent
-							session={session}
-							clientName={clientName}
-							clientInitials={getClientInitials(session.contract.client)}
-							size={size}
-							onViewClient={onViewClient}
-							onDeleteClick={onDeleteClick}
-						/>
+						{session.type === "personal" ? (
+							<SessionCalendarEvent
+								session={{
+									id: session.id,
+									date: session.date,
+									status: session.status,
+									contract: session.contract,
+								}}
+								clientName={getClientFullName(session.contract.client)}
+								clientInitials={getClientInitials(session.contract.client)}
+								size={size}
+								onViewClient={onViewClient}
+								onDeleteClick={onDeleteClick}
+							/>
+						) : (
+							<SmallGroupCalendarEvent session={session} size={size} />
+						)}
 					</div>
 				);
 			})}

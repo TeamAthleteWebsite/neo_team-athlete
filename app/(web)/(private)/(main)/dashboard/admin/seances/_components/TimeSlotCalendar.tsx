@@ -5,6 +5,7 @@ import {
 	formatCalendarHourLabel,
 	getCalendarHourLabels,
 } from "@/lib/calendar/session-calendar.utils";
+import type { CalendarSession } from "@/lib/types/calendar-session.types";
 import { type PlanningWithClient } from "@/src/actions/planning.actions";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -12,7 +13,7 @@ import { DeleteSessionDialog } from "./DeleteSessionDialog";
 import { PositionedSessionEvents } from "./PositionedSessionEvents";
 
 interface TimeSlotCalendarProps {
-	sessions: PlanningWithClient[];
+	sessions: CalendarSession[];
 	selectedDate: Date;
 	onSessionDeleted?: (sessionId: string) => void;
 }
@@ -78,30 +79,26 @@ export const TimeSlotCalendar: React.FC<TimeSlotCalendarProps> = ({
 		setSelectedSession(null);
 	};
 
-	if (sessions.length === 0) {
-		return (
-			<div className="bg-black/30 rounded-lg p-3 sm:p-6">
-				<h3 className="text-base sm:text-lg font-semibold text-accent mb-3 sm:mb-4">
-					{formatDate(selectedDate)}
-				</h3>
-				<div className="font-medium text-center text-white py-6 sm:py-8">
-					<p className="text-sm sm:text-base">
-						Aucune séance planifiée pour cette journée
-					</p>
-				</div>
-			</div>
-		);
-	}
+	const daySessions = sessions.filter((session) => {
+		const sessionDate = new Date(session.date);
+		return sessionDate.toDateString() === selectedDate.toDateString();
+	});
 
 	return (
 		<div className="bg-black/30 rounded-lg p-3 sm:p-6">
-			<h3 className="text-base sm:text-lg font-semibold text-accent mb-4 sm:mb-6">
-				{formatDate(selectedDate)}
-			</h3>
+			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 sm:mb-6">
+				<h3 className="text-base sm:text-lg font-semibold text-accent">
+					{formatDate(selectedDate)}
+				</h3>
+				{daySessions.length === 0 && (
+					<p className="text-white/70 text-xs sm:text-sm">
+						Aucune séance planifiée pour cette journée
+					</p>
+				)}
+			</div>
 
 			<div className="max-h-[500px] sm:max-h-[600px] overflow-y-auto hide-scrollbar">
 				<div className="flex gap-2 sm:gap-4">
-					{/* Axe horaire — heures pleines uniquement */}
 					<div className="w-12 sm:w-16 md:w-20 flex-shrink-0">
 						{hourLabels.map((hour) => (
 							<div key={hour} className={HOUR_LABEL_CLASS}>
@@ -112,7 +109,6 @@ export const TimeSlotCalendar: React.FC<TimeSlotCalendarProps> = ({
 						))}
 					</div>
 
-					{/* Grille + séances positionnées selon l'heure réelle */}
 					<div
 						className={`relative flex-1 ${CALENDAR_HEIGHT_CLASS} border-l-2 border-gray-700/50 ml-2 sm:ml-4`}
 					>
@@ -129,7 +125,7 @@ export const TimeSlotCalendar: React.FC<TimeSlotCalendarProps> = ({
 						))}
 
 						<PositionedSessionEvents
-							sessions={sessions}
+							sessions={daySessions}
 							size="day"
 							getClientFullName={getClientFullName}
 							getClientInitials={getClientInitials}

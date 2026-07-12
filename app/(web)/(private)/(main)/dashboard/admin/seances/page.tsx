@@ -2,6 +2,7 @@ import { DashboardTitle } from "@/components/features/DashboardTitle";
 import { ServerAccessControl } from "@/components/features/ServerAccessControl";
 import { auth } from "@/lib/auth";
 import { getPlanningsByCoachId } from "@/src/actions/planning.actions";
+import { getSmallGroupSessionsByCoachId } from "@/src/actions/small-group-session.actions";
 import { headers } from "next/headers";
 import { CalendarView } from "./_components/CalendarView";
 
@@ -28,7 +29,10 @@ export default async function SeancesPage() {
 	}
 
 	try {
-		const sessions = await getPlanningsByCoachId(session.user.id);
+		const [personalSessions, smallGroupSessions] = await Promise.all([
+			getPlanningsByCoachId(session.user.id),
+			getSmallGroupSessionsByCoachId(session.user.id),
+		]);
 
 		return (
 			<ServerAccessControl allowedRoles={["ADMIN", "COACH"]}>
@@ -37,7 +41,10 @@ export default async function SeancesPage() {
 						<DashboardTitle title="Gestion des Séances" />
 
 						<div className="space-y-4 sm:space-y-6">
-							<CalendarView sessions={sessions} />
+							<CalendarView
+								personalSessions={personalSessions}
+								smallGroupSessions={smallGroupSessions}
+							/>
 						</div>
 					</div>
 				</div>

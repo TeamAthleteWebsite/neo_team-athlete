@@ -6,6 +6,7 @@ import {
 	formatCalendarHourLabel,
 	getCalendarHourLabels,
 } from "@/lib/calendar/session-calendar.utils";
+import type { CalendarSession } from "@/lib/types/calendar-session.types";
 import { type PlanningWithClient } from "@/src/actions/planning.actions";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -16,7 +17,7 @@ interface WeekViewCalendarProps {
 	currentWeek: Date;
 	selectedDate: Date;
 	onDateSelect: (date: Date) => void;
-	sessions: PlanningWithClient[];
+	sessions: CalendarSession[];
 	onSessionDeleted?: (sessionId: string) => void;
 }
 
@@ -24,7 +25,7 @@ interface DayData {
 	date: Date;
 	dayName: string;
 	dayNumber: string;
-	sessions: PlanningWithClient[];
+	sessions: CalendarSession[];
 	isSelected: boolean;
 	isToday: boolean;
 }

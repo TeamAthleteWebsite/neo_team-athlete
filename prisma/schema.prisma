@@ -42,6 +42,8 @@ model User {
   offers         Offer[]        @relation("CoachOffers")
   availabilities Availability[]
 
+  smallGroupSessions SmallGroupSession[] @relation("CoachSmallGroupSessions")
+
   // Offre sélectionnée par l'utilisateur
   selectedOffer   Offer?  @relation("UserSelectedOffer", fields: [selectedOfferId], references: [id])
   selectedOfferId String?
@@ -147,6 +149,12 @@ enum PlanningStatus {
   CANCELLED
 }
 
+enum SmallGroupSessionStatus {
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
 enum NotificationType {
   PROGRAM_UPDATE
   SESSION_REMINDER
@@ -231,6 +239,23 @@ model SmallGroupCreditPeriod {
   updatedAt DateTime? @updatedAt
 
   @@unique([contractId, year, month])
+}
+
+model SmallGroupSession {
+  id          String                  @id @default(cuid())
+  coach       User                    @relation("CoachSmallGroupSessions", fields: [coachId], references: [id])
+  coachId     String
+  startAt     DateTime
+  location    String
+  description String                  @db.Text
+  maxCapacity Int
+  status      SmallGroupSessionStatus @default(SCHEDULED)
+
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+
+  @@index([coachId])
+  @@index([startAt])
 }
 
 model Planning {
