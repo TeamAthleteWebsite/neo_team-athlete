@@ -1,9 +1,17 @@
 "use client";
 
+import { OfferSummaryPanel } from "@/components/features/small-group/OfferSummaryPanel";
+import { SmallGroupCreditsSelector } from "@/components/features/small-group/SmallGroupCreditsSelector";
+import type { SmallGroupOfferSelection } from "@/lib/types/small-group.types";
+import {
+	calculateSmallGroupPricing,
+	getInitialSmallGroupCredits,
+	isSmallGroupCreditsEligible,
+} from "@/lib/utils/small-group-pricing.utils";
 import { getCoachesAction } from "@/src/actions/coach.actions";
 import { getOffersByCoachAction } from "@/src/actions/offer.actions";
 import Image from "next/image";
-import { type FC, useEffect, useState } from "react";
+import { type FC, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface Coach {
@@ -30,6 +38,8 @@ interface Offer {
 interface CoachOfferSelectionFlowProps {
 	selectedOfferId: string;
 	setSelectedOfferId: (offerId: string) => void;
+	initialSmallGroupCredits?: number | null;
+	onSelectionChange?: (selection: SmallGroupOfferSelection | null) => void;
 	onClose?: () => void;
 	onOfferSelect?: (offerId: string) => void;
 }
@@ -37,6 +47,8 @@ interface CoachOfferSelectionFlowProps {
 export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 	selectedOfferId,
 	setSelectedOfferId,
+	initialSmallGroupCredits = null,
+	onSelectionChange,
 	onClose,
 	onOfferSelect,
 }) => {
@@ -48,6 +60,82 @@ export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 	const [showCommitmentOffers, setShowCommitmentOffers] = useState(true);
 	const [activeProgramType, setActiveProgramType] =
 		useState<string>("PERSONAL");
+	const [smallGroupCredits, setSmallGroupCredits] = useState<number | null>(
+		null,
+	);
+	const onSelectionChangeRef = useRef(onSelectionChange);
+	onSelectionChangeRef.current = onSelectionChange;
+
+	const selectedOffer = offers.find((offer) => offer.id === selectedOfferId);
+	const isCreditsEligible = selectedOffer
+		? isSmallGroupCreditsEligible(selectedOffer.program.type)
+		: false;
+
+	useEffect(() => {
+		if (!selectedOffer || !isCreditsEligible || smallGroupCredits != null) {
+			return;
+		}
+
+		setSmallGroupCredits(
+			getInitialSmallGroupCredits(
+				selectedOffer.sessions,
+				initialSmallGroupCredits,
+			),
+		);
+	}, [
+		selectedOffer,
+		isCreditsEligible,
+		smallGroupCredits,
+		initialSmallGroupCredits,
+	]);
+
+	useEffect(() => {
+		if (!selectedOffer) {
+			onSelectionChangeRef.current?.(null);
+			return;
+		}
+
+		if (!isCreditsEligible) {
+			onSelectionChangeRef.current?.({
+				offerId: selectedOffer.id,
+				offerName: selectedOffer.program.name,
+				basePrice: selectedOffer.price,
+				includedSessions: selectedOffer.sessions,
+				includedCredits: 0,
+				selectedCredits: 0,
+				programType: selectedOffer.program.type,
+				duration: selectedOffer.duration,
+				pricing: calculateSmallGroupPricing(
+					selectedOffer.price,
+					selectedOffer.sessions,
+					selectedOffer.sessions,
+				),
+			});
+			return;
+		}
+
+		if (smallGroupCredits == null) {
+			return;
+		}
+
+		const pricing = calculateSmallGroupPricing(
+			selectedOffer.price,
+			smallGroupCredits,
+			selectedOffer.sessions,
+		);
+
+		onSelectionChangeRef.current?.({
+			offerId: selectedOffer.id,
+			offerName: selectedOffer.program.name,
+			basePrice: selectedOffer.price,
+			includedSessions: selectedOffer.sessions,
+			includedCredits: selectedOffer.sessions,
+			selectedCredits: smallGroupCredits,
+			programType: selectedOffer.program.type,
+			duration: selectedOffer.duration,
+			pricing,
+		});
+	}, [selectedOffer, isCreditsEligible, smallGroupCredits]);
 
 	useEffect(() => {
 		const loadCoaches = async () => {
@@ -97,8 +185,20 @@ export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 	};
 
 	const handleOfferSelection = (offerId: string) => {
+		const offer = offers.find((currentOffer) => currentOffer.id === offerId);
 		setSelectedOfferId(offerId);
+
+		if (offer && isSmallGroupCreditsEligible(offer.program.type)) {
+			setSmallGroupCredits(offer.sessions);
+		} else {
+			setSmallGroupCredits(null);
+		}
+
 		onOfferSelect?.(offerId);
+	};
+
+	const handleSmallGroupCreditsChange = (credits: number) => {
+		setSmallGroupCredits(credits);
 	};
 
 	const handleBackToCoaches = () => {
@@ -538,6 +638,45 @@ export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 							</div>
 						)}
 					</div>
+
+					{selectedOffer && (
+						<div className="space-y-4 sm:space-y-6">
+							{isCreditsEligible && smallGroupCredits != null && (
+								<div className="bg-zinc-800 rounded-lg p-3 sm:p-4">
+									<SmallGroupCreditsSelector
+										includedCredits={selectedOffer.sessions}
+										selectedCredits={smallGroupCredits}
+										onCreditsChange={handleSmallGroupCreditsChange}
+									/>
+								</div>
+							)}
+
+							<OfferSummaryPanel
+								offerName={selectedOffer.program.name}
+								basePrice={selectedOffer.price}
+								includedSessions={selectedOffer.sessions}
+								pricing={
+									isCreditsEligible && smallGroupCredits != null
+										? calculateSmallGroupPricing(
+												selectedOffer.price,
+												smallGroupCredits,
+												selectedOffer.sessions,
+											)
+										: {
+												includedCredits: 0,
+												extraCredits: 0,
+												extraBlocks: 0,
+												supplement: 0,
+												totalMonthlyPrice: selectedOffer.price,
+											}
+								}
+								duration={selectedOffer.duration}
+								showSmallGroupDetails={
+									isCreditsEligible && smallGroupCredits != null
+								}
+							/>
+						</div>
+					)}
 				</div>
 			)}
 		</div>

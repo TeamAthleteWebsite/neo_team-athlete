@@ -56,7 +56,7 @@ const ProfileEditPage = () => {
 	}
 
 	return (
-		<div className="relative z-10 w-full max-w-2xl">
+		<div className="relative z-10 w-full max-w-4xl">
 			<div className="flex items-center mb-4 sm:mb-6">
 				<Link
 					href="/profile"
@@ -67,7 +67,7 @@ const ProfileEditPage = () => {
 				</Link>
 			</div>
 
-			<div className="backdrop-blur-sm bg-black/70 rounded-lg border border-zinc-800 p-3 sm:p-4 md:p-6">
+			<div className="backdrop-blur-sm bg-black/70 rounded-lg border border-zinc-800 p-3 sm:p-4 md:p-6 max-w-4xl">
 				<h1 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">
 					Modifier mon profil
 				</h1>

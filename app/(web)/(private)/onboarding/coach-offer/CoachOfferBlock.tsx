@@ -3,8 +3,10 @@
 import { OnboardingLayout } from "@/app/(web)/(private)/onboarding/_components/OnboardingLayout";
 import { CoachOfferSelectionFlow } from "@/components/features/coach-offer-selection/CoachOfferSelectionFlow";
 import { CoachOfferSelectionPanel } from "@/components/features/coach-offer-selection/CoachOfferSelectionPanel";
+import type { SmallGroupOfferSelection } from "@/lib/types/small-group.types";
+import { isSmallGroupCreditsEligible } from "@/lib/utils/small-group-pricing.utils";
 import { User } from "@/prisma/generated";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { saveOnboarding } from "../save";
 
@@ -16,6 +18,15 @@ export default function CoachOfferBlock({ user }: CoachOfferBlockProps) {
 	const [selectedOfferId, setSelectedOfferId] = useState(
 		user.selectedOfferId ?? "",
 	);
+	const [offerSelection, setOfferSelection] =
+		useState<SmallGroupOfferSelection | null>(null);
+
+	const handleSelectionChange = useCallback(
+		(selection: SmallGroupOfferSelection | null) => {
+			setOfferSelection(selection);
+		},
+		[],
+	);
 
 	const handleNext = async () => {
 		if (!selectedOfferId) {
@@ -23,9 +34,18 @@ export default function CoachOfferBlock({ user }: CoachOfferBlockProps) {
 			return false;
 		}
 
+		const isEligible =
+			offerSelection != null &&
+			isSmallGroupCreditsEligible(offerSelection.programType);
+
 		try {
 			await saveOnboarding({
-				data: { selectedOfferId },
+				data: {
+					selectedOfferId,
+					selectedSmallGroupCredits: isEligible
+						? offerSelection.selectedCredits
+						: null,
+				},
 			});
 			toast.success("Offre enregistrée avec succès");
 			return true;
@@ -44,10 +64,6 @@ export default function CoachOfferBlock({ user }: CoachOfferBlockProps) {
 			isNextDisabled={!selectedOfferId}
 			wideContent
 		>
-			{/*
-			  Mobile: panneau dédié entre header et barre fixe (même logique qu’une modale centrée,
-			  hauteur explicite + scroll interne — effet visible vs l’ancienne colonne max-w-md).
-			*/}
 			<div
 				className="
 					max-sm:fixed max-sm:left-3 max-sm:right-3 max-sm:top-[5.75rem] max-sm:bottom-[11.5rem]
@@ -65,6 +81,8 @@ export default function CoachOfferBlock({ user }: CoachOfferBlockProps) {
 					<CoachOfferSelectionFlow
 						selectedOfferId={selectedOfferId}
 						setSelectedOfferId={setSelectedOfferId}
+						initialSmallGroupCredits={user.selectedSmallGroupCredits}
+						onSelectionChange={handleSelectionChange}
 						onOfferSelect={() => {
 							toast.success("Offre sélectionnée, vous pouvez continuer.");
 						}}

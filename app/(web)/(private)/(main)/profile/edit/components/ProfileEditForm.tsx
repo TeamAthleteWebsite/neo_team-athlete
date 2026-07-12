@@ -2,14 +2,20 @@
 
 import { CoachOfferSelectionFlow } from "@/components/features/coach-offer-selection/CoachOfferSelectionFlow";
 import { CoachOfferSelectionPanel } from "@/components/features/coach-offer-selection/CoachOfferSelectionPanel";
+import { OfferSummaryPanel } from "@/components/features/small-group/OfferSummaryPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { SmallGroupOfferSelection } from "@/lib/types/small-group.types";
+import {
+	calculateSmallGroupPricing,
+	isSmallGroupCreditsEligible,
+} from "@/lib/utils/small-group-pricing.utils";
 import { User, UserRole } from "@/prisma/generated";
 import { updateUserProfile } from "@/src/actions/user.actions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -66,6 +72,38 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
+const buildSelectionFromUser = (
+	user: ExtendedUser,
+): SmallGroupOfferSelection | null => {
+	if (!user.selectedOffer) {
+		return null;
+	}
+
+	const { selectedOffer } = user;
+	const includedCredits = selectedOffer.sessions;
+	const selectedCredits =
+		user.selectedSmallGroupCredits != null &&
+		isSmallGroupCreditsEligible(selectedOffer.program.type)
+			? user.selectedSmallGroupCredits
+			: includedCredits;
+
+	return {
+		offerId: selectedOffer.id,
+		offerName: selectedOffer.program.name,
+		basePrice: selectedOffer.price,
+		includedSessions: selectedOffer.sessions,
+		includedCredits,
+		selectedCredits,
+		programType: selectedOffer.program.type,
+		duration: selectedOffer.duration,
+		pricing: calculateSmallGroupPricing(
+			selectedOffer.price,
+			selectedCredits,
+			includedCredits,
+		),
+	};
+};
+
 interface ProfileEditFormProps {
 	user: ExtendedUser;
 }
@@ -75,6 +113,15 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [isCoachPopupOpen, setIsCoachPopupOpen] = useState(false);
 	const [selectedOfferId, setSelectedOfferId] = useState<string>("");
+	const [offerSelection, setOfferSelection] =
+		useState<SmallGroupOfferSelection | null>(null);
+
+	const handleSelectionChange = useCallback(
+		(selection: SmallGroupOfferSelection | null) => {
+			setOfferSelection(selection);
+		},
+		[],
+	);
 
 	const {
 		register,
@@ -98,8 +145,9 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 	useEffect(() => {
 		if (user?.selectedOfferId) {
 			setSelectedOfferId(user.selectedOfferId);
+			setOfferSelection(buildSelectionFromUser(user));
 		}
-	}, [user?.selectedOfferId]);
+	}, [user]);
 
 	const openCoachPopup = () => {
 		setIsCoachPopupOpen(true);
@@ -109,6 +157,10 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 		setIsLoading(true);
 
 		try {
+			const isEligible =
+				offerSelection != null &&
+				isSmallGroupCreditsEligible(offerSelection.programType);
+
 			await updateUserProfile({
 				firstName: data.firstName,
 				lastName: data.lastName,
@@ -119,6 +171,9 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 				goal: data.goal,
 				bio: data.bio,
 				selectedOfferId: selectedOfferId || null,
+				selectedSmallGroupCredits: isEligible
+					? offerSelection.selectedCredits
+					: null,
 			});
 
 			toast.success("Profil mis à jour avec succès");
@@ -339,6 +394,21 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 							</p>
 						</div>
 					)}
+
+					{offerSelection && (
+						<div className="mt-3 sm:mt-4">
+							<OfferSummaryPanel
+								offerName={offerSelection.offerName}
+								basePrice={offerSelection.basePrice}
+								includedSessions={offerSelection.includedSessions}
+								pricing={offerSelection.pricing}
+								duration={offerSelection.duration}
+								showSmallGroupDetails={isSmallGroupCreditsEligible(
+									offerSelection.programType,
+								)}
+							/>
+						</div>
+					)}
 				</div>
 			</div>
 
@@ -375,6 +445,8 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 						<CoachOfferSelectionFlow
 							selectedOfferId={selectedOfferId}
 							setSelectedOfferId={setSelectedOfferId}
+							initialSmallGroupCredits={user.selectedSmallGroupCredits}
+							onSelectionChange={handleSelectionChange}
 							onClose={() => setIsCoachPopupOpen(false)}
 							onOfferSelect={() => {
 								toast.success(

@@ -16,6 +16,7 @@ export async function updateUserProfile(data: {
 	weight?: number;
 	goal?: string;
 	selectedOfferId?: string | null;
+	selectedSmallGroupCredits?: number | null;
 }) {
 	try {
 		const session = await auth.api.getSession({
@@ -38,6 +39,7 @@ export async function updateUserProfile(data: {
 				weight: data.weight,
 				goal: data.goal,
 				selectedOfferId: data.selectedOfferId,
+				selectedSmallGroupCredits: data.selectedSmallGroupCredits,
 			},
 		});
 

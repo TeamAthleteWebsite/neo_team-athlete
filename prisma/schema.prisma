@@ -46,6 +46,9 @@ model User {
   selectedOffer   Offer?  @relation("UserSelectedOffer", fields: [selectedOfferId], references: [id])
   selectedOfferId String?
 
+  // Crédits Small Group souhaités (inclus + supplémentaires)
+  selectedSmallGroupCredits Int?
+
   createdAt DateTime? @default(now())
   updatedAt DateTime? @updatedAt
 
@@ -199,10 +202,12 @@ model Contract {
   offerId       String
   startDate     DateTime
   endDate       DateTime
-  totalSessions Int
-  isFlexible    Boolean
-  amount        Float
-  status        ContractStatus
+  totalSessions             Int
+  smallGroupCreditsPerMonth Int   @default(0)
+  smallGroupSupplement      Float @default(0)
+  isFlexible                Boolean
+  amount                    Float
+  status                    ContractStatus
   plannings     Planning[]
   payments      Payment[]
 

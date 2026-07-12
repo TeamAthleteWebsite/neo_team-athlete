@@ -11,6 +11,7 @@ type OnboardingData = {
 	age?: number;
 	goal?: string;
 	selectedOfferId?: string | null;
+	selectedSmallGroupCredits?: number | null;
 	isOnboarded?: boolean;
 };
 
