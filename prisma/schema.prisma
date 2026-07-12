@@ -195,21 +195,21 @@ model Offer {
 }
 
 model Contract {
-  id            String         @id @default(cuid())
-  client        User           @relation("ClientContracts", fields: [clientId], references: [id])
-  clientId      String
-  offer         Offer          @relation(fields: [offerId], references: [id])
-  offerId       String
-  startDate     DateTime
-  endDate       DateTime
+  id                        String         @id @default(cuid())
+  client                    User           @relation("ClientContracts", fields: [clientId], references: [id])
+  clientId                  String
+  offer                     Offer          @relation(fields: [offerId], references: [id])
+  offerId                   String
+  startDate                 DateTime
+  endDate                   DateTime
   totalSessions             Int
-  smallGroupCreditsPerMonth Int   @default(0)
-  smallGroupSupplement      Float @default(0)
+  smallGroupCreditsPerMonth Int            @default(0)
+  smallGroupSupplement      Float          @default(0)
   isFlexible                Boolean
   amount                    Float
   status                    ContractStatus
-  plannings     Planning[]
-  payments      Payment[]
+  plannings                 Planning[]
+  payments                  Payment[]
 
   createdAt DateTime? @default(now())
   updatedAt DateTime? @updatedAt
