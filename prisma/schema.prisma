@@ -210,9 +210,27 @@ model Contract {
   status                    ContractStatus
   plannings                 Planning[]
   payments                  Payment[]
+  smallGroupCreditPeriods   SmallGroupCreditPeriod[]
 
   createdAt DateTime? @default(now())
   updatedAt DateTime? @updatedAt
+}
+
+model SmallGroupCreditPeriod {
+  id         String    @id @default(cuid())
+  contract   Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contractId String
+  year       Int
+  month      Int
+  allocated  Int
+  consumed   Int       @default(0)
+  expired    Int       @default(0)
+  closedAt   DateTime?
+
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+
+  @@unique([contractId, year, month])
 }
 
 model Planning {

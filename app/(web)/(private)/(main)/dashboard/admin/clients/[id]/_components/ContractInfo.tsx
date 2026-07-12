@@ -1,5 +1,6 @@
 "use client";
 
+import { ContractSmallGroupCreditsInfo } from "@/components/features/small-group/ContractSmallGroupCreditsInfo";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -11,6 +12,10 @@ import {
 } from "@/components/ui/dialog";
 import { getClientContractsAction } from "@/src/actions/contract.actions";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
+import {
+	type SmallGroupCreditStatus,
+	getSmallGroupCreditStatusAction,
+} from "@/src/actions/small-group-credit.actions";
 import {
 	Calendar,
 	Clock,
@@ -79,6 +84,8 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 	const [payments, setPayments] = useState<Payment[]>([]);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
+	const [smallGroupCreditStatus, setSmallGroupCreditStatus] =
+		useState<SmallGroupCreditStatus | null>(null);
 
 	const loadPayments = async () => {
 		try {
@@ -97,6 +104,20 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 			}
 		} catch (error) {
 			console.error("Erreur lors du chargement des paiements:", error);
+		}
+	};
+
+	const loadSmallGroupCreditStatus = async () => {
+		try {
+			const result = await getSmallGroupCreditStatusAction(clientId);
+			if (result.success) {
+				setSmallGroupCreditStatus(result.data);
+			}
+		} catch (error) {
+			console.error(
+				"Erreur lors du chargement des crédits Small Group:",
+				error,
+			);
 		}
 	};
 
@@ -158,6 +179,7 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 	useEffect(() => {
 		loadContractData();
 		loadPayments();
+		loadSmallGroupCreditStatus();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [clientId, plannings, refreshKey]);
 
@@ -185,10 +207,9 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 						"L'abonnement et toutes les données associées ont été supprimés avec succès.",
 				);
 				setIsDeleteDialogOpen(false);
-				// Recharger les données du contrat (qui sera maintenant null)
 				await loadContractData();
-				// Recharger les paiements
 				await loadPayments();
+				await loadSmallGroupCreditStatus();
 			} else {
 				toast.error(
 					result.error || "Erreur lors de la suppression de l'abonnement",
@@ -509,6 +530,12 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 						</div>
 					)}
 				</div>
+
+				{smallGroupCreditStatus && (
+					<ContractSmallGroupCreditsInfo
+						creditStatus={smallGroupCreditStatus}
+					/>
+				)}
 
 				{/* Prix total du contrat */}
 				<div className="text-center p-3 sm:p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">

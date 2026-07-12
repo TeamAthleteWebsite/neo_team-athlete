@@ -16,4 +16,6 @@ export interface Client {
 	} | null;
 	/** Offre enregistrée comme souhaitée par le client (profil) */
 	selectedOfferId?: string | null;
+	/** Crédits Small Group souhaités lors de l'inscription */
+	selectedSmallGroupCredits?: number | null;
 }

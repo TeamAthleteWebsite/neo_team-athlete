@@ -333,6 +333,9 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 					coachId={coachId}
 					clientId={client.id}
 					clientPreferredOfferId={client.selectedOfferId ?? null}
+					clientPreferredSmallGroupCredits={
+						client.selectedSmallGroupCredits ?? null
+					}
 					onOfferSelect={handleOfferSelect}
 				/>
 			)}

@@ -1,7 +1,12 @@
 "use client";
 
+import { ContractSmallGroupCreditsInfo } from "@/components/features/small-group/ContractSmallGroupCreditsInfo";
 import { getClientContractsAction } from "@/src/actions/contract.actions";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
+import {
+	type SmallGroupCreditStatus,
+	getSmallGroupCreditStatusAction,
+} from "@/src/actions/small-group-credit.actions";
 import {
 	Calendar,
 	Clock,
@@ -59,6 +64,8 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [payments, setPayments] = useState<Payment[]>([]);
+	const [smallGroupCreditStatus, setSmallGroupCreditStatus] =
+		useState<SmallGroupCreditStatus | null>(null);
 
 	const loadPayments = async () => {
 		try {
@@ -84,6 +91,17 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 			}
 		} catch (err) {
 			console.error("Erreur lors du chargement des paiements:", err);
+		}
+	};
+
+	const loadSmallGroupCreditStatus = async () => {
+		try {
+			const result = await getSmallGroupCreditStatusAction(clientId);
+			if (result.success) {
+				setSmallGroupCreditStatus(result.data);
+			}
+		} catch (err) {
+			console.error("Erreur lors du chargement des crédits Small Group:", err);
 		}
 	};
 
@@ -114,6 +132,7 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 	useEffect(() => {
 		loadContractData();
 		loadPayments();
+		loadSmallGroupCreditStatus();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [clientId, plannings]);
 
@@ -414,6 +433,12 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 						</div>
 					)}
 				</div>
+
+				{smallGroupCreditStatus && (
+					<ContractSmallGroupCreditsInfo
+						creditStatus={smallGroupCreditStatus}
+					/>
+				)}
 
 				{/* Prix total du contrat */}
 				<div className="text-center p-3 sm:p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">

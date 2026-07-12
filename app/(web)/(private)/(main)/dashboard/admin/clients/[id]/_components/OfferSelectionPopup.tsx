@@ -1,5 +1,11 @@
 "use client";
 
+import { SmallGroupCreditsSelector } from "@/components/features/small-group/SmallGroupCreditsSelector";
+import {
+	calculateSmallGroupSupplement,
+	getInitialSmallGroupCredits,
+	isSmallGroupCreditsEligible,
+} from "@/lib/utils/small-group-pricing.utils";
 import { createContractAction } from "@/src/actions/contract.actions";
 import { getOffersByCoachAction } from "@/src/actions/offer.actions";
 import { Calendar, X } from "lucide-react";
@@ -50,6 +56,8 @@ interface OfferSelectionPopupProps {
 	clientId: string;
 	/** Offre enregistrée par le client sur son profil — présélectionnée si elle figure dans le catalogue */
 	clientPreferredOfferId?: string | null;
+	/** Crédits Small Group souhaités par le prospect lors de l'inscription */
+	clientPreferredSmallGroupCredits?: number | null;
 	onOfferSelect: (offerId: string) => void;
 }
 
@@ -59,6 +67,7 @@ export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 	coachId,
 	clientId,
 	clientPreferredOfferId,
+	clientPreferredSmallGroupCredits,
 	onOfferSelect,
 }) => {
 	const [offers, setOffers] = useState<Offer[]>([]);
@@ -70,6 +79,7 @@ export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 	const [contractStartDate, setContractStartDate] = useState<string>("");
 	const [customSessions, setCustomSessions] = useState<number>(0);
 	const [customPrice, setCustomPrice] = useState<number>(0);
+	const [smallGroupCredits, setSmallGroupCredits] = useState<number>(0);
 	const [isFlexibleContract, setIsFlexibleContract] = useState<boolean>(false);
 	const [isCreatingContract, setIsCreatingContract] = useState<boolean>(false);
 	const [contractMessage, setContractMessage] = useState<{
@@ -114,18 +124,67 @@ export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 		setSelectedOfferId(preferred.id);
 		setCustomSessions(preferred.sessions);
 		setCustomPrice(preferred.price);
-	}, [isOpen, offers, clientPreferredOfferId]);
+
+		if (isSmallGroupCreditsEligible(preferred.program.type)) {
+			const credits = getInitialSmallGroupCredits(
+				preferred.sessions,
+				clientPreferredSmallGroupCredits,
+			);
+			setSmallGroupCredits(credits);
+			setCustomPrice(
+				preferred.price +
+					calculateSmallGroupSupplement(credits, preferred.sessions),
+			);
+		} else {
+			setSmallGroupCredits(0);
+		}
+	}, [
+		isOpen,
+		offers,
+		clientPreferredOfferId,
+		clientPreferredSmallGroupCredits,
+	]);
+
+	const applySmallGroupCreditsToOffer = (offer: Offer, credits: number) => {
+		setSmallGroupCredits(credits);
+		setCustomPrice(
+			offer.price + calculateSmallGroupSupplement(credits, offer.sessions),
+		);
+	};
 
 	const handleOfferSelection = (offerId: string) => {
 		setSelectedOfferId(offerId);
 
-		// Mettre à jour le nombre de séances et le prix par défaut avec ceux de l'offre sélectionnée
 		const selectedOffer = offers.find((offer) => offer.id === offerId);
-		if (selectedOffer) {
-			setCustomSessions(selectedOffer.sessions);
-			setCustomPrice(selectedOffer.price);
+		if (!selectedOffer) {
+			return;
 		}
+
+		setCustomSessions(selectedOffer.sessions);
+
+		if (isSmallGroupCreditsEligible(selectedOffer.program.type)) {
+			const credits = getInitialSmallGroupCredits(
+				selectedOffer.sessions,
+				offerId === clientPreferredOfferId
+					? clientPreferredSmallGroupCredits
+					: null,
+			);
+			applySmallGroupCreditsToOffer(selectedOffer, credits);
+			return;
+		}
+
+		setSmallGroupCredits(0);
+		setCustomPrice(selectedOffer.price);
 	};
+
+	const selectedOffer = offers.find((offer) => offer.id === selectedOfferId);
+	const isCreditsEligible = selectedOffer
+		? isSmallGroupCreditsEligible(selectedOffer.program.type)
+		: false;
+	const showProspectCreditsPreference =
+		isCreditsEligible &&
+		clientPreferredSmallGroupCredits != null &&
+		selectedOfferId === clientPreferredOfferId;
 
 	const handleConfirmSelection = async () => {
 		if (!selectedOfferId || customPrice <= 0 || !contractStartDate) {
@@ -143,6 +202,14 @@ export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 				customSessions: customSessions,
 				customPrice: customPrice,
 				isFlexible: isFlexibleContract,
+				smallGroupCreditsPerMonth: isCreditsEligible ? smallGroupCredits : 0,
+				smallGroupSupplement:
+					isCreditsEligible && selectedOffer
+						? calculateSmallGroupSupplement(
+								smallGroupCredits,
+								selectedOffer.sessions,
+							)
+						: 0,
 			});
 
 			if (result.success && result.data) {
@@ -186,7 +253,14 @@ export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 
 	const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const value = parseFloat(event.target.value) || 0;
-		setCustomPrice(Math.max(0, value)); // Empêcher les valeurs négatives
+		setCustomPrice(Math.max(0, value));
+	};
+
+	const handleSmallGroupCreditsChange = (credits: number) => {
+		if (!selectedOffer) {
+			return;
+		}
+		applySmallGroupCreditsToOffer(selectedOffer, credits);
 	};
 
 	const handleFlexibleToggle = () => {
@@ -641,6 +715,42 @@ export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 						</div>
 					</div>
 				</div>
+
+				{/* Crédits Small Group */}
+				{isCreditsEligible && selectedOffer && (
+					<div className="mb-4 sm:mb-6">
+						{showProspectCreditsPreference && (
+							<div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+								<p className="text-emerald-400 text-xs sm:text-sm font-medium">
+									Souhait du prospect
+								</p>
+								<p className="text-white text-sm sm:text-base mt-1">
+									{clientPreferredSmallGroupCredits} crédits Small Group
+									souhaités lors de l&apos;inscription
+								</p>
+							</div>
+						)}
+
+						<div className="bg-zinc-800 rounded-lg p-3 sm:p-4 border border-zinc-700">
+							<SmallGroupCreditsSelector
+								includedCredits={selectedOffer.sessions}
+								selectedCredits={smallGroupCredits}
+								onCreditsChange={handleSmallGroupCreditsChange}
+							/>
+
+							{selectedOffer && smallGroupCredits > selectedOffer.sessions && (
+								<p className="text-zinc-400 text-xs sm:text-sm mt-3">
+									Supplément Small Group : +
+									{calculateSmallGroupSupplement(
+										smallGroupCredits,
+										selectedOffer.sessions,
+									)}
+									€ / mois
+								</p>
+							)}
+						</div>
+					</div>
+				)}
 
 				{/* Toggle Flexible */}
 				<div className="mb-4 sm:mb-6">
