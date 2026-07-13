@@ -6,7 +6,10 @@ import {
 	formatCalendarHourLabel,
 	getCalendarHourLabels,
 } from "@/lib/calendar/session-calendar.utils";
-import type { CalendarSession } from "@/lib/types/calendar-session.types";
+import type {
+	CalendarSession,
+	SmallGroupCalendarSession,
+} from "@/lib/types/calendar-session.types";
 import { type PlanningWithClient } from "@/src/actions/planning.actions";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -19,6 +22,7 @@ interface WeekViewCalendarProps {
 	onDateSelect: (date: Date) => void;
 	sessions: CalendarSession[];
 	onSessionDeleted?: (sessionId: string) => void;
+	onSmallGroupSessionClick?: (session: SmallGroupCalendarSession) => void;
 }
 
 interface DayData {
@@ -39,6 +43,7 @@ export const WeekViewCalendar: React.FC<WeekViewCalendarProps> = ({
 	onDateSelect,
 	sessions,
 	onSessionDeleted,
+	onSmallGroupSessionClick,
 }) => {
 	const router = useRouter();
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -219,6 +224,7 @@ export const WeekViewCalendar: React.FC<WeekViewCalendarProps> = ({
 				getClientInitials={getClientInitials}
 				onViewClient={handleViewClient}
 				onDeleteClick={handleDeleteClick}
+				onSmallGroupSessionClick={onSmallGroupSessionClick}
 			/>
 		</div>
 	);

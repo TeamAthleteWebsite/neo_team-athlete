@@ -1,6 +1,10 @@
 "use client";
 
-import type { SmallGroupSessionData } from "@/lib/types/calendar-session.types";
+import type {
+	SmallGroupCalendarSession,
+	SmallGroupSessionData,
+	SmallGroupSessionDetail,
+} from "@/lib/types/calendar-session.types";
 import { mergeCalendarSessions } from "@/lib/types/calendar-session.types";
 import { type PlanningWithClient } from "@/src/actions/planning.actions";
 import {
@@ -14,6 +18,7 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 import { CreateSmallGroupSessionPopup } from "./CreateSmallGroupSessionPopup";
+import { SmallGroupSessionDetailPopup } from "./SmallGroupSessionDetailPopup";
 import { TimeSlotCalendar } from "./TimeSlotCalendar";
 import { WeekDays } from "./WeekDays";
 import { WeekNavigation } from "./WeekNavigation";
@@ -41,6 +46,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 		initialSmallGroupSessions,
 	);
 	const [isCreatePopupOpen, setIsCreatePopupOpen] = useState(false);
+	const [selectedSmallGroupSessionId, setSelectedSmallGroupSessionId] =
+		useState<string | null>(null);
+	const [isDetailPopupOpen, setIsDetailPopupOpen] = useState(false);
 
 	const calendarSessions = mergeCalendarSessions(
 		personalSessions,
@@ -80,6 +88,37 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 			),
 		);
 		setSelectedDate(new Date(session.startAt));
+	};
+
+	const handleSmallGroupSessionClick = (session: SmallGroupCalendarSession) => {
+		setSelectedSmallGroupSessionId(session.id);
+		setIsDetailPopupOpen(true);
+	};
+
+	const handleSmallGroupSessionUpdated = (session: SmallGroupSessionDetail) => {
+		setSmallGroupSessions((prevSessions) =>
+			prevSessions
+				.map((existingSession) =>
+					existingSession.id === session.id
+						? {
+								id: session.id,
+								startAt: session.startAt,
+								location: session.location,
+								description: session.description,
+								maxCapacity: session.maxCapacity,
+								status: session.status,
+								registrationCount: session.registrationCount,
+							}
+						: existingSession,
+				)
+				.sort((a, b) => a.startAt.getTime() - b.startAt.getTime()),
+		);
+	};
+
+	const handleSmallGroupSessionDeleted = (sessionId: string) => {
+		setSmallGroupSessions((prevSessions) =>
+			prevSessions.filter((session) => session.id !== sessionId),
+		);
 	};
 
 	return (
@@ -156,6 +195,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 						sessions={calendarSessions}
 						selectedDate={selectedDate}
 						onSessionDeleted={(sessionId) => handleSessionDeleted(sessionId)}
+						onSmallGroupSessionClick={handleSmallGroupSessionClick}
 					/>
 				</>
 			) : (
@@ -165,6 +205,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 					onDateSelect={handleDateSelect}
 					sessions={calendarSessions}
 					onSessionDeleted={(sessionId) => handleSessionDeleted(sessionId)}
+					onSmallGroupSessionClick={handleSmallGroupSessionClick}
 				/>
 			)}
 
@@ -173,6 +214,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 				onClose={() => setIsCreatePopupOpen(false)}
 				defaultDate={selectedDate}
 				onSessionCreated={handleSmallGroupSessionCreated}
+			/>
+
+			<SmallGroupSessionDetailPopup
+				isOpen={isDetailPopupOpen}
+				sessionId={selectedSmallGroupSessionId}
+				onClose={() => {
+					setIsDetailPopupOpen(false);
+					setSelectedSmallGroupSessionId(null);
+				}}
+				onSessionUpdated={handleSmallGroupSessionUpdated}
+				onSessionDeleted={handleSmallGroupSessionDeleted}
 			/>
 		</div>
 	);

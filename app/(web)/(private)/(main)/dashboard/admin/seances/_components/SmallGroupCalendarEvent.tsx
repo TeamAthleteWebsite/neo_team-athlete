@@ -2,18 +2,20 @@
 
 import type { SmallGroupCalendarSession } from "@/lib/types/calendar-session.types";
 import { MapPin, Users } from "lucide-react";
-import { type FC } from "react";
+import { type FC, type KeyboardEvent } from "react";
 
 type SmallGroupCalendarEventSize = "day" | "week";
 
 interface SmallGroupCalendarEventProps {
 	session: SmallGroupCalendarSession;
 	size?: SmallGroupCalendarEventSize;
+	onClick?: (session: SmallGroupCalendarSession) => void;
 }
 
 export const SmallGroupCalendarEvent: FC<SmallGroupCalendarEventProps> = ({
 	session,
 	size = "day",
+	onClick,
 }) => {
 	const isDayView = size === "day";
 	const timeLabel = session.date.toLocaleTimeString("fr-FR", {
@@ -21,9 +23,25 @@ export const SmallGroupCalendarEvent: FC<SmallGroupCalendarEventProps> = ({
 		minute: "2-digit",
 	});
 
+	const handleClick = () => {
+		onClick?.(session);
+	};
+
+	const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+		if (event.key === "Enter" || event.key === " ") {
+			event.preventDefault();
+			handleClick();
+		}
+	};
+
 	return (
 		<div
-			className={`flex h-full min-h-0 flex-col justify-center bg-cyan-950/80 rounded border-l-2 border-cyan-400 overflow-hidden ${
+			role="button"
+			tabIndex={0}
+			onClick={handleClick}
+			onKeyDown={handleKeyDown}
+			aria-label={`Séance Small Group à ${timeLabel}, ${session.registrationCount} sur ${session.maxCapacity} participants`}
+			className={`flex h-full min-h-0 flex-col justify-center bg-cyan-950/80 rounded border-l-2 border-cyan-400 overflow-hidden cursor-pointer hover:bg-cyan-900/80 transition-colors ${
 				isDayView ? "gap-1 p-2 sm:p-3" : "gap-0.5 p-1 sm:p-1.5"
 			}`}
 			title={session.description}

@@ -1,13 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import type { SmallGroupSessionData } from "@/lib/types/calendar-session.types";
+import { formatDateInputValue } from "@/lib/utils/small-group-session.utils";
 import { X } from "lucide-react";
 import { type FC, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { SmallGroupSessionFormFields } from "./SmallGroupSessionFormFields";
 
 interface CreateSmallGroupSessionPopupProps {
 	isOpen: boolean;
@@ -15,13 +14,6 @@ interface CreateSmallGroupSessionPopupProps {
 	defaultDate?: Date;
 	onSessionCreated: (session: SmallGroupSessionData) => void;
 }
-
-const formatDateInputValue = (date: Date): string => {
-	const year = date.getFullYear();
-	const month = String(date.getMonth() + 1).padStart(2, "0");
-	const day = String(date.getDate()).padStart(2, "0");
-	return `${year}-${month}-${day}`;
-};
 
 export const CreateSmallGroupSessionPopup: FC<
 	CreateSmallGroupSessionPopupProps
@@ -115,86 +107,19 @@ export const CreateSmallGroupSessionPopup: FC<
 					onSubmit={handleSubmit}
 					className="p-4 sm:p-6 space-y-4 sm:space-y-5"
 				>
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-						<div className="space-y-2">
-							<Label htmlFor="sg-date" className="text-zinc-300">
-								Date
-							</Label>
-							<Input
-								id="sg-date"
-								type="date"
-								value={date}
-								onChange={(event) => setDate(event.target.value)}
-								required
-								className="bg-zinc-800 border-zinc-700 text-white"
-							/>
-						</div>
-
-						<div className="space-y-2">
-							<Label htmlFor="sg-time" className="text-zinc-300">
-								Heure
-							</Label>
-							<Input
-								id="sg-time"
-								type="time"
-								value={time}
-								onChange={(event) => setTime(event.target.value)}
-								required
-								className="bg-zinc-800 border-zinc-700 text-white"
-							/>
-						</div>
-					</div>
-
-					<div className="space-y-2">
-						<Label htmlFor="sg-location" className="text-zinc-300">
-							Lieu
-						</Label>
-						<Input
-							id="sg-location"
-							type="text"
-							value={location}
-							onChange={(event) => setLocation(event.target.value)}
-							placeholder="Ex. Salle de sport, 12 rue..."
-							required
-							className="bg-zinc-800 border-zinc-700 text-white"
-						/>
-					</div>
-
-					<div className="space-y-2">
-						<Label htmlFor="sg-description" className="text-zinc-300">
-							Description
-						</Label>
-						<Textarea
-							id="sg-description"
-							value={description}
-							onChange={(event) => setDescription(event.target.value)}
-							placeholder="Décrivez le contenu et l'objectif de la séance"
-							rows={4}
-							required
-							className="bg-zinc-800 border-zinc-700 text-white resize-none"
-						/>
-					</div>
-
-					<div className="space-y-2">
-						<Label htmlFor="sg-capacity" className="text-zinc-300">
-							Limite d&apos;affluence
-						</Label>
-						<Input
-							id="sg-capacity"
-							type="number"
-							min={1}
-							max={100}
-							value={maxCapacity}
-							onChange={(event) =>
-								setMaxCapacity(Number.parseInt(event.target.value, 10) || 1)
-							}
-							required
-							className="bg-zinc-800 border-zinc-700 text-white"
-						/>
-						<p className="text-zinc-500 text-xs">
-							Nombre maximum de participants
-						</p>
-					</div>
+					<SmallGroupSessionFormFields
+						idPrefix="create-sg"
+						date={date}
+						time={time}
+						location={location}
+						description={description}
+						maxCapacity={maxCapacity}
+						onDateChange={setDate}
+						onTimeChange={setTime}
+						onLocationChange={setLocation}
+						onDescriptionChange={setDescription}
+						onMaxCapacityChange={setMaxCapacity}
+					/>
 
 					<div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
 						<Button

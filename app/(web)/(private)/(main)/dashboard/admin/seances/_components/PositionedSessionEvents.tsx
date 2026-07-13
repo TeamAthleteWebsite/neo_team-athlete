@@ -5,7 +5,10 @@ import {
 	getSessionLayoutStyles,
 	isSessionInCalendarRange,
 } from "@/lib/calendar/session-calendar.utils";
-import type { CalendarSession } from "@/lib/types/calendar-session.types";
+import type {
+	CalendarSession,
+	SmallGroupCalendarSession,
+} from "@/lib/types/calendar-session.types";
 import { type PlanningWithClient } from "@/src/actions/planning.actions";
 import { type FC, type MouseEvent, useMemo } from "react";
 import { SessionCalendarEvent } from "./SessionCalendarEvent";
@@ -24,6 +27,7 @@ interface PositionedSessionEventsProps {
 	) => string;
 	onViewClient: (clientId: string) => void;
 	onDeleteClick: (session: PlanningWithClient, e: MouseEvent) => void;
+	onSmallGroupSessionClick?: (session: SmallGroupCalendarSession) => void;
 }
 
 export const PositionedSessionEvents: FC<PositionedSessionEventsProps> = ({
@@ -33,6 +37,7 @@ export const PositionedSessionEvents: FC<PositionedSessionEventsProps> = ({
 	getClientInitials,
 	onViewClient,
 	onDeleteClick,
+	onSmallGroupSessionClick,
 }) => {
 	const visibleSessions = useMemo(
 		() =>
@@ -82,7 +87,11 @@ export const PositionedSessionEvents: FC<PositionedSessionEventsProps> = ({
 								onDeleteClick={onDeleteClick}
 							/>
 						) : (
-							<SmallGroupCalendarEvent session={session} size={size} />
+							<SmallGroupCalendarEvent
+								session={session}
+								size={size}
+								onClick={onSmallGroupSessionClick}
+							/>
 						)}
 					</div>
 				);

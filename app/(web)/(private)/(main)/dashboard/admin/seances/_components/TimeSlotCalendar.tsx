@@ -5,7 +5,10 @@ import {
 	formatCalendarHourLabel,
 	getCalendarHourLabels,
 } from "@/lib/calendar/session-calendar.utils";
-import type { CalendarSession } from "@/lib/types/calendar-session.types";
+import type {
+	CalendarSession,
+	SmallGroupCalendarSession,
+} from "@/lib/types/calendar-session.types";
 import { type PlanningWithClient } from "@/src/actions/planning.actions";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -16,6 +19,7 @@ interface TimeSlotCalendarProps {
 	sessions: CalendarSession[];
 	selectedDate: Date;
 	onSessionDeleted?: (sessionId: string) => void;
+	onSmallGroupSessionClick?: (session: SmallGroupCalendarSession) => void;
 }
 
 const HOUR_LABEL_CLASS = "h-[60px] sm:h-[80px] flex items-start justify-end";
@@ -25,6 +29,7 @@ export const TimeSlotCalendar: React.FC<TimeSlotCalendarProps> = ({
 	sessions,
 	selectedDate,
 	onSessionDeleted,
+	onSmallGroupSessionClick,
 }) => {
 	const router = useRouter();
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -131,6 +136,7 @@ export const TimeSlotCalendar: React.FC<TimeSlotCalendarProps> = ({
 							getClientInitials={getClientInitials}
 							onViewClient={handleViewClient}
 							onDeleteClick={handleDeleteClick}
+							onSmallGroupSessionClick={onSmallGroupSessionClick}
 						/>
 					</div>
 				</div>
