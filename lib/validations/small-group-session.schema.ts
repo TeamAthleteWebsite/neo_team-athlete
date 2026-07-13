@@ -14,6 +14,19 @@ export const createSmallGroupSessionSchema = z.object({
 		.max(100, "La capacité maximale est de 100 participants"),
 });
 
+export const updateSmallGroupSessionSchema =
+	createSmallGroupSessionSchema.extend({
+		sessionId: z.string().min(1, "Identifiant de séance requis"),
+	});
+
+export const deleteSmallGroupSessionSchema = z.object({
+	sessionId: z.string().min(1, "Identifiant de séance requis"),
+});
+
 export type CreateSmallGroupSessionInput = z.infer<
 	typeof createSmallGroupSessionSchema
+>;
+
+export type UpdateSmallGroupSessionInput = z.infer<
+	typeof updateSmallGroupSessionSchema
 >;

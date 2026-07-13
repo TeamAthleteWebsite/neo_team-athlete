@@ -10,6 +10,17 @@ export interface SmallGroupSessionData {
 	registrationCount: number;
 }
 
+export interface SmallGroupSessionParticipant {
+	id: string;
+	name: string;
+	lastName: string | null;
+	image: string | null;
+}
+
+export interface SmallGroupSessionDetail extends SmallGroupSessionData {
+	participants: SmallGroupSessionParticipant[];
+}
+
 export interface PersonalCalendarSession {
 	type: "personal";
 	id: string;
