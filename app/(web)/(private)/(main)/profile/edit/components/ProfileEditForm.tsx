@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import type { SmallGroupOfferSelection } from "@/lib/types/small-group.types";
 import {
 	calculateSmallGroupPricing,
+	getInitialSmallGroupCredits,
 	isSmallGroupCreditsEligible,
 } from "@/lib/utils/small-group-pricing.utils";
 import { User, UserRole } from "@/prisma/generated";
@@ -80,27 +81,22 @@ const buildSelectionFromUser = (
 	}
 
 	const { selectedOffer } = user;
-	const includedCredits = selectedOffer.sessions;
-	const selectedCredits =
-		user.selectedSmallGroupCredits != null &&
-		isSmallGroupCreditsEligible(selectedOffer.program.type)
-			? user.selectedSmallGroupCredits
-			: includedCredits;
+	const selectedCredits = isSmallGroupCreditsEligible(
+		selectedOffer.program.type,
+	)
+		? getInitialSmallGroupCredits(user.selectedSmallGroupCredits)
+		: 0;
 
 	return {
 		offerId: selectedOffer.id,
 		offerName: selectedOffer.program.name,
 		basePrice: selectedOffer.price,
 		includedSessions: selectedOffer.sessions,
-		includedCredits,
+		includedCredits: 0,
 		selectedCredits,
 		programType: selectedOffer.program.type,
 		duration: selectedOffer.duration,
-		pricing: calculateSmallGroupPricing(
-			selectedOffer.price,
-			selectedCredits,
-			includedCredits,
-		),
+		pricing: calculateSmallGroupPricing(selectedOffer.price, selectedCredits),
 	};
 };
 

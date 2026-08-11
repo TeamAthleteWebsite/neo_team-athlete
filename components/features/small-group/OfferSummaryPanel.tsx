@@ -63,17 +63,8 @@ export const OfferSummaryPanel: FC<OfferSummaryPanelProps> = ({
 				{showSmallGroupDetails && (
 					<>
 						<div className="flex justify-between gap-3">
-							<dt className="text-zinc-400">Crédits Small Group inclus</dt>
-							<dd className="text-white font-medium">
-								{pricing.includedCredits}
-							</dd>
-						</div>
-
-						<div className="flex justify-between gap-3">
-							<dt className="text-zinc-400">Crédits supplémentaires</dt>
-							<dd className="text-white font-medium">
-								{pricing.extraCredits > 0 ? `+${pricing.extraCredits}` : "0"}
-							</dd>
+							<dt className="text-zinc-400">Crédits Small Group</dt>
+							<dd className="text-white font-medium">{pricing.extraCredits}</dd>
 						</div>
 
 						<div className="flex justify-between gap-3">

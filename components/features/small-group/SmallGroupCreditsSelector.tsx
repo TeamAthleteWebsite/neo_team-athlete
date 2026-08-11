@@ -10,26 +10,22 @@ import { Minus, Plus } from "lucide-react";
 import { type FC } from "react";
 
 interface SmallGroupCreditsSelectorProps {
-	includedCredits: number;
 	selectedCredits: number;
 	onCreditsChange: (credits: number) => void;
 }
 
 export const SmallGroupCreditsSelector: FC<SmallGroupCreditsSelectorProps> = ({
-	includedCredits,
 	selectedCredits,
 	onCreditsChange,
 }) => {
-	const extraBlocks = calculateExtraBlocks(selectedCredits - includedCredits);
+	const creditBlocks = calculateExtraBlocks(selectedCredits);
 
 	const handleAddBlock = () => {
-		onCreditsChange(addSmallGroupCreditBlock(selectedCredits, includedCredits));
+		onCreditsChange(addSmallGroupCreditBlock(selectedCredits));
 	};
 
 	const handleRemoveBlock = () => {
-		onCreditsChange(
-			removeSmallGroupCreditBlock(selectedCredits, includedCredits),
-		);
+		onCreditsChange(removeSmallGroupCreditBlock(selectedCredits));
 	};
 
 	return (
@@ -43,31 +39,22 @@ export const SmallGroupCreditsSelector: FC<SmallGroupCreditsSelectorProps> = ({
 				</p>
 			</div>
 
-			<div className="bg-zinc-800/80 rounded-lg p-3 sm:p-4 space-y-3">
-				<div className="flex items-center justify-between gap-3">
-					<span className="text-zinc-300 text-sm sm:text-base">
-						Crédits inclus dans l&apos;offre
-					</span>
-					<span className="text-white font-semibold text-sm sm:text-base">
-						{includedCredits}
-					</span>
-				</div>
-
+			<div className="bg-zinc-800/80 rounded-lg p-3 sm:p-4">
 				<div className="flex items-center justify-between gap-3">
 					<div className="min-w-0">
 						<span className="text-zinc-300 text-sm sm:text-base block">
-							Crédits supplémentaires
+							Crédits Small Group
 						</span>
 						<span className="text-zinc-500 text-xs sm:text-sm">
-							Par bloc de {SMALL_GROUP_CREDIT_BLOCK_SIZE} crédits
+							Par bloc de {SMALL_GROUP_CREDIT_BLOCK_SIZE} crédits (+20 €)
 						</span>
 					</div>
 					<div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
 						<button
 							type="button"
 							onClick={handleRemoveBlock}
-							disabled={selectedCredits <= includedCredits}
-							aria-label="Retirer un bloc de crédits supplémentaires"
+							disabled={selectedCredits <= 0}
+							aria-label="Retirer un bloc de crédits Small Group"
 							className="w-9 h-9 sm:w-10 sm:h-10 rounded-md bg-zinc-700 text-white flex items-center justify-center hover:bg-zinc-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
 						>
 							<Minus className="w-4 h-4" />
@@ -76,30 +63,18 @@ export const SmallGroupCreditsSelector: FC<SmallGroupCreditsSelectorProps> = ({
 							className="text-white font-semibold text-sm sm:text-base min-w-[4.5rem] text-center"
 							aria-live="polite"
 						>
-							{extraBlocks} bloc{extraBlocks > 1 ? "s" : ""} (+
-							{extraBlocks * SMALL_GROUP_CREDIT_BLOCK_SIZE})
+							{creditBlocks} bloc{creditBlocks > 1 ? "s" : ""} (+
+							{creditBlocks * SMALL_GROUP_CREDIT_BLOCK_SIZE})
 						</span>
 						<button
 							type="button"
 							onClick={handleAddBlock}
-							aria-label="Ajouter un bloc de crédits supplémentaires"
+							aria-label="Ajouter un bloc de crédits Small Group"
 							className="w-9 h-9 sm:w-10 sm:h-10 rounded-md bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-colors"
 						>
 							<Plus className="w-4 h-4" />
 						</button>
 					</div>
-				</div>
-
-				<div className="pt-2 border-t border-zinc-700 flex items-center justify-between gap-3">
-					<span className="text-white font-medium text-sm sm:text-base">
-						Total crédits Small Group
-					</span>
-					<span
-						className="text-blue-400 font-bold text-base sm:text-lg"
-						aria-live="polite"
-					>
-						{selectedCredits}
-					</span>
 				</div>
 			</div>
 		</div>

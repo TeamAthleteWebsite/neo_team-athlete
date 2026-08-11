@@ -127,14 +127,10 @@ export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 
 		if (isSmallGroupCreditsEligible(preferred.program.type)) {
 			const credits = getInitialSmallGroupCredits(
-				preferred.sessions,
 				clientPreferredSmallGroupCredits,
 			);
 			setSmallGroupCredits(credits);
-			setCustomPrice(
-				preferred.price +
-					calculateSmallGroupSupplement(credits, preferred.sessions),
-			);
+			setCustomPrice(preferred.price + calculateSmallGroupSupplement(credits));
 		} else {
 			setSmallGroupCredits(0);
 		}
@@ -147,9 +143,7 @@ export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 
 	const applySmallGroupCreditsToOffer = (offer: Offer, credits: number) => {
 		setSmallGroupCredits(credits);
-		setCustomPrice(
-			offer.price + calculateSmallGroupSupplement(credits, offer.sessions),
-		);
+		setCustomPrice(offer.price + calculateSmallGroupSupplement(credits));
 	};
 
 	const handleOfferSelection = (offerId: string) => {
@@ -164,7 +158,6 @@ export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 
 		if (isSmallGroupCreditsEligible(selectedOffer.program.type)) {
 			const credits = getInitialSmallGroupCredits(
-				selectedOffer.sessions,
 				offerId === clientPreferredOfferId
 					? clientPreferredSmallGroupCredits
 					: null,
@@ -205,10 +198,7 @@ export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 				smallGroupCreditsPerMonth: isCreditsEligible ? smallGroupCredits : 0,
 				smallGroupSupplement:
 					isCreditsEligible && selectedOffer
-						? calculateSmallGroupSupplement(
-								smallGroupCredits,
-								selectedOffer.sessions,
-							)
+						? calculateSmallGroupSupplement(smallGroupCredits)
 						: 0,
 			});
 
@@ -733,19 +723,14 @@ export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 
 						<div className="bg-zinc-800 rounded-lg p-3 sm:p-4 border border-zinc-700">
 							<SmallGroupCreditsSelector
-								includedCredits={selectedOffer.sessions}
 								selectedCredits={smallGroupCredits}
 								onCreditsChange={handleSmallGroupCreditsChange}
 							/>
 
-							{selectedOffer && smallGroupCredits > selectedOffer.sessions && (
+							{selectedOffer && smallGroupCredits > 0 && (
 								<p className="text-zinc-400 text-xs sm:text-sm mt-3">
 									Supplément Small Group : +
-									{calculateSmallGroupSupplement(
-										smallGroupCredits,
-										selectedOffer.sessions,
-									)}
-									€ / mois
+									{calculateSmallGroupSupplement(smallGroupCredits)}€ / mois
 								</p>
 							)}
 						</div>

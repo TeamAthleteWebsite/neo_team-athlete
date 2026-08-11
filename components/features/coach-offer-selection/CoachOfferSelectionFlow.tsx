@@ -63,6 +63,7 @@ export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 	const [smallGroupCredits, setSmallGroupCredits] = useState<number | null>(
 		null,
 	);
+	const initialOfferIdRef = useRef(selectedOfferId);
 	const onSelectionChangeRef = useRef(onSelectionChange);
 	onSelectionChangeRef.current = onSelectionChange;
 
@@ -76,12 +77,7 @@ export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 			return;
 		}
 
-		setSmallGroupCredits(
-			getInitialSmallGroupCredits(
-				selectedOffer.sessions,
-				initialSmallGroupCredits,
-			),
-		);
+		setSmallGroupCredits(getInitialSmallGroupCredits(initialSmallGroupCredits));
 	}, [
 		selectedOffer,
 		isCreditsEligible,
@@ -105,11 +101,7 @@ export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 				selectedCredits: 0,
 				programType: selectedOffer.program.type,
 				duration: selectedOffer.duration,
-				pricing: calculateSmallGroupPricing(
-					selectedOffer.price,
-					selectedOffer.sessions,
-					selectedOffer.sessions,
-				),
+				pricing: calculateSmallGroupPricing(selectedOffer.price, 0),
 			});
 			return;
 		}
@@ -121,7 +113,6 @@ export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 		const pricing = calculateSmallGroupPricing(
 			selectedOffer.price,
 			smallGroupCredits,
-			selectedOffer.sessions,
 		);
 
 		onSelectionChangeRef.current?.({
@@ -129,7 +120,7 @@ export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 			offerName: selectedOffer.program.name,
 			basePrice: selectedOffer.price,
 			includedSessions: selectedOffer.sessions,
-			includedCredits: selectedOffer.sessions,
+			includedCredits: 0,
 			selectedCredits: smallGroupCredits,
 			programType: selectedOffer.program.type,
 			duration: selectedOffer.duration,
@@ -189,7 +180,13 @@ export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 		setSelectedOfferId(offerId);
 
 		if (offer && isSmallGroupCreditsEligible(offer.program.type)) {
-			setSmallGroupCredits(offer.sessions);
+			setSmallGroupCredits(
+				getInitialSmallGroupCredits(
+					offerId === initialOfferIdRef.current
+						? initialSmallGroupCredits
+						: null,
+				),
+			);
 		} else {
 			setSmallGroupCredits(null);
 		}
@@ -644,7 +641,6 @@ export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 							{isCreditsEligible && smallGroupCredits != null && (
 								<div className="bg-zinc-800 rounded-lg p-3 sm:p-4">
 									<SmallGroupCreditsSelector
-										includedCredits={selectedOffer.sessions}
 										selectedCredits={smallGroupCredits}
 										onCreditsChange={handleSmallGroupCreditsChange}
 									/>
@@ -660,7 +656,6 @@ export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 										? calculateSmallGroupPricing(
 												selectedOffer.price,
 												smallGroupCredits,
-												selectedOffer.sessions,
 											)
 										: {
 												includedCredits: 0,
