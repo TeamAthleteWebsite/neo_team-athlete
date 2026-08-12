@@ -309,8 +309,9 @@ export async function unregisterFromSmallGroupSessionAction(sessionId: string) {
 			}
 
 			const contractId = registration.contractId;
-			const regYear = registration.createdAt.getFullYear();
-			const regMonth = registration.createdAt.getMonth() + 1;
+			const registrationDate = registration.createdAt ?? now;
+			const regYear = registrationDate.getFullYear();
+			const regMonth = registrationDate.getMonth() + 1;
 
 			await tx.smallGroupRegistration.delete({
 				where: { id: registration.id },
