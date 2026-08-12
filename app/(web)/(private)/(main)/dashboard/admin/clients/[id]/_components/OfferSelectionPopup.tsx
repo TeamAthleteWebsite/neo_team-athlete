@@ -8,7 +8,7 @@ import {
 } from "@/lib/utils/small-group-pricing.utils";
 import { createContractAction } from "@/src/actions/contract.actions";
 import { getOffersByCoachAction } from "@/src/actions/offer.actions";
-import { Calendar, X } from "lucide-react";
+import { X } from "lucide-react";
 import { type FC, useEffect, useState } from "react";
 
 interface Offer {
@@ -617,10 +617,9 @@ export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 									value={contractStartDate}
 									onChange={handleDateChange}
 									// min={getMinDate()} // Suppression de la restriction de date minimale
-									className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
+									className="scheme-dark [&::-webkit-calendar-picker-indicator]:opacity-70 w-full px-2.5 sm:px-3 py-1.5 sm:py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
 									placeholder="Sélectionner une date"
 								/>
-								<Calendar className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-zinc-400 pointer-events-none" />
 							</div>
 						</div>
 
