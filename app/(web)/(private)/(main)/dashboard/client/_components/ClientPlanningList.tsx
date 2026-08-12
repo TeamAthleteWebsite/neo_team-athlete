@@ -16,12 +16,19 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import {
+	type ClientPlanningItem,
+	type ClientSmallGroupPlanningSession,
+	mapPersonalPlanningToClientItem,
+} from "@/lib/types/client-planning.types";
+import { canCancelSessionBeforeStart } from "@/lib/utils/session-cancellation.utils";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
 import { Lock } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ClientSmallGroupPlanningCard } from "./ClientSmallGroupPlanningCard";
+import { ClientSmallGroupSessionPopup } from "./ClientSmallGroupSessionPopup";
 
-// Définition locale de PlanningStatus
 enum PlanningStatus {
 	PLANNED = "PLANNED",
 	DONE = "DONE",
@@ -30,11 +37,15 @@ enum PlanningStatus {
 
 interface ClientPlanningListProps {
 	plannings: PlanningWithContract[];
+	smallGroupSessions?: ClientSmallGroupPlanningSession[];
+	remainingSmallGroupCredits?: number;
 	onPlanningUpdate?: () => void;
 }
 
 export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 	plannings,
+	smallGroupSessions = [],
+	remainingSmallGroupCredits = 0,
 	onPlanningUpdate,
 }) => {
 	const [selectedStatus, setSelectedStatus] = useState<string>(
@@ -46,11 +57,33 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 	const [isCancelling, setIsCancelling] = useState(false);
 	const [localPlannings, setLocalPlannings] =
 		useState<PlanningWithContract[]>(plannings);
+	const [localSmallGroupSessions, setLocalSmallGroupSessions] =
+		useState<ClientSmallGroupPlanningSession[]>(smallGroupSessions);
+	const [localRemainingCredits, setLocalRemainingCredits] = useState(
+		remainingSmallGroupCredits,
+	);
+	const [selectedSmallGroupSession, setSelectedSmallGroupSession] =
+		useState<ClientSmallGroupPlanningSession | null>(null);
+	const [isSmallGroupPopupOpen, setIsSmallGroupPopupOpen] = useState(false);
+	const [isRegistering, setIsRegistering] = useState(false);
+	const [isUnregistering, setIsUnregistering] = useState(false);
 
-	// Mettre à jour les plannings locaux quand les props changent
 	useEffect(() => {
 		setLocalPlannings(plannings);
 	}, [plannings]);
+
+	useEffect(() => {
+		setLocalSmallGroupSessions(smallGroupSessions);
+	}, [smallGroupSessions]);
+
+	useEffect(() => {
+		setLocalRemainingCredits(remainingSmallGroupCredits);
+	}, [remainingSmallGroupCredits]);
+
+	const allPlanningItems = useMemo<ClientPlanningItem[]>(() => {
+		const personalItems = localPlannings.map(mapPersonalPlanningToClientItem);
+		return [...personalItems, ...localSmallGroupSessions];
+	}, [localPlannings, localSmallGroupSessions]);
 
 	const statusOptions = [
 		{ value: "all", label: "Tous les statuts" },
@@ -63,14 +96,32 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 		setSelectedStatus(value);
 	};
 
-	const filteredPlannings =
-		selectedStatus === "all"
-			? localPlannings
-			: localPlannings.filter((planning) => planning.status === selectedStatus);
+	const filteredItems = useMemo(() => {
+		if (selectedStatus === "all") {
+			return allPlanningItems;
+		}
 
-	// Trier les séances par ordre croissant de date
-	const sortedPlannings = filteredPlannings.sort(
-		(a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+		return allPlanningItems.filter((item) => {
+			if (item.type === "small_group") {
+				if (selectedStatus === PlanningStatus.PLANNED) {
+					return !item.isPast;
+				}
+				if (selectedStatus === PlanningStatus.DONE) {
+					return item.isPast;
+				}
+				return false;
+			}
+
+			return item.status === selectedStatus;
+		});
+	}, [allPlanningItems, selectedStatus]);
+
+	const sortedItems = useMemo(
+		() =>
+			[...filteredItems].sort(
+				(a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+			),
+		[filteredItems],
 	);
 
 	const formatDayAndTime = (date: Date) => {
@@ -85,12 +136,8 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 			"Samedi",
 		];
 		const dayName = dayNames[sessionDate.getDay()];
-
-		// Heure de début (heure de la date)
 		const startHour = sessionDate.getHours();
 		const startMinute = sessionDate.getMinutes();
-
-		// Heure de fin (heure de la date + 1)
 		const endHour = startHour + 1;
 
 		const formatTime = (hour: number, minute: number) => {
@@ -103,8 +150,7 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 	};
 
 	const formatDate = (date: Date) => {
-		const sessionDate = new Date(date);
-		return sessionDate.toLocaleDateString("fr-FR", {
+		return new Date(date).toLocaleDateString("fr-FR", {
 			day: "2-digit",
 			month: "2-digit",
 			year: "numeric",
@@ -138,18 +184,12 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 		);
 	};
 
-	// Vérifier si une séance peut être annulée (48h ou plus)
 	const canCancelSession = (planning: PlanningWithContract): boolean => {
 		if (planning.status !== PlanningStatus.PLANNED) {
 			return false;
 		}
 
-		const now = new Date();
-		const sessionDate = new Date(planning.date);
-		const hoursUntilSession =
-			(sessionDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-		return hoursUntilSession >= 48;
+		return canCancelSessionBeforeStart(planning.date);
 	};
 
 	const handlePlanningClick = (planning: PlanningWithContract) => {
@@ -162,8 +202,136 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 		}
 	};
 
+	const handleSmallGroupSessionClick = (
+		session: ClientSmallGroupPlanningSession,
+	) => {
+		setSelectedSmallGroupSession(session);
+		setIsSmallGroupPopupOpen(true);
+	};
+
+	const handleCloseSmallGroupPopup = () => {
+		setIsSmallGroupPopupOpen(false);
+		setSelectedSmallGroupSession(null);
+	};
+
+	const handleRegisterToSmallGroupSession = async () => {
+		if (!selectedSmallGroupSession) {
+			return;
+		}
+
+		setIsRegistering(true);
+
+		try {
+			const response = await fetch("/api/small-group-session/client/register", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ sessionId: selectedSmallGroupSession.id }),
+			});
+
+			const result = await response.json();
+
+			if (!response.ok || !result.success) {
+				toast.error(
+					result.error ||
+						"Erreur lors de l'inscription à la séance Small Group",
+				);
+				return;
+			}
+
+			const updatedSession: ClientSmallGroupPlanningSession = {
+				...selectedSmallGroupSession,
+				isRegistered: true,
+				registrationCount: result.data.registrationCount,
+				remainingSeats: result.data.remainingSeats,
+			};
+
+			setLocalSmallGroupSessions((prevSessions) => {
+				const updatedSessions = prevSessions.map((session) =>
+					session.id === updatedSession.id ? updatedSession : session,
+				);
+
+				if (result.data.remainingCredits === 0) {
+					return updatedSessions.filter(
+						(session) => session.isPast || session.isRegistered,
+					);
+				}
+
+				return updatedSessions;
+			});
+			setSelectedSmallGroupSession(updatedSession);
+			setLocalRemainingCredits(result.data.remainingCredits);
+			toast.success("Inscription confirmée avec succès");
+			handleCloseSmallGroupPopup();
+
+			if (onPlanningUpdate) {
+				onPlanningUpdate();
+			}
+		} catch (error) {
+			console.error("Erreur lors de l'inscription Small Group:", error);
+			toast.error("Une erreur inattendue est survenue");
+		} finally {
+			setIsRegistering(false);
+		}
+	};
+
+	const handleUnregisterFromSmallGroupSession = async () => {
+		if (!selectedSmallGroupSession) {
+			return;
+		}
+
+		setIsUnregistering(true);
+
+		try {
+			const response = await fetch(
+				"/api/small-group-session/client/unregister",
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ sessionId: selectedSmallGroupSession.id }),
+				},
+			);
+
+			const result = await response.json();
+
+			if (!response.ok || !result.success) {
+				toast.error(
+					result.error ||
+						"Erreur lors de la désinscription à la séance Small Group",
+				);
+				return;
+			}
+
+			const updatedSession: ClientSmallGroupPlanningSession = {
+				...selectedSmallGroupSession,
+				isRegistered: false,
+				registrationCount: result.data.registrationCount,
+				remainingSeats: result.data.remainingSeats,
+			};
+
+			setLocalSmallGroupSessions((prevSessions) =>
+				prevSessions.map((session) =>
+					session.id === updatedSession.id ? updatedSession : session,
+				),
+			);
+			setLocalRemainingCredits(result.data.remainingCredits);
+			toast.success("Désinscription confirmée, votre crédit a été recrédité");
+			handleCloseSmallGroupPopup();
+
+			if (onPlanningUpdate) {
+				onPlanningUpdate();
+			}
+		} catch (error) {
+			console.error("Erreur lors de la désinscription Small Group:", error);
+			toast.error("Une erreur inattendue est survenue");
+		} finally {
+			setIsUnregistering(false);
+		}
+	};
+
 	const handleCancelSession = async () => {
-		if (!selectedPlanning) return;
+		if (!selectedPlanning) {
+			return;
+		}
 
 		setIsCancelling(true);
 		try {
@@ -180,12 +348,11 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 			const result = await response.json();
 
 			if (result.success) {
-				// Mettre à jour le statut localement
 				setLocalPlannings((prev) =>
-					prev.map((p) =>
-						p.id === selectedPlanning.id
-							? { ...p, status: PlanningStatus.CANCELLED }
-							: p,
+					prev.map((planning) =>
+						planning.id === selectedPlanning.id
+							? { ...planning, status: PlanningStatus.CANCELLED }
+							: planning,
 					),
 				);
 
@@ -193,7 +360,6 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 				setIsCancelDialogOpen(false);
 				setSelectedPlanning(null);
 
-				// Notifier le parent pour rafraîchir les données
 				if (onPlanningUpdate) {
 					onPlanningUpdate();
 				}
@@ -208,7 +374,7 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 		}
 	};
 
-	if (localPlannings.length === 0) {
+	if (allPlanningItems.length === 0) {
 		return (
 			<div className="text-center py-8 sm:py-12">
 				<div className="text-white/60 text-base sm:text-lg px-4">
@@ -221,7 +387,6 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 	return (
 		<>
 			<div className="space-y-4 sm:space-y-6">
-				{/* Filtre par statut */}
 				<div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-3 sm:p-4">
 					<div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
 						<div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 flex-1 min-w-[1px]">
@@ -245,9 +410,8 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 					</div>
 				</div>
 
-				{/* Liste des séances filtrées */}
 				<div className="space-y-4">
-					{sortedPlannings.length === 0 ? (
+					{sortedItems.length === 0 ? (
 						<div className="text-center py-12">
 							<div className="text-white/60 text-lg">
 								{selectedStatus === "all"
@@ -256,18 +420,39 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 							</div>
 						</div>
 					) : (
-						sortedPlannings.map((planning) => {
-							const canCancel = canCancelSession(planning);
-							const isClickable =
-								planning.status === PlanningStatus.PLANNED && canCancel;
+						sortedItems.map((item) => {
+							if (item.type === "small_group") {
+								return (
+									<ClientSmallGroupPlanningCard
+										key={`sg-${item.id}`}
+										session={item}
+										formatDayAndTime={formatDayAndTime}
+										formatDate={formatDate}
+										onClick={handleSmallGroupSessionClick}
+									/>
+								);
+							}
 
+							const canCancel = canCancelSession(item);
+							const isClickable =
+								item.status === PlanningStatus.PLANNED && canCancel;
 							const isNonCancellable =
-								planning.status === PlanningStatus.PLANNED && !canCancel;
+								item.status === PlanningStatus.PLANNED && !canCancel;
 
 							return (
 								<div
-									key={planning.id}
-									onClick={() => isClickable && handlePlanningClick(planning)}
+									key={`personal-${item.id}`}
+									onClick={() => {
+										if (!isClickable) {
+											return;
+										}
+										const planning = localPlannings.find(
+											(entry) => entry.id === item.id,
+										);
+										if (planning) {
+											handlePlanningClick(planning);
+										}
+									}}
 									className={`bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4 flex items-center justify-between hover:bg-white/10 transition-colors ${
 										isClickable ? "cursor-pointer" : "cursor-default"
 									}`}
@@ -275,7 +460,7 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 									<div className="flex-1 min-w-[1px]">
 										<div className="flex items-center gap-2">
 											<div className="text-white font-medium text-base sm:text-lg break-words">
-												{formatDayAndTime(planning.date)}
+												{formatDayAndTime(item.date)}
 											</div>
 											{isNonCancellable && (
 												<Lock
@@ -285,11 +470,11 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 											)}
 										</div>
 										<div className="text-white/70 text-xs sm:text-sm mt-1">
-											{formatDate(planning.date)}
+											{formatDate(item.date)}
 										</div>
 									</div>
 									<div className="ml-0 sm:ml-4 flex-shrink-0">
-										{getStatusBadge(planning.status)}
+										{getStatusBadge(item.status)}
 									</div>
 								</div>
 							);
@@ -298,7 +483,16 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 				</div>
 			</div>
 
-			{/* Dialog de confirmation d'annulation */}
+			<ClientSmallGroupSessionPopup
+				isOpen={isSmallGroupPopupOpen}
+				session={selectedSmallGroupSession}
+				remainingCredits={localRemainingCredits}
+				isSubmitting={isRegistering || isUnregistering}
+				onClose={handleCloseSmallGroupPopup}
+				onRegister={handleRegisterToSmallGroupSession}
+				onUnregister={handleUnregisterFromSmallGroupSession}
+			/>
+
 			<Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
 				<DialogContent className="bg-gray-900 border-white/20 text-white">
 					<DialogHeader>

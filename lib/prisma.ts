@@ -17,12 +17,14 @@ const getPrismaClient = (): PrismaClient => {
 		const cachedClient = globalForPrisma.prisma as PrismaClient & {
 			smallGroupCreditPeriod?: { create: unknown };
 			smallGroupSession?: { create: unknown };
+			smallGroupRegistration?: { create: unknown };
 		};
 
 		// Après ajout de modèles Prisma, le singleton dev peut rester obsolète jusqu'au redémarrage.
 		if (
 			!cachedClient.smallGroupCreditPeriod ||
-			!cachedClient.smallGroupSession
+			!cachedClient.smallGroupSession ||
+			!cachedClient.smallGroupRegistration
 		) {
 			void cachedClient.$disconnect().catch(() => undefined);
 			globalForPrisma.prisma = createPrismaClient();

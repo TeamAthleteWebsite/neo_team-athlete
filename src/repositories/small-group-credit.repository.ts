@@ -64,3 +64,63 @@ export const getCurrentCreditPeriod = async (contractId: string) => {
 		},
 	});
 };
+
+export const getCreditPeriodDateRange = (year: number, month: number) => {
+	const start = new Date(year, month - 1, 1, 0, 0, 0, 0);
+	const end = new Date(year, month, 0, 23, 59, 59, 999);
+	return { start, end };
+};
+
+export const countRegistrationsForCreditPeriod = async (
+	contractId: string,
+	year: number,
+	month: number,
+) => {
+	const { start, end } = getCreditPeriodDateRange(year, month);
+
+	return prisma.smallGroupRegistration.count({
+		where: {
+			contractId,
+			createdAt: {
+				gte: start,
+				lte: end,
+			},
+		},
+	});
+};
+
+/** Aligne `consumed` sur le nombre réel d'inscriptions du mois (source de vérité). */
+export const syncCreditPeriodConsumed = async (
+	contractId: string,
+	year: number,
+	month: number,
+) => {
+	const consumed = await countRegistrationsForCreditPeriod(
+		contractId,
+		year,
+		month,
+	);
+
+	const period = await prisma.smallGroupCreditPeriod.findUnique({
+		where: {
+			contractId_year_month: {
+				contractId,
+				year,
+				month,
+			},
+		},
+	});
+
+	if (!period) {
+		return consumed;
+	}
+
+	if (period.consumed !== consumed) {
+		await prisma.smallGroupCreditPeriod.update({
+			where: { id: period.id },
+			data: { consumed },
+		});
+	}
+
+	return consumed;
+};

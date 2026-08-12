@@ -1,6 +1,7 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { ClientSmallGroupPlanningSession } from "@/lib/types/client-planning.types";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -33,12 +34,16 @@ interface Availability {
 interface ClientProfileProps {
 	client: Client;
 	plannings: PlanningWithContract[];
+	smallGroupSessions: ClientSmallGroupPlanningSession[];
+	remainingSmallGroupCredits: number;
 	availabilities: Availability[];
 }
 
 export const ClientProfile: React.FC<ClientProfileProps> = ({
 	client,
 	plannings,
+	smallGroupSessions,
+	remainingSmallGroupCredits,
 	availabilities,
 }) => {
 	const router = useRouter();
@@ -217,6 +222,8 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 										<ClientPlanningList
 											key={refreshKey}
 											plannings={plannings}
+											smallGroupSessions={smallGroupSessions}
+											remainingSmallGroupCredits={remainingSmallGroupCredits}
 											onPlanningUpdate={handlePlanningUpdate}
 										/>
 									</TabsContent>

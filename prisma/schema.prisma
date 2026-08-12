@@ -42,7 +42,8 @@ model User {
   offers         Offer[]        @relation("CoachOffers")
   availabilities Availability[]
 
-  smallGroupSessions SmallGroupSession[] @relation("CoachSmallGroupSessions")
+  smallGroupSessions      SmallGroupSession[]      @relation("CoachSmallGroupSessions")
+  smallGroupRegistrations SmallGroupRegistration[] @relation("ClientSmallGroupRegistrations")
 
   // Offre sélectionnée par l'utilisateur
   selectedOffer   Offer?  @relation("UserSelectedOffer", fields: [selectedOfferId], references: [id])
@@ -219,6 +220,7 @@ model Contract {
   plannings                 Planning[]
   payments                  Payment[]
   smallGroupCreditPeriods   SmallGroupCreditPeriod[]
+  smallGroupRegistrations   SmallGroupRegistration[]
 
   createdAt DateTime? @default(now())
   updatedAt DateTime? @updatedAt
@@ -248,14 +250,33 @@ model SmallGroupSession {
   startAt     DateTime
   location    String
   description String                  @db.Text
-  maxCapacity Int
-  status      SmallGroupSessionStatus @default(SCHEDULED)
+  maxCapacity   Int
+  status        SmallGroupSessionStatus @default(SCHEDULED)
+  registrations SmallGroupRegistration[]
 
   createdAt DateTime? @default(now())
   updatedAt DateTime? @updatedAt
 
   @@index([coachId])
   @@index([startAt])
+}
+
+model SmallGroupRegistration {
+  id         String            @id @default(cuid())
+  session    SmallGroupSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId  String
+  client     User              @relation("ClientSmallGroupRegistrations", fields: [clientId], references: [id], onDelete: Cascade)
+  clientId   String
+  contract   Contract          @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contractId String
+
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+
+  @@unique([sessionId, clientId])
+  @@index([clientId])
+  @@index([sessionId])
+  @@index([contractId])
 }
 
 model Planning {

@@ -33,6 +33,9 @@ const mapSessionToData = (session: {
 	description: string;
 	maxCapacity: number;
 	status: string;
+	_count?: {
+		registrations: number;
+	};
 }): SmallGroupSessionData => ({
 	id: session.id,
 	startAt: session.startAt,
@@ -40,7 +43,7 @@ const mapSessionToData = (session: {
 	description: session.description,
 	maxCapacity: session.maxCapacity,
 	status: session.status,
-	registrationCount: 0,
+	registrationCount: session._count?.registrations ?? 0,
 });
 
 const getAuthenticatedUser = async () => {
@@ -128,6 +131,25 @@ export async function getSmallGroupSessionDetailAction(sessionId: string) {
 
 		const session = await prisma.smallGroupSession.findUnique({
 			where: { id: sessionId },
+			include: {
+				registrations: {
+					include: {
+						client: {
+							select: {
+								id: true,
+								name: true,
+								lastName: true,
+								image: true,
+							},
+						},
+					},
+				},
+				_count: {
+					select: {
+						registrations: true,
+					},
+				},
+			},
 		});
 
 		if (!session) {
@@ -136,7 +158,12 @@ export async function getSmallGroupSessionDetailAction(sessionId: string) {
 
 		const detail: SmallGroupSessionDetail = {
 			...mapSessionToData(session),
-			participants: [],
+			participants: session.registrations.map((registration) => ({
+				id: registration.client.id,
+				name: registration.client.name,
+				lastName: registration.client.lastName,
+				image: registration.client.image,
+			})),
 		};
 
 		return { success: true as const, data: detail };
@@ -249,6 +276,13 @@ export async function getSmallGroupSessionsByCoachId(
 			where: {
 				coachId,
 				status: "SCHEDULED",
+			},
+			include: {
+				_count: {
+					select: {
+						registrations: true,
+					},
+				},
 			},
 			orderBy: {
 				startAt: "asc",

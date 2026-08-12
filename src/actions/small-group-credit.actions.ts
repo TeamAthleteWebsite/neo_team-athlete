@@ -4,6 +4,7 @@ import { getClientContractsAction } from "@/src/actions/contract.actions";
 import {
 	getCurrentCreditPeriod,
 	getOrCreateCurrentCreditPeriod,
+	syncCreditPeriodConsumed,
 } from "@/src/repositories/small-group-credit.repository";
 
 export interface SmallGroupCreditStatus {
@@ -33,6 +34,8 @@ export async function getSmallGroupCreditStatusAction(
 		}
 
 		const now = new Date();
+		const year = now.getFullYear();
+		const month = now.getMonth() + 1;
 		const contractStart = new Date(contract.startDate);
 		const contractEnd = new Date(contract.endDate);
 		const isContractActive = contractStart <= now && contractEnd >= now;
@@ -48,7 +51,7 @@ export async function getSmallGroupCreditStatusAction(
 
 		const allocatedThisMonth =
 			period?.allocated ?? contract.smallGroupCreditsPerMonth;
-		const consumed = period?.consumed ?? 0;
+		const consumed = await syncCreditPeriodConsumed(contract.id, year, month);
 		const expired = period?.expired ?? 0;
 		const remaining = Math.max(0, allocatedThisMonth - consumed - expired);
 
