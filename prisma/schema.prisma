@@ -244,14 +244,14 @@ model SmallGroupCreditPeriod {
 }
 
 model SmallGroupSession {
-  id          String                  @id @default(cuid())
-  coach       User                    @relation("CoachSmallGroupSessions", fields: [coachId], references: [id])
-  coachId     String
-  startAt     DateTime
-  location    String
-  description String                  @db.Text
+  id            String                   @id @default(cuid())
+  coach         User                     @relation("CoachSmallGroupSessions", fields: [coachId], references: [id])
+  coachId       String
+  startAt       DateTime
+  location      String
+  description   String                   @db.Text
   maxCapacity   Int
-  status        SmallGroupSessionStatus @default(SCHEDULED)
+  status        SmallGroupSessionStatus  @default(SCHEDULED)
   registrations SmallGroupRegistration[]
 
   createdAt DateTime? @default(now())
