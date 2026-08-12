@@ -6,23 +6,27 @@ import { formatDateInputValue } from "@/lib/utils/small-group-session.utils";
 import { X } from "lucide-react";
 import { type FC, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { SmallGroupRecurrenceFields } from "./SmallGroupRecurrenceFields";
 import { SmallGroupSessionFormFields } from "./SmallGroupSessionFormFields";
 
 interface CreateSmallGroupSessionPopupProps {
 	isOpen: boolean;
 	onClose: () => void;
 	defaultDate?: Date;
-	onSessionCreated: (session: SmallGroupSessionData) => void;
+	onSessionsCreated: (sessions: SmallGroupSessionData[]) => void;
 }
 
 export const CreateSmallGroupSessionPopup: FC<
 	CreateSmallGroupSessionPopupProps
-> = ({ isOpen, onClose, defaultDate, onSessionCreated }) => {
+> = ({ isOpen, onClose, defaultDate, onSessionsCreated }) => {
 	const [date, setDate] = useState("");
 	const [time, setTime] = useState("09:00");
 	const [location, setLocation] = useState("");
 	const [description, setDescription] = useState("");
 	const [maxCapacity, setMaxCapacity] = useState(6);
+	const [isRecurringEnabled, setIsRecurringEnabled] = useState(false);
+	const [numberOfWeeks, setNumberOfWeeks] = useState(1);
+	const [selectedDays, setSelectedDays] = useState<number[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	useEffect(() => {
@@ -35,10 +39,39 @@ export const CreateSmallGroupSessionPopup: FC<
 		setLocation("");
 		setDescription("");
 		setMaxCapacity(6);
+		setIsRecurringEnabled(false);
+		setNumberOfWeeks(1);
+		setSelectedDays([]);
 	}, [isOpen, defaultDate]);
+
+	const isRecurrenceValid = () => {
+		if (!isRecurringEnabled) {
+			return true;
+		}
+
+		return (
+			date !== "" && time !== "" && numberOfWeeks > 0 && selectedDays.length > 0
+		);
+	};
+
+	const handleToggleDay = (dayId: number) => {
+		setSelectedDays((previousDays) =>
+			previousDays.includes(dayId)
+				? previousDays.filter((id) => id !== dayId)
+				: [...previousDays, dayId],
+		);
+	};
 
 	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
+
+		if (isRecurringEnabled && !isRecurrenceValid()) {
+			toast.error(
+				"Pour activer la récurrence, veuillez sélectionner une date, une heure, un nombre de semaines supérieur à 0 et au moins un jour de la semaine",
+			);
+			return;
+		}
+
 		setIsSubmitting(true);
 
 		try {
@@ -51,6 +84,15 @@ export const CreateSmallGroupSessionPopup: FC<
 					location,
 					description,
 					maxCapacity,
+					...(isRecurringEnabled
+						? {
+								recurrence: {
+									enabled: true,
+									numberOfWeeks,
+									selectedDays,
+								},
+							}
+						: {}),
 				}),
 			});
 
@@ -63,11 +105,22 @@ export const CreateSmallGroupSessionPopup: FC<
 				return;
 			}
 
-			toast.success("Séance Small Group créée avec succès");
-			onSessionCreated({
-				...result.data,
-				startAt: new Date(result.data.startAt),
-			});
+			const createdSessions: SmallGroupSessionData[] = result.data.sessions.map(
+				(session: SmallGroupSessionData & { startAt: string }) => ({
+					...session,
+					startAt: new Date(session.startAt),
+				}),
+			);
+
+			if (createdSessions.length > 1) {
+				toast.success(
+					`${createdSessions.length} séances Small Group créées avec succès`,
+				);
+			} else {
+				toast.success("Séance Small Group créée avec succès");
+			}
+
+			onSessionsCreated(createdSessions);
 			onClose();
 		} catch (error) {
 			console.error("Erreur création séance Small Group:", error);
@@ -121,6 +174,15 @@ export const CreateSmallGroupSessionPopup: FC<
 						onMaxCapacityChange={setMaxCapacity}
 					/>
 
+					<SmallGroupRecurrenceFields
+						isEnabled={isRecurringEnabled}
+						numberOfWeeks={numberOfWeeks}
+						selectedDays={selectedDays}
+						onEnabledChange={setIsRecurringEnabled}
+						onNumberOfWeeksChange={setNumberOfWeeks}
+						onToggleDay={handleToggleDay}
+					/>
+
 					<div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
 						<Button
 							type="button"
@@ -133,10 +195,16 @@ export const CreateSmallGroupSessionPopup: FC<
 						</Button>
 						<Button
 							type="submit"
-							disabled={isSubmitting}
+							disabled={
+								isSubmitting || (isRecurringEnabled && !isRecurrenceValid())
+							}
 							className="bg-cyan-600 hover:bg-cyan-700 text-white"
 						>
-							{isSubmitting ? "Création..." : "Créer la séance"}
+							{isSubmitting
+								? "Création..."
+								: isRecurringEnabled
+									? "Créer les séances"
+									: "Créer la séance"}
 						</Button>
 					</div>
 				</form>

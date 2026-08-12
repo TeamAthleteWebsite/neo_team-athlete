@@ -81,13 +81,18 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 		);
 	};
 
-	const handleSmallGroupSessionCreated = (session: SmallGroupSessionData) => {
+	const handleSmallGroupSessionsCreated = (
+		sessions: SmallGroupSessionData[],
+	) => {
 		setSmallGroupSessions((prevSessions) =>
-			[...prevSessions, session].sort(
+			[...prevSessions, ...sessions].sort(
 				(a, b) => a.startAt.getTime() - b.startAt.getTime(),
 			),
 		);
-		setSelectedDate(new Date(session.startAt));
+
+		if (sessions.length > 0) {
+			setSelectedDate(new Date(sessions[0].startAt));
+		}
 	};
 
 	const handleSmallGroupSessionClick = (session: SmallGroupCalendarSession) => {
@@ -213,7 +218,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 				isOpen={isCreatePopupOpen}
 				onClose={() => setIsCreatePopupOpen(false)}
 				defaultDate={selectedDate}
-				onSessionCreated={handleSmallGroupSessionCreated}
+				onSessionsCreated={handleSmallGroupSessionsCreated}
 			/>
 
 			<SmallGroupSessionDetailPopup

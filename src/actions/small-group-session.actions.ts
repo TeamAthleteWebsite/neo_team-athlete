@@ -6,6 +6,7 @@ import type {
 	SmallGroupSessionData,
 	SmallGroupSessionDetail,
 } from "@/lib/types/calendar-session.types";
+import { generateRecurringSessionDates } from "@/lib/utils/recurrence.utils";
 import {
 	type CreateSmallGroupSessionInput,
 	type UpdateSmallGroupSessionInput,
@@ -91,22 +92,62 @@ export async function createSmallGroupSessionAction(
 	try {
 		const user = await getAuthenticatedUser();
 		const data = createSmallGroupSessionSchema.parse(input);
-		const startAt = buildSessionDateTime(data.date, data.time);
+		const sessionData = {
+			coachId: user.id,
+			location: data.location.trim(),
+			description: data.description.trim(),
+			maxCapacity: data.maxCapacity,
+			status: "SCHEDULED" as const,
+		};
 
+		if (data.recurrence?.enabled) {
+			const baseDate = new Date(`${data.date}T00:00:00`);
+
+			if (Number.isNaN(baseDate.getTime())) {
+				return { success: false as const, error: "Date invalide" };
+			}
+
+			const sessionDates = generateRecurringSessionDates(
+				baseDate,
+				data.time,
+				data.recurrence.numberOfWeeks,
+				data.recurrence.selectedDays,
+			);
+
+			const sessions = await prisma.$transaction(
+				sessionDates.map((startAt) =>
+					prisma.smallGroupSession.create({
+						data: {
+							...sessionData,
+							startAt,
+						},
+					}),
+				),
+			);
+
+			return {
+				success: true as const,
+				data: {
+					sessions: sessions.map(mapSessionToData),
+					count: sessions.length,
+				},
+			};
+		}
+
+		const startAt = buildSessionDateTime(data.date, data.time);
 		const session = await prisma.smallGroupSession.create({
 			data: {
-				coachId: user.id,
+				...sessionData,
 				startAt,
-				location: data.location.trim(),
-				description: data.description.trim(),
-				maxCapacity: data.maxCapacity,
-				status: "SCHEDULED",
 			},
 		});
 
 		return {
 			success: true as const,
-			data: mapSessionToData(session),
+			data: {
+				sessions: [mapSessionToData(session)],
+				count: 1,
+			},
 		};
 	} catch (error) {
 		console.error(

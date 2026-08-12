@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { generateRecurringSessionDates } from "@/lib/utils/recurrence.utils";
 
 /** Durée par défaut d'une séance (1 h), alignée sur l'affichage du planning admin */
 const PLANNING_SESSION_DURATION_MS = 60 * 60 * 1000;
@@ -192,44 +193,13 @@ export const addRecurringPlanningSessions = async (
 		}
 
 		// Générer toutes les dates de séances
-		const sessionsToCreate: Date[] = [];
+		const uniqueSessions = generateRecurringSessionDates(
+			startDate,
+			startTime,
+			numberOfWeeks,
+			selectedDays,
+		);
 		const now = new Date();
-		const baseDate = new Date(startDate);
-		const startDayOfWeek = baseDate.getDay();
-
-		// Pour chaque semaine (0 à numberOfWeeks-1)
-		for (let week = 0; week < numberOfWeeks; week++) {
-			// Pour chaque jour sélectionné
-			for (const targetDayOfWeek of selectedDays) {
-				// Calculer le décalage pour atteindre le jour cible
-				// Si le jour cible est dans le passé de la semaine de départ, on prend celui de la semaine suivante
-				let daysToAdd = targetDayOfWeek - startDayOfWeek;
-				if (daysToAdd < 0) {
-					daysToAdd += 7;
-				}
-
-				// Ajouter le nombre de semaines
-				daysToAdd += week * 7;
-
-				// Créer la date de la séance
-				const sessionDate = new Date(baseDate);
-				sessionDate.setDate(baseDate.getDate() + daysToAdd);
-
-				// Définir l'heure de début
-				const sessionDateTime = new Date(sessionDate);
-				sessionDateTime.setHours(startHour, startMinute, 0, 0);
-
-				// Ajouter la séance
-				sessionsToCreate.push(sessionDateTime);
-			}
-		}
-
-		// Trier les dates pour éviter les doublons et organiser
-		const uniqueSessions = Array.from(
-			new Set(sessionsToCreate.map((d) => d.getTime())),
-		)
-			.map((time) => new Date(time))
-			.sort((a, b) => a.getTime() - b.getTime());
 
 		// Créer toutes les séances en une seule transaction
 		const createdSessions = await prisma.$transaction(
