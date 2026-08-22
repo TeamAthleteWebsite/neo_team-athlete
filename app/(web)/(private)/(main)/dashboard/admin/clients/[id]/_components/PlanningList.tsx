@@ -24,6 +24,8 @@ interface PlanningListProps {
 	onAddSession?: () => void;
 	onSessionDeleted?: (sessionId: string) => void;
 	clientName?: string;
+	/** false = aucun contrat actif/futur affiché dans Abonnement */
+	hasDisplayContract?: boolean;
 }
 
 export const PlanningList: React.FC<PlanningListProps> = ({
@@ -31,6 +33,7 @@ export const PlanningList: React.FC<PlanningListProps> = ({
 	onAddSession,
 	onSessionDeleted,
 	clientName = "le client",
+	hasDisplayContract = true,
 }) => {
 	const [selectedStatus, setSelectedStatus] = useState<string>(
 		PlanningStatus.PLANNED,
@@ -181,7 +184,9 @@ export const PlanningList: React.FC<PlanningListProps> = ({
 					<div className="text-center py-12">
 						<div className="text-white/60 text-lg">
 							{selectedStatus === "all"
-								? "Aucune séance planifiée"
+								? hasDisplayContract
+									? "Aucune séance planifiée"
+									: "Aucun abonnement à afficher"
 								: "Aucune séance trouvée pour le statut sélectionné"}
 						</div>
 					</div>

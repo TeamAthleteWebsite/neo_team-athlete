@@ -1,13 +1,15 @@
 "use client";
 
-import { getClientContractsAction } from "@/src/actions/contract.actions";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
 import { BanknoteArrowUp, BanknoteX, HandCoins } from "lucide-react";
 import { useEffect, useState } from "react";
+import { type ClientDisplayContract } from "../../_components/types";
 
 interface PaymentTabProps {
 	plannings: PlanningWithContract[];
 	clientId?: string;
+	/** Contrat affiché dans Abonnement — seule source pour la grille de paiements */
+	displayContract: ClientDisplayContract | null;
 	onPaymentValidated?: () => void;
 }
 
@@ -40,17 +42,10 @@ interface MonthlyPaymentData {
 	paymentId?: string;
 }
 
-interface ContractData {
-	id: string;
-	startDate: Date | string;
-	endDate: Date | string;
-	amount: number;
-	clientId: string;
-}
-
 export const PaymentTab: React.FC<PaymentTabProps> = ({
 	plannings,
 	clientId,
+	displayContract,
 	onPaymentValidated,
 }) => {
 	const [payments, setPayments] = useState<Payment[]>([]);
@@ -58,9 +53,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 	const [processingPayment, setProcessingPayment] = useState<string | null>(
 		null,
 	);
-	const [contract, setContract] = useState<ContractData | null>(null);
 
-	// Fonction pour obtenir le nom du mois en français
 	const getMonthName = (monthIndex: number): string => {
 		const months = [
 			"Janvier",
@@ -79,108 +72,79 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 		return months[monthIndex];
 	};
 
-	// Fonction pour charger le contrat
-	const loadContract = async () => {
-		if (!clientId) return;
-
-		try {
-			const result = await getClientContractsAction(clientId);
-			if (result.success && result.data) {
-				const contractData = result.data as ContractData;
-				setContract({
-					id: contractData.id,
-					startDate: contractData.startDate,
-					endDate: contractData.endDate,
-					amount: contractData.amount,
-					clientId: contractData.clientId,
-				});
-			}
-		} catch (error) {
-			console.error("Erreur lors du chargement du contrat:", error);
-		}
-	};
-
-	// Fonction pour charger les paiements
 	const loadPayments = async () => {
 		try {
 			setLoading(true);
-			const targetClientId = clientId || plannings[0]?.contract.clientId;
+
+			if (!displayContract) {
+				setPayments([]);
+				return;
+			}
+
+			const targetClientId =
+				clientId || displayContract.clientId || plannings[0]?.contract.clientId;
 			if (!targetClientId) {
 				console.error("ClientId manquant");
 				setPayments([]);
 				return;
 			}
 
-			console.log("Chargement des paiements pour clientId:", targetClientId);
 			const response = await fetch(`/api/payment?clientId=${targetClientId}`);
 			if (response.ok) {
 				const result = await response.json();
 				if (result.success) {
-					console.log("Paiements chargés:", result.data);
-					setPayments(result.data);
+					const contractPayments = (result.data as Payment[]).filter(
+						(payment) => payment.contractId === displayContract.id,
+					);
+					setPayments(contractPayments);
 				} else {
 					console.error("Erreur dans la réponse API:", result.error);
+					setPayments([]);
 				}
 			} else {
 				const error = await response.json();
 				console.error("Erreur HTTP:", error);
+				setPayments([]);
 			}
 		} catch (error) {
 			console.error("Erreur lors du chargement des paiements:", error);
+			setPayments([]);
 		} finally {
 			setLoading(false);
 		}
 	};
 
-	// Charger le contrat et les paiements au montage du composant
 	useEffect(() => {
-		const fetchData = async () => {
-			if (plannings.length === 0 && clientId) {
-				// Si pas de plannings, charger le contrat directement
-				await loadContract();
-			}
-			await loadPayments();
-		};
-		fetchData();
+		void loadPayments();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [plannings, clientId]);
+	}, [displayContract?.id, clientId]);
 
-	// Fonction pour calculer les données mensuelles de paiement
 	const calculateMonthlyPaymentData = (): MonthlyPaymentData[] => {
-		// Récupérer les informations du contrat depuis plannings ou depuis l'état
-		const contractData =
-			plannings.length > 0
-				? plannings[0]?.contract
-				: contract
-					? {
-							id: contract.id,
-							clientId: contract.clientId,
-							startDate: contract.startDate,
-							endDate: contract.endDate,
-							amount: contract.amount,
-						}
-					: null;
-
-		if (!contractData || !contractData.amount) return [];
+		if (!displayContract || !displayContract.amount) return [];
 
 		const contractStartDate =
-			contractData.startDate instanceof Date
-				? contractData.startDate
-				: new Date(contractData.startDate);
+			displayContract.startDate instanceof Date
+				? displayContract.startDate
+				: new Date(displayContract.startDate);
+		const contractEndDate =
+			displayContract.endDate instanceof Date
+				? displayContract.endDate
+				: new Date(displayContract.endDate);
 		const now = new Date();
+		const rangeEnd = contractEndDate < now ? contractEndDate : now;
 
-		// Créer un Map pour regrouper les paiements par mois
 		const monthlyMap = new Map<string, MonthlyPaymentData>();
 
-		// Initialiser tous les mois du contrat jusqu'au mois en cours
 		const startMonth = contractStartDate.getMonth();
 		const startYear = contractStartDate.getFullYear();
+		const endMonth = rangeEnd.getMonth();
+		const endYear = rangeEnd.getFullYear();
 		const currentMonth = now.getMonth();
 		const currentYear = now.getFullYear();
 
-		for (let year = startYear; year <= currentYear; year++) {
+		for (let year = startYear; year <= endYear; year++) {
 			const monthStart = year === startYear ? startMonth : 0;
-			const monthEnd = year === currentYear ? currentMonth : 11;
+			const monthEnd = year === endYear ? endMonth : 11;
 
 			for (let month = monthStart; month <= monthEnd; month++) {
 				const key = `${year}-${month}`;
@@ -192,7 +156,7 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 					month: getMonthName(month),
 					year,
 					monthIndex: month,
-					amount: contractData.amount || 0,
+					amount: displayContract.amount || 0,
 					isPaid: false,
 					isPastMonth,
 					isCurrentMonth,
@@ -200,7 +164,6 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 			}
 		}
 
-		// Marquer les mois payés
 		payments.forEach((payment) => {
 			const paymentDate = new Date(payment.paymentDate);
 			const year = paymentDate.getFullYear();
@@ -216,50 +179,31 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 		});
 
 		return Array.from(monthlyMap.values()).sort((a, b) => {
-			if (a.year !== b.year) return b.year - a.year; // Tri décroissant par année
-			return b.monthIndex - a.monthIndex; // Tri décroissant par mois
+			if (a.year !== b.year) return b.year - a.year;
+			return b.monthIndex - a.monthIndex;
 		});
 	};
 
-	// Fonction pour gérer le clic sur un mois
 	const handleMonthClick = async (monthData: MonthlyPaymentData) => {
-		if (monthData.isPaid || processingPayment) return;
+		if (monthData.isPaid || processingPayment || !displayContract) return;
+
+		if (!displayContract.amount) {
+			console.error("Contrat ou montant manquant:", displayContract);
+			return;
+		}
 
 		try {
 			setProcessingPayment(`${monthData.year}-${monthData.monthIndex}`);
 
-			const contractData =
-				plannings.length > 0
-					? plannings[0]?.contract
-					: contract
-						? {
-								id: contract.id,
-								clientId: contract.clientId,
-								startDate: contract.startDate,
-								endDate: contract.endDate,
-								amount: contract.amount,
-							}
-						: null;
-
-			if (!contractData || !contractData.amount) {
-				console.error("Contrat ou montant manquant:", contractData);
-				return;
-			}
-
-			// Calculer le premier jour du mois sur lequel l'utilisateur a cliqué
 			const firstDayOfMonth = new Date(monthData.year, monthData.monthIndex, 1);
-
-			// Set the hour to 12:00:00
 			firstDayOfMonth.setHours(12, 0, 0, 0);
 
 			const paymentData = {
-				contractId: contractData.id,
+				contractId: displayContract.id,
 				amount: monthData.amount || 0,
 				paymentDate: firstDayOfMonth.toISOString(),
 				comment: `Paiement mensuel - ${monthData.month} ${monthData.year}`,
 			};
-
-			console.log("Sending payment data:", paymentData);
 
 			const response = await fetch("/api/payment", {
 				method: "POST",
@@ -283,7 +227,6 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 		}
 	};
 
-	// Fonction pour obtenir l'icône appropriée
 	const getPaymentIcon = (monthData: MonthlyPaymentData) => {
 		if (monthData.isPaid) {
 			return (
@@ -298,7 +241,6 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 		return <HandCoins className="w-5 h-5 sm:w-7 sm:h-7 text-white/60" />;
 	};
 
-	// Fonction pour obtenir la classe CSS du conteneur
 	const getContainerClass = (monthData: MonthlyPaymentData) => {
 		if (monthData.isPaid) {
 			return "bg-white/5 backdrop-blur-sm rounded-xl border border-green-500/30 overflow-hidden";
@@ -311,7 +253,6 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 		return "bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden";
 	};
 
-	// Fonction pour obtenir la classe CSS du header
 	const getHeaderClass = (monthData: MonthlyPaymentData) => {
 		if (monthData.isPaid) {
 			return "p-4 flex items-center justify-between hover:bg-green-500/10 transition-colors cursor-pointer";
@@ -336,11 +277,21 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 		);
 	}
 
+	if (!displayContract) {
+		return (
+			<div className="text-center py-8 sm:py-12">
+				<div className="text-white/60 text-base sm:text-lg px-4">
+					Aucune donnée pour cet abonnement
+				</div>
+			</div>
+		);
+	}
+
 	if (monthlyData.length === 0) {
 		return (
 			<div className="text-center py-8 sm:py-12">
 				<div className="text-white/60 text-base sm:text-lg px-4">
-					Aucun contrat trouvé
+					Aucune échéance de paiement pour le moment
 				</div>
 			</div>
 		);
@@ -354,13 +305,29 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 
 				return (
 					<div key={monthKey} className={getContainerClass(monthData)}>
-						{/* En-tête du mois */}
 						<div
 							className={getHeaderClass(monthData)}
 							onClick={() =>
 								!monthData.isPaid &&
 								!isProcessing &&
 								handleMonthClick(monthData)
+							}
+							onKeyDown={(e) => {
+								if (
+									(e.key === "Enter" || e.key === " ") &&
+									!monthData.isPaid &&
+									!isProcessing
+								) {
+									e.preventDefault();
+									void handleMonthClick(monthData);
+								}
+							}}
+							role="button"
+							tabIndex={monthData.isPaid || isProcessing ? -1 : 0}
+							aria-label={
+								monthData.isPaid
+									? `${monthData.month} ${monthData.year} — payé`
+									: `Marquer comme payé — ${monthData.month} ${monthData.year}`
 							}
 						>
 							<div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 flex-1 min-w-[1px]">
@@ -385,7 +352,6 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 									})()}
 							</div>
 
-							{/* Icône de paiement */}
 							<div className="flex items-center gap-2 flex-shrink-0">
 								{isProcessing ? (
 									<div className="w-5 h-5 sm:w-7 sm:h-7 border-2 border-white/60 border-t-transparent rounded-full animate-spin"></div>

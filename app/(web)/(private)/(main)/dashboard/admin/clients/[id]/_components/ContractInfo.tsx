@@ -10,7 +10,10 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { getClientContractsAction } from "@/src/actions/contract.actions";
+import {
+	type ClientContractListItem,
+	getClientContractsListAction,
+} from "@/src/actions/contract.actions";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
 import {
 	type SmallGroupCreditStatus,
@@ -23,15 +26,21 @@ import {
 	DollarSign,
 	Dumbbell,
 	Package,
+	Plus,
 	Trash2,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { type ClientDisplayContract } from "../../_components/types";
+import { ContractSelector } from "./ContractSelector";
 
 interface ContractInfoProps {
 	clientId: string;
 	plannings: PlanningWithContract[];
-	onContractUpdate?: (hasContractData: boolean) => void;
+	/** null = appliquer la sélection par défaut après chargement */
+	selectedContractId: string | null;
+	onSelectedContractIdChange: (contractId: string | null) => void;
+	onContractUpdate?: (contract: ClientDisplayContract | null) => void;
 	onOpenOfferPopup?: () => void;
 	refreshKey?: number;
 }
@@ -70,15 +79,42 @@ interface Payment {
 	};
 }
 
+const toContractData = (item: ClientContractListItem): ContractData => ({
+	id: item.id,
+	startDate:
+		item.startDate instanceof Date ? item.startDate : new Date(item.startDate),
+	endDate: item.endDate instanceof Date ? item.endDate : new Date(item.endDate),
+	totalSessions: item.totalSessions,
+	amount: item.amount,
+	status: item.status,
+	offer: item.offer,
+});
+
+const toDisplayContract = (
+	item: ClientContractListItem,
+	clientId: string,
+): ClientDisplayContract => ({
+	id: item.id,
+	clientId,
+	startDate: item.startDate,
+	endDate: item.endDate,
+	totalSessions: item.totalSessions,
+	amount: item.amount,
+	temporalStatus: item.temporalStatus,
+	programName: item.programName,
+});
+
 export const ContractInfo: React.FC<ContractInfoProps> = ({
 	clientId,
 	plannings,
+	selectedContractId,
+	onSelectedContractIdChange,
 	onContractUpdate,
 	onOpenOfferPopup,
 	refreshKey,
 }) => {
+	const [contracts, setContracts] = useState<ClientContractListItem[]>([]);
 	const [contractData, setContractData] = useState<ContractData | null>(null);
-	const [contractType, setContractType] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [payments, setPayments] = useState<Payment[]>([]);
@@ -87,23 +123,48 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 	const [smallGroupCreditStatus, setSmallGroupCreditStatus] =
 		useState<SmallGroupCreditStatus | null>(null);
 
+	const canCreateContract = useMemo(
+		() => !contracts.some((contract) => contract.temporalStatus === "active"),
+		[contracts],
+	);
+
+	const handleOpenOfferPopup = () => {
+		onOpenOfferPopup?.();
+	};
+
+	const applySelectedContract = (
+		list: ClientContractListItem[],
+		contractId: string | null,
+	) => {
+		if (list.length === 0 || !contractId) {
+			setContractData(null);
+			onContractUpdate?.(null);
+			return;
+		}
+
+		const selected =
+			list.find((contract) => contract.id === contractId) ?? list[0];
+
+		setContractData(toContractData(selected));
+		onContractUpdate?.(toDisplayContract(selected, clientId));
+	};
+
 	const loadPayments = async () => {
 		try {
-			const targetClientId = clientId || plannings[0]?.contract.clientId;
-			if (!targetClientId) {
+			if (!clientId) {
 				setPayments([]);
 				return;
 			}
 
-			const response = await fetch(`/api/payment?clientId=${targetClientId}`);
+			const response = await fetch(`/api/payment?clientId=${clientId}`);
 			if (response.ok) {
 				const result = await response.json();
 				if (result.success) {
 					setPayments(result.data);
 				}
 			}
-		} catch (error) {
-			console.error("Erreur lors du chargement des paiements:", error);
+		} catch (loadError) {
+			console.error("Erreur lors du chargement des paiements:", loadError);
 		}
 	};
 
@@ -113,75 +174,81 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 			if (result.success) {
 				setSmallGroupCreditStatus(result.data);
 			}
-		} catch (error) {
+		} catch (loadError) {
 			console.error(
 				"Erreur lors du chargement des crédits Small Group:",
-				error,
+				loadError,
 			);
 		}
 	};
 
-	const loadContractData = async () => {
+	const loadContracts = async () => {
 		setIsLoading(true);
 		setError(null);
 
 		try {
-			const result = await getClientContractsAction(clientId);
+			const result = await getClientContractsListAction(clientId);
 
-			if (result.success && result.data) {
-				// Convertir les dates de string à Date si nécessaire
-				const contract = result.data as {
-					id: string;
-					startDate: Date | string;
-					endDate: Date | string;
-					totalSessions: number;
-					amount: number;
-					status: string;
-					offer: {
-						program: {
-							name: string;
-							type: string;
-						};
-						price: number;
-						duration: number;
-					};
-				};
-				const contractDataWithDates: ContractData = {
-					...contract,
-					startDate:
-						contract.startDate instanceof Date
-							? contract.startDate
-							: new Date(contract.startDate),
-					endDate:
-						contract.endDate instanceof Date
-							? contract.endDate
-							: new Date(contract.endDate),
-				};
-				setContractData(contractDataWithDates);
-				setContractType(result.type || null);
-				onContractUpdate?.(true);
-			} else {
+			if (!result.success) {
+				setContracts([]);
 				setContractData(null);
-				setContractType(null);
-				onContractUpdate?.(false);
-				if (result.error) {
-					setError(result.error);
-				}
+				onSelectedContractIdChange(null);
+				onContractUpdate?.(null);
+				setError(result.error || "Erreur lors du chargement des contrats");
+				return;
 			}
+
+			const list = result.data;
+			setContracts(list);
+
+			if (list.length === 0) {
+				onSelectedContractIdChange(null);
+				applySelectedContract([], null);
+				return;
+			}
+
+			const resolvedId =
+				selectedContractId && list.some((c) => c.id === selectedContractId)
+					? selectedContractId
+					: result.defaultContractId;
+
+			if (resolvedId !== selectedContractId) {
+				onSelectedContractIdChange(resolvedId);
+			}
+
+			applySelectedContract(list, resolvedId);
 		} catch {
 			setError("Erreur lors du chargement des contrats");
-			onContractUpdate?.(false);
+			setContracts([]);
+			onSelectedContractIdChange(null);
+			onContractUpdate?.(null);
 		} finally {
 			setIsLoading(false);
 		}
 	};
 
 	useEffect(() => {
-		loadContractData();
-		loadPayments();
-		loadSmallGroupCreditStatus();
+		void loadContracts();
+		void loadPayments();
+		void loadSmallGroupCreditStatus();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [clientId, plannings, refreshKey]);
+	}, [clientId, refreshKey]);
+
+	useEffect(() => {
+		if (isLoading || contracts.length === 0) return;
+		if (!selectedContractId) return;
+
+		const stillExists = contracts.some((c) => c.id === selectedContractId);
+		if (!stillExists) return;
+
+		applySelectedContract(contracts, selectedContractId);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [selectedContractId]);
+
+	const handleSelectContract = (contractId: string) => {
+		onSelectedContractIdChange(contractId);
+		applySelectedContract(contracts, contractId);
+	};
 
 	const handleDeleteContract = async () => {
 		if (!contractData) return;
@@ -207,7 +274,8 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 						"L'abonnement et toutes les données associées ont été supprimés avec succès.",
 				);
 				setIsDeleteDialogOpen(false);
-				await loadContractData();
+				onSelectedContractIdChange(null);
+				await loadContracts();
 				await loadPayments();
 				await loadSmallGroupCreditStatus();
 			} else {
@@ -215,8 +283,11 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 					result.error || "Erreur lors de la suppression de l'abonnement",
 				);
 			}
-		} catch (error) {
-			console.error("Erreur lors de la suppression de l'abonnement:", error);
+		} catch (deleteError) {
+			console.error(
+				"Erreur lors de la suppression de l'abonnement:",
+				deleteError,
+			);
 			toast.error(
 				"Une erreur est survenue lors de la suppression de l'abonnement",
 			);
@@ -236,41 +307,37 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 	const calculateDuration = (startDate: Date, endDate: Date) => {
 		const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
 		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-		// Calculer le nombre de mois (approximatif)
 		const months = Math.floor(diffDays / 30);
 
 		if (months === 0) {
 			return "Sans engagement";
-		} else {
-			return `${months} mois`;
 		}
+
+		return `${months} mois`;
 	};
 
-	// Fonction pour calculer le nombre total de séances du contrat
-	const calculateTotalSessions = (contractData: ContractData) => {
+	const calculateTotalSessions = (data: ContractData) => {
 		const diffTime = Math.abs(
-			contractData.endDate.getTime() - contractData.startDate.getTime(),
+			data.endDate.getTime() - data.startDate.getTime(),
 		);
 		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 		const months = Math.floor(diffDays / 30);
 
 		if (months === 0) {
-			return contractData.totalSessions; // Pour les contrats sans engagement
+			return data.totalSessions;
 		}
 
-		return contractData.totalSessions * months;
+		return data.totalSessions * months;
 	};
 
-	// Fonction pour calculer les séances restantes en utilisant la même logique que l'onglet Séances
-	const calculateRemainingSessions = (contractData: ContractData) => {
-		const totalSessions = calculateTotalSessions(contractData);
+	const calculateRemainingSessions = (data: ContractData) => {
+		const totalSessions = calculateTotalSessions(data);
+		const contractPlannings = plannings.filter(
+			(planning) => planning.contract.id === data.id,
+		);
 
-		// Calculer la somme des séances affichées par mois (même logique que getDisplaySessionCount)
 		const now = new Date();
-		const contractStartDate = new Date(contractData.startDate);
-
-		// Créer un Map pour regrouper les séances par mois
+		const contractStartDate = new Date(data.startDate);
 		const monthlyMap = new Map<
 			string,
 			{
@@ -280,7 +347,6 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 			}
 		>();
 
-		// Initialiser tous les mois du contrat jusqu'au mois en cours
 		const startMonth = contractStartDate.getMonth();
 		const startYear = contractStartDate.getFullYear();
 		const currentMonth = now.getMonth();
@@ -294,7 +360,7 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 				const key = `${year}-${month}`;
 				monthlyMap.set(key, {
 					totalSessions: 0,
-					contractTotalSessions: contractData.totalSessions,
+					contractTotalSessions: data.totalSessions,
 					isMonthCompleted:
 						year < currentYear ||
 						(year === currentYear && month < currentMonth),
@@ -302,8 +368,7 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 			}
 		}
 
-		// Compter les séances par mois
-		plannings.forEach((planning) => {
+		contractPlannings.forEach((planning) => {
 			const sessionDate = new Date(planning.date);
 			const year = sessionDate.getFullYear();
 			const month = sessionDate.getMonth();
@@ -315,7 +380,6 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 			}
 		});
 
-		// Calculer la somme des séances affichées (même logique que getDisplaySessionCount)
 		let totalDisplayedSessions = 0;
 		Array.from(monthlyMap.values()).forEach((monthData) => {
 			const { totalSessions, contractTotalSessions, isMonthCompleted } =
@@ -323,37 +387,27 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 
 			if (!isMonthCompleted) {
 				totalDisplayedSessions += totalSessions;
+			} else if (totalSessions < contractTotalSessions) {
+				totalDisplayedSessions += contractTotalSessions;
 			} else {
-				// Mois terminé - si moins que le total du contrat, afficher le total du contrat
-				if (totalSessions < contractTotalSessions) {
-					totalDisplayedSessions += contractTotalSessions;
-				} else {
-					totalDisplayedSessions += totalSessions;
-				}
+				totalDisplayedSessions += totalSessions;
 			}
 		});
 
 		return Math.max(0, totalSessions - totalDisplayedSessions);
 	};
 
-	// Fonction pour calculer le montant restant à payer
-	const calculateRemainingAmount = (contractData: ContractData) => {
-		if (!contractData || contractData.offer.duration <= 0) {
-			return 0; // Pour les contrats sans engagement ou prix unique
+	const calculateRemainingAmount = (data: ContractData) => {
+		if (!data || data.offer.duration <= 0) {
+			return 0;
 		}
 
-		const totalContractAmount =
-			contractData.amount * contractData.offer.duration;
+		const totalContractAmount = data.amount * data.offer.duration;
+		const paidAmount = payments
+			.filter((payment) => payment.contractId === data.id)
+			.reduce((sum, payment) => sum + payment.amount, 0);
 
-		// Calculer le montant déjà payé en faisant la somme des montants dans la table Payment
-		// pour le contrat actif (même contrat que celui utilisé pour la liste de planning)
-		const paidAmount = payments.reduce((sum, payment) => {
-			return sum + payment.amount;
-		}, 0);
-
-		const remainingAmount = totalContractAmount - paidAmount;
-
-		return Math.max(0, remainingAmount);
+		return Math.max(0, totalContractAmount - paidAmount);
 	};
 
 	if (isLoading) {
@@ -364,7 +418,7 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 						Abonnement
 					</h3>
 					<div className="animate-pulse">
-						<div className="h-4 bg-white/20 rounded w-3/4 mx-auto mb-2"></div>
+						<div className="h-10 bg-white/20 rounded w-full max-w-md mx-auto mb-2"></div>
 						<div className="h-4 bg-white/20 rounded w-1/2 mx-auto"></div>
 					</div>
 				</div>
@@ -385,7 +439,7 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 		);
 	}
 
-	if (!contractData) {
+	if (contracts.length === 0 || !contractData || !selectedContractId) {
 		return (
 			<div className="pt-4 sm:pt-6 border-t border-white/10">
 				<div className="text-center space-y-3 sm:space-y-4">
@@ -399,8 +453,10 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 						Veuillez sélectionner un programme
 					</p>
 					<button
-						onClick={onOpenOfferPopup}
-						className="bg-blue-500 hover:bg-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base"
+						type="button"
+						onClick={handleOpenOfferPopup}
+						className="mx-auto w-full max-w-xs sm:w-auto bg-blue-500 hover:bg-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base"
+						aria-label="Sélectionner un programme pour créer un abonnement"
 					>
 						Sélection
 					</button>
@@ -412,26 +468,34 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 	return (
 		<div className="pt-4 sm:pt-6 border-t border-white/10">
 			<div className="space-y-4 sm:space-y-6">
-				{/* Header avec type de contrat */}
-				<div className="text-center">
-					<h3 className="text-white text-xl sm:text-2xl font-bold mb-2">
+				<div className="text-center space-y-3 sm:space-y-4">
+					<h3 className="text-white text-xl sm:text-2xl font-bold">
 						Abonnement
 					</h3>
-					{contractType === "active" && (
-						<span className="inline-block bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-medium border border-green-500/30">
-							Contrat en cours
-						</span>
-					)}
-					{contractType === "future" && (
-						<span className="inline-block bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-sm font-medium border border-blue-500/30">
-							Contrat futur
-						</span>
+					<ContractSelector
+						contracts={contracts}
+						selectedContractId={selectedContractId}
+						onSelect={handleSelectContract}
+					/>
+					{canCreateContract && (
+						<div className="px-1 sm:px-0">
+							<button
+								type="button"
+								onClick={handleOpenOfferPopup}
+								className="inline-flex w-full max-w-md sm:w-auto sm:min-w-[220px] items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base"
+								aria-label="Créer un nouvel abonnement"
+							>
+								<Plus
+									className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
+									aria-hidden
+								/>
+								Nouvel abonnement
+							</button>
+						</div>
 					)}
 				</div>
 
-				{/* Informations du contrat */}
 				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-					{/* Type de programme */}
 					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
 						<Package className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 flex-shrink-0" />
 						<div className="min-w-0 flex-1">
@@ -444,7 +508,6 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 						</div>
 					</div>
 
-					{/* Durée du contrat */}
 					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
 						<Clock className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 flex-shrink-0" />
 						<div className="min-w-0 flex-1">
@@ -457,7 +520,6 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 						</div>
 					</div>
 
-					{/* Date de début */}
 					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
 						<Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 flex-shrink-0" />
 						<div className="min-w-0 flex-1">
@@ -468,7 +530,6 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 						</div>
 					</div>
 
-					{/* Date de fin */}
 					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
 						<Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 flex-shrink-0" />
 						<div className="min-w-0 flex-1">
@@ -479,7 +540,6 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 						</div>
 					</div>
 
-					{/* Nombre de sessions */}
 					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
 						<Dumbbell className="w-4 h-4 sm:w-5 sm:h-5 text-green-400 flex-shrink-0" />
 						<div className="min-w-0 flex-1">
@@ -490,7 +550,6 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 						</div>
 					</div>
 
-					{/* Séances restantes */}
 					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
 						<Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 flex-shrink-0" />
 						<div className="min-w-0 flex-1">
@@ -503,7 +562,6 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 						</div>
 					</div>
 
-					{/* Prix par mois */}
 					<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
 						<DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0" />
 						<div className="min-w-0 flex-1">
@@ -515,7 +573,6 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 						</div>
 					</div>
 
-					{/* Montant restant à payer */}
 					{contractData.offer.duration > 0 && (
 						<div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
 							<CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 flex-shrink-0" />
@@ -537,7 +594,6 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 					/>
 				)}
 
-				{/* Prix total du contrat */}
 				<div className="text-center p-3 sm:p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
 					<p className="text-blue-400 text-xs sm:text-sm mb-1">
 						Prix total du contrat
@@ -549,7 +605,6 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 					</p>
 				</div>
 
-				{/* Bouton de suppression - uniquement si le contrat est ACTIVE */}
 				{contractData.status === "ACTIVE" && (
 					<div className="flex justify-center pt-2">
 						<Button
@@ -564,7 +619,6 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 				)}
 			</div>
 
-			{/* Dialog de confirmation de suppression */}
 			<Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
 				<DialogContent className="sm:max-w-[425px] bg-gray-900 border-gray-700">
 					<DialogHeader>

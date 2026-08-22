@@ -6,8 +6,11 @@ import { type PlanningWithContract } from "@/src/actions/planning.actions";
 import { X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Client } from "../../_components/types";
+import { useMemo, useState } from "react";
+import {
+	type Client,
+	type ClientDisplayContract,
+} from "../../_components/types";
 import {
 	AddSessionPopup,
 	ContractInfo,
@@ -29,12 +32,26 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 	const router = useRouter();
 	const { data: session } = useSession();
 	const [isOfferPopupOpen, setIsOfferPopupOpen] = useState(false);
-	const [, setHasContract] = useState(false);
+	const [selectedContractId, setSelectedContractId] = useState<string | null>(
+		null,
+	);
+	const [displayContract, setDisplayContract] =
+		useState<ClientDisplayContract | null>(null);
 	const [activeTab, setActiveTab] = useState("planning");
 	const [isAddSessionPopupOpen, setIsAddSessionPopupOpen] = useState(false);
 	const [plannings, setPlannings] =
 		useState<PlanningWithContract[]>(initialPlannings);
 	const [contractRefreshKey, setContractRefreshKey] = useState(0);
+
+	/** Séances liées uniquement au contrat sélectionné dans Abonnement */
+	const tabPlannings = useMemo(() => {
+		if (!displayContract) return [];
+		return plannings.filter(
+			(planning) => planning.contract.id === displayContract.id,
+		);
+	}, [plannings, displayContract]);
+
+	const canAddSession = displayContract?.temporalStatus === "active";
 
 	const handleClose = () => {
 		router.back();
@@ -49,16 +66,18 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 	};
 
 	const handleOfferSelect = async (_offerId: string) => {
-		// Rafraîchir les données après l'ajout d'un abonnement
+		setSelectedContractId(null);
 		await refreshPlannings();
-		// Forcer le rechargement de ContractInfo
 		setContractRefreshKey((prev) => prev + 1);
-		// Rafraîchir la page pour mettre à jour les données serveur
 		router.refresh();
 	};
 
-	const handleContractUpdate = (hasContractData: boolean) => {
-		setHasContract(hasContractData);
+	const handleContractUpdate = (contract: ClientDisplayContract | null) => {
+		setDisplayContract(contract);
+	};
+
+	const handleSelectedContractIdChange = (contractId: string | null) => {
+		setSelectedContractId(contractId);
 	};
 
 	const handlePaymentValidated = () => {
@@ -74,7 +93,6 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 	};
 
 	const handleSessionDeleted = (sessionId: string) => {
-		// Mettre à jour l'état local en filtrant la session supprimée
 		setPlannings((prevPlannings) =>
 			prevPlannings.filter((planning) => planning.id !== sessionId),
 		);
@@ -244,6 +262,10 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 										<ContractInfo
 											clientId={client.id}
 											plannings={plannings}
+											selectedContractId={selectedContractId}
+											onSelectedContractIdChange={
+												handleSelectedContractIdChange
+											}
 											onContractUpdate={handleContractUpdate}
 											onOpenOfferPopup={handleOpenOfferPopup}
 											refreshKey={contractRefreshKey}
@@ -284,24 +306,29 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 
 									<TabsContent value="planning" className="mt-4 sm:mt-6">
 										<PlanningList
-											plannings={plannings}
-											onAddSession={handleAddSession}
+											plannings={tabPlannings}
+											onAddSession={
+												canAddSession ? handleAddSession : undefined
+											}
 											onSessionDeleted={handleSessionDeleted}
 											clientName={getClientFullName()}
+											hasDisplayContract={Boolean(displayContract)}
 										/>
 									</TabsContent>
 
 									<TabsContent value="seances" className="mt-4 sm:mt-6">
 										<SessionsMonthlyView
-											plannings={plannings}
+											plannings={tabPlannings}
 											clientId={client.id}
+											displayContract={displayContract}
 										/>
 									</TabsContent>
 
 									<TabsContent value="paiement" className="mt-4 sm:mt-6">
 										<PaymentTab
-											plannings={plannings}
+											plannings={tabPlannings}
 											clientId={client.id}
+											displayContract={displayContract}
 											onPaymentValidated={handlePaymentValidated}
 										/>
 									</TabsContent>

@@ -1,16 +1,18 @@
 "use client";
 
-import { getClientContractsAction } from "@/src/actions/contract.actions";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { type ClientDisplayContract } from "../../_components/types";
 
 interface SessionsMonthlyViewProps {
 	plannings: PlanningWithContract[];
 	clientId?: string;
+	/** Contrat affiché dans Abonnement — seule source pour la grille mensuelle */
+	displayContract: ClientDisplayContract | null;
 }
 
 interface WeeklyData {
-	weekNumber: number; // Maintenant c'est le jour du premier jour de la semaine dans le mois
+	weekNumber: number;
 	daysInMonth: number;
 	totalSessions: number;
 	plannedSessions: number;
@@ -33,51 +35,12 @@ interface MonthlyData {
 	weeks: WeeklyData[];
 }
 
-interface ContractData {
-	id: string;
-	startDate: Date | string;
-	endDate: Date | string;
-	totalSessions: number;
-	clientId: string;
-}
-
 export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 	plannings,
-	clientId,
+	displayContract,
 }) => {
 	const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set());
-	const [contract, setContract] = useState<ContractData | null>(null);
 
-	// Fonction pour charger le contrat
-	const loadContract = async () => {
-		if (!clientId) return;
-
-		try {
-			const result = await getClientContractsAction(clientId);
-			if (result.success && result.data) {
-				const contractData = result.data as ContractData;
-				setContract({
-					id: contractData.id,
-					startDate: contractData.startDate,
-					endDate: contractData.endDate,
-					totalSessions: contractData.totalSessions,
-					clientId: contractData.clientId,
-				});
-			}
-		} catch (error) {
-			console.error("Erreur lors du chargement du contrat:", error);
-		}
-	};
-
-	// Charger le contrat au montage si nécessaire
-	useEffect(() => {
-		if (plannings.length === 0 && clientId) {
-			loadContract();
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [plannings, clientId]);
-
-	// Fonction pour gérer l'expansion des mois
 	const handleMonthToggle = (monthKey: string) => {
 		const newExpandedMonths = new Set(expandedMonths);
 		if (newExpandedMonths.has(monthKey)) {
@@ -88,32 +51,27 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 		setExpandedMonths(newExpandedMonths);
 	};
 
-	// Fonction pour calculer les semaines d'un mois
 	const calculateWeeksForMonth = (
 		year: number,
 		month: number,
-		plannings: PlanningWithContract[],
+		monthPlannings: PlanningWithContract[],
 	): WeeklyData[] => {
 		const weeks: WeeklyData[] = [];
 
-		// Obtenir le premier et dernier jour du mois
 		const firstDayOfMonth = new Date(year, month, 1);
 		const lastDayOfMonth = new Date(year, month + 1, 0);
 
-		// Obtenir le premier lundi du mois (ou le premier jour si c'est un lundi)
 		const firstMonday = new Date(firstDayOfMonth);
 		const dayOfWeek = firstDayOfMonth.getDay();
-		const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Dimanche = 0, donc 6 jours pour arriver au lundi
+		const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 		firstMonday.setDate(firstDayOfMonth.getDate() - daysToMonday);
 
-		// Calculer toutes les semaines qui touchent ce mois
 		const currentWeekStart = new Date(firstMonday);
 
 		while (currentWeekStart <= lastDayOfMonth) {
 			const currentWeekEnd = new Date(currentWeekStart);
 			currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
 
-			// Calculer combien de jours de cette semaine appartiennent au mois
 			const weekStart = new Date(
 				Math.max(currentWeekStart.getTime(), firstDayOfMonth.getTime()),
 			);
@@ -125,16 +83,14 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 					(weekEnd.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24),
 				) + 1;
 
-			// Obtenir le jour du premier jour de la semaine qui appartient au mois
 			const firstDayInMonth = weekStart.getDate();
 
-			// Compter les séances pour cette semaine
-			const weekSessions = plannings.filter((planning) => {
+			const weekSessions = monthPlannings.filter((planning) => {
 				const sessionDate = new Date(planning.date);
 				return sessionDate >= currentWeekStart && sessionDate <= currentWeekEnd;
 			});
 
-			const weeklyData: WeeklyData = {
+			weeks.push({
 				weekNumber: firstDayInMonth,
 				daysInMonth,
 				totalSessions: weekSessions.length,
@@ -145,18 +101,14 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 					.length,
 				startDate: new Date(currentWeekStart),
 				endDate: new Date(currentWeekEnd),
-			};
+			});
 
-			weeks.push(weeklyData);
-
-			// Passer à la semaine suivante
 			currentWeekStart.setDate(currentWeekStart.getDate() + 7);
 		}
 
 		return weeks;
 	};
 
-	// Fonction pour obtenir le nom du mois en français
 	const getMonthName = (monthIndex: number): string => {
 		const months = [
 			"Janvier",
@@ -175,42 +127,32 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 		return months[monthIndex];
 	};
 
-	// Fonction pour calculer les données mensuelles
 	const calculateMonthlyData = (): MonthlyData[] => {
-		// Récupérer les informations du contrat depuis plannings ou depuis l'état
-		const contractData =
-			plannings.length > 0
-				? plannings[0]?.contract
-				: contract
-					? {
-							id: contract.id,
-							clientId: contract.clientId,
-							startDate: contract.startDate,
-							endDate: contract.endDate,
-							totalSessions: contract.totalSessions,
-						}
-					: null;
-
-		if (!contractData) return [];
+		if (!displayContract) return [];
 
 		const contractStartDate =
-			contractData.startDate instanceof Date
-				? contractData.startDate
-				: new Date(contractData.startDate);
+			displayContract.startDate instanceof Date
+				? displayContract.startDate
+				: new Date(displayContract.startDate);
+		const contractEndDate =
+			displayContract.endDate instanceof Date
+				? displayContract.endDate
+				: new Date(displayContract.endDate);
 		const now = new Date();
+		const rangeEnd = contractEndDate < now ? contractEndDate : now;
 
-		// Créer un Map pour regrouper les séances par mois
 		const monthlyMap = new Map<string, MonthlyData>();
 
-		// Initialiser tous les mois du contrat jusqu'au mois en cours
 		const startMonth = contractStartDate.getMonth();
 		const startYear = contractStartDate.getFullYear();
+		const endMonth = rangeEnd.getMonth();
+		const endYear = rangeEnd.getFullYear();
 		const currentMonth = now.getMonth();
 		const currentYear = now.getFullYear();
 
-		for (let year = startYear; year <= currentYear; year++) {
+		for (let year = startYear; year <= endYear; year++) {
 			const monthStart = year === startYear ? startMonth : 0;
-			const monthEnd = year === currentYear ? currentMonth : 11;
+			const monthEnd = year === endYear ? endMonth : 11;
 
 			for (let month = monthStart; month <= monthEnd; month++) {
 				const key = `${year}-${month}`;
@@ -222,7 +164,7 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 					plannedSessions: 0,
 					doneSessions: 0,
 					cancelledSessions: 0,
-					contractTotalSessions: contractData.totalSessions,
+					contractTotalSessions: displayContract.totalSessions,
 					isMonthCompleted:
 						year < currentYear ||
 						(year === currentYear && month < currentMonth),
@@ -231,7 +173,6 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 			}
 		}
 
-		// Compter les séances par mois
 		plannings.forEach((planning) => {
 			const sessionDate = new Date(planning.date);
 			const year = sessionDate.getFullYear();
@@ -256,7 +197,6 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 			}
 		});
 
-		// Calculer les semaines pour chaque mois
 		Array.from(monthlyMap.values()).forEach((monthData) => {
 			monthData.weeks = calculateWeeksForMonth(
 				monthData.year,
@@ -266,32 +206,28 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 		});
 
 		return Array.from(monthlyMap.values()).sort((a, b) => {
-			if (a.year !== b.year) return b.year - a.year; // Tri décroissant par année
-			return b.monthIndex - a.monthIndex; // Tri décroissant par mois
+			if (a.year !== b.year) return b.year - a.year;
+			return b.monthIndex - a.monthIndex;
 		});
 	};
 
-	// Fonction pour déterminer la couleur du nombre de séances
 	const getSessionCountColor = (monthlyData: MonthlyData): string => {
 		const { totalSessions, contractTotalSessions, isMonthCompleted } =
 			monthlyData;
 
 		if (!isMonthCompleted) {
-			// Mois en cours ou futur - affichage normal
 			return "text-white";
 		}
 
-		// Mois terminé - appliquer les règles métier
 		if (totalSessions < contractTotalSessions) {
-			return "text-red-400"; // Rouge si moins que le total du contrat
+			return "text-red-400";
 		} else if (totalSessions === contractTotalSessions) {
-			return "text-green-400"; // Vert si égal au total du contrat
+			return "text-green-400";
 		} else {
-			return "text-white"; // Blanc si plus que le total du contrat
+			return "text-white";
 		}
 	};
 
-	// Fonction pour obtenir le nombre de séances à afficher
 	const getDisplaySessionCount = (monthlyData: MonthlyData): number => {
 		const { totalSessions, contractTotalSessions, isMonthCompleted } =
 			monthlyData;
@@ -300,7 +236,6 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 			return totalSessions;
 		}
 
-		// Mois terminé - si moins que le total du contrat, afficher le total du contrat
 		if (totalSessions < contractTotalSessions) {
 			return contractTotalSessions;
 		}
@@ -310,11 +245,21 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 
 	const monthlyData = calculateMonthlyData();
 
+	if (!displayContract) {
+		return (
+			<div className="text-center py-8 sm:py-12">
+				<div className="text-white/60 text-base sm:text-lg px-4">
+					Aucune donnée pour cet abonnement
+				</div>
+			</div>
+		);
+	}
+
 	if (monthlyData.length === 0) {
 		return (
 			<div className="text-center py-8 sm:py-12">
 				<div className="text-white/60 text-base sm:text-lg px-4">
-					Aucune séance planifiée
+					Aucune séance pour cet abonnement
 				</div>
 			</div>
 		);
@@ -331,10 +276,19 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 						key={monthKey}
 						className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden"
 					>
-						{/* En-tête du mois */}
 						<div
 							className="p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 hover:bg-white/10 transition-colors cursor-pointer"
 							onClick={() => handleMonthToggle(monthKey)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter" || e.key === " ") {
+									e.preventDefault();
+									handleMonthToggle(monthKey);
+								}
+							}}
+							role="button"
+							tabIndex={0}
+							aria-expanded={isExpanded}
+							aria-label={`${monthData.month} ${monthData.year} — ${getDisplaySessionCount(monthData)} séances`}
 						>
 							<div className="flex items-center gap-4">
 								<div className="text-white font-medium text-lg">
@@ -347,7 +301,6 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 								</div>
 							</div>
 
-							{/* Indicateur de statut du mois */}
 							<div className="flex items-center gap-2 flex-shrink-0">
 								{monthData.isMonthCompleted ? (
 									<span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
@@ -358,7 +311,6 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 										En cours
 									</span>
 								)}
-								{/* Icône d'expansion */}
 								<div
 									className={`text-white/60 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
 								>
@@ -367,7 +319,6 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 							</div>
 						</div>
 
-						{/* Détails du mois (si nécessaire pour debug ou informations supplémentaires) */}
 						{monthData.totalSessions > 0 && (
 							<div className="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-white/10">
 								<div className="flex flex-wrap items-center gap-3 sm:gap-6 text-xs sm:text-sm text-white/70 mt-2">
@@ -375,7 +326,6 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 										<div className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>
 										<span>{monthData.doneSessions} terminées</span>
 									</div>
-									{/* Afficher les séances prévues seulement pour les mois en cours ou futurs */}
 									{!monthData.isMonthCompleted &&
 										monthData.plannedSessions > 0 && (
 											<div className="flex items-center gap-2">
@@ -393,7 +343,6 @@ export const SessionsMonthlyView: React.FC<SessionsMonthlyViewProps> = ({
 							</div>
 						)}
 
-						{/* Vue détaillée des semaines */}
 						{isExpanded && (
 							<div className="border-t border-white/10">
 								<div className="p-3 sm:p-4 bg-white/5">

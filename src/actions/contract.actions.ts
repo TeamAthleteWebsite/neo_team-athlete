@@ -1,6 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import {
+	type ContractTemporalStatus,
+	getContractTemporalStatus,
+	pickDefaultContractId,
+	sortContractsForSelector,
+} from "@/lib/utils/contract-temporal.utils";
 
 interface CreateContractData {
 	clientId: string;
@@ -173,6 +179,101 @@ export async function getClientContractsAction(clientId: string) {
 		console.error("Erreur lors de la récupération des contrats:", error);
 		return {
 			success: false,
+			error:
+				error instanceof Error
+					? error.message
+					: "Une erreur est survenue lors de la récupération des contrats",
+		};
+	}
+}
+
+export interface ClientContractListItem {
+	id: string;
+	clientId: string;
+	startDate: Date;
+	endDate: Date;
+	totalSessions: number;
+	amount: number;
+	status: string;
+	temporalStatus: ContractTemporalStatus;
+	programName: string;
+	offer: {
+		program: {
+			name: string;
+			type: string;
+		};
+		price: number;
+		duration: number;
+	};
+}
+
+/** Liste tous les contrats du client, triés pour le sélecteur Abonnement */
+export async function getClientContractsListAction(clientId: string) {
+	try {
+		const today = new Date();
+
+		const contracts = await prisma.contract.findMany({
+			where: { clientId },
+			include: {
+				offer: {
+					include: {
+						program: {
+							select: {
+								name: true,
+								type: true,
+							},
+						},
+					},
+				},
+			},
+			orderBy: [{ startDate: "asc" }],
+		});
+
+		const withStatus: ClientContractListItem[] = contracts.map((contract) => {
+			const temporalStatus = getContractTemporalStatus(
+				contract.startDate,
+				contract.endDate,
+				today,
+			);
+
+			return {
+				id: contract.id,
+				clientId: contract.clientId,
+				startDate: contract.startDate,
+				endDate: contract.endDate,
+				totalSessions: contract.totalSessions,
+				amount: contract.amount,
+				status: contract.status,
+				temporalStatus,
+				programName: contract.offer.program.name,
+				offer: {
+					program: {
+						name: contract.offer.program.name,
+						type: contract.offer.program.type,
+					},
+					price: contract.offer.price,
+					duration: contract.offer.duration,
+				},
+			};
+		});
+
+		const sorted = sortContractsForSelector(withStatus);
+		const defaultContractId = pickDefaultContractId(sorted);
+
+		return {
+			success: true as const,
+			data: sorted,
+			defaultContractId,
+		};
+	} catch (error) {
+		console.error(
+			"Erreur lors de la récupération de la liste des contrats:",
+			error,
+		);
+		return {
+			success: false as const,
+			data: [] as ClientContractListItem[],
+			defaultContractId: null as string | null,
 			error:
 				error instanceof Error
 					? error.message
