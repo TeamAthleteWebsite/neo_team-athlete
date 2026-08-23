@@ -1,6 +1,12 @@
 "use client";
 
 import { ContractSmallGroupCreditsInfo } from "@/components/features/small-group/ContractSmallGroupCreditsInfo";
+import {
+	calculateMonthlyQuotaBalance,
+	calculateTotalMonthlyQuotaAllocation,
+	getContractMonthsFromDates,
+} from "@/lib/utils/contract-monthly-quota.utils";
+import { getContractTemporalStatus } from "@/lib/utils/contract-temporal.utils";
 import { getClientContractsAction } from "@/src/actions/contract.actions";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
 import {
@@ -15,7 +21,7 @@ import {
 	Dumbbell,
 	Package,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface ContractInfoClientProps {
 	clientId: string;
@@ -66,6 +72,17 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 	const [payments, setPayments] = useState<Payment[]>([]);
 	const [smallGroupCreditStatus, setSmallGroupCreditStatus] =
 		useState<SmallGroupCreditStatus | null>(null);
+
+	const contractTemporalStatus = useMemo(() => {
+		if (!contractData) {
+			return undefined;
+		}
+
+		return getContractTemporalStatus(
+			contractData.startDate,
+			contractData.endDate,
+		);
+	}, [contractData]);
 
 	const loadPayments = async () => {
 		try {
@@ -158,93 +175,28 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 		}
 	};
 
-	// Fonction pour calculer le nombre total de séances du contrat
 	const calculateTotalSessions = (contractData: ContractData) => {
-		const diffTime = Math.abs(
-			contractData.endDate.getTime() - contractData.startDate.getTime(),
+		const months = getContractMonthsFromDates(
+			contractData.startDate,
+			contractData.endDate,
 		);
-		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-		const months = Math.floor(diffDays / 30);
-
-		if (months === 0) {
-			return contractData.totalSessions; // Pour les contrats sans engagement
-		}
-
-		return contractData.totalSessions * months;
+		return calculateTotalMonthlyQuotaAllocation(
+			contractData.totalSessions,
+			months,
+		);
 	};
 
-	// Fonction pour calculer les séances restantes en utilisant la même logique que l'onglet Séances
 	const calculateRemainingSessions = (contractData: ContractData) => {
 		const totalSessions = calculateTotalSessions(contractData);
 
-		// Calculer la somme des séances affichées par mois (même logique que getDisplaySessionCount)
-		const now = new Date();
-		const contractStartDate = new Date(contractData.startDate);
-
-		// Créer un Map pour regrouper les séances par mois
-		const monthlyMap = new Map<
-			string,
-			{
-				totalSessions: number;
-				contractTotalSessions: number;
-				isMonthCompleted: boolean;
-			}
-		>();
-
-		// Initialiser tous les mois du contrat jusqu'au mois en cours
-		const startMonth = contractStartDate.getMonth();
-		const startYear = contractStartDate.getFullYear();
-		const currentMonth = now.getMonth();
-		const currentYear = now.getFullYear();
-
-		for (let year = startYear; year <= currentYear; year++) {
-			const monthStart = year === startYear ? startMonth : 0;
-			const monthEnd = year === currentYear ? currentMonth : 11;
-
-			for (let month = monthStart; month <= monthEnd; month++) {
-				const key = `${year}-${month}`;
-				monthlyMap.set(key, {
-					totalSessions: 0,
-					contractTotalSessions: contractData.totalSessions,
-					isMonthCompleted:
-						year < currentYear ||
-						(year === currentYear && month < currentMonth),
-				});
-			}
-		}
-
-		// Compter les séances par mois
-		plannings.forEach((planning) => {
-			const sessionDate = new Date(planning.date);
-			const year = sessionDate.getFullYear();
-			const month = sessionDate.getMonth();
-			const key = `${year}-${month}`;
-
-			const monthlyData = monthlyMap.get(key);
-			if (monthlyData) {
-				monthlyData.totalSessions++;
-			}
+		const balance = calculateMonthlyQuotaBalance({
+			contractStartDate: contractData.startDate,
+			monthlyQuota: contractData.totalSessions,
+			totalAllocated: totalSessions,
+			usageDates: plannings.map((planning) => new Date(planning.date)),
 		});
 
-		// Calculer la somme des séances affichées (même logique que getDisplaySessionCount)
-		let totalDisplayedSessions = 0;
-		Array.from(monthlyMap.values()).forEach((monthData) => {
-			const { totalSessions, contractTotalSessions, isMonthCompleted } =
-				monthData;
-
-			if (!isMonthCompleted) {
-				totalDisplayedSessions += totalSessions;
-			} else {
-				// Mois terminé - si moins que le total du contrat, afficher le total du contrat
-				if (totalSessions < contractTotalSessions) {
-					totalDisplayedSessions += contractTotalSessions;
-				} else {
-					totalDisplayedSessions += totalSessions;
-				}
-			}
-		});
-
-		return Math.max(0, totalSessions - totalDisplayedSessions);
+		return balance.remaining;
 	};
 
 	// Fonction pour calculer le montant restant à payer
@@ -437,6 +389,8 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 				{smallGroupCreditStatus && (
 					<ContractSmallGroupCreditsInfo
 						creditStatus={smallGroupCreditStatus}
+						temporalStatus={contractTemporalStatus}
+						contractStartDate={contractData.startDate}
 					/>
 				)}
 

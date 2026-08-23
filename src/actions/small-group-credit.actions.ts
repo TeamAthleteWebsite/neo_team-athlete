@@ -1,68 +1,96 @@
 "use server";
 
+import { prisma } from "@/lib/prisma";
+import type { SmallGroupCreditBalance } from "@/lib/utils/small-group-credit.utils";
 import { getClientContractsAction } from "@/src/actions/contract.actions";
-import {
-	getCurrentCreditPeriod,
-	getOrCreateCurrentCreditPeriod,
-	syncCreditPeriodConsumed,
-} from "@/src/repositories/small-group-credit.repository";
+import { getContractSmallGroupCreditBalance } from "@/src/repositories/small-group-credit.repository";
 
-export interface SmallGroupCreditStatus {
-	allocatedPerMonth: number;
-	consumed: number;
-	remaining: number;
+export type SmallGroupCreditStatus = SmallGroupCreditBalance;
+
+interface ContractWithSmallGroupCredits {
+	id: string;
+	clientId: string;
+	startDate: Date;
+	endDate: Date;
+	smallGroupCreditsPerMonth: number;
+	offerDuration: number;
 }
+
+const buildCreditStatusForContract = async (
+	contract: ContractWithSmallGroupCredits,
+): Promise<SmallGroupCreditStatus | null> => {
+	return getContractSmallGroupCreditBalance({
+		id: contract.id,
+		startDate: contract.startDate,
+		endDate: contract.endDate,
+		smallGroupCreditsPerMonth: contract.smallGroupCreditsPerMonth,
+		offerDuration: contract.offerDuration,
+	});
+};
 
 export async function getSmallGroupCreditStatusAction(
 	clientId: string,
+	contractId?: string,
 ): Promise<{
 	success: boolean;
 	data: SmallGroupCreditStatus | null;
 	error?: string;
 }> {
 	try {
-		const contractResult = await getClientContractsAction(clientId);
+		let contract: ContractWithSmallGroupCredits | null = null;
 
-		if (!contractResult.success || !contractResult.data) {
-			return { success: true, data: null };
+		if (contractId) {
+			const selectedContract = await prisma.contract.findFirst({
+				where: {
+					id: contractId,
+					clientId,
+				},
+				select: {
+					id: true,
+					clientId: true,
+					startDate: true,
+					endDate: true,
+					smallGroupCreditsPerMonth: true,
+					offer: {
+						select: {
+							duration: true,
+						},
+					},
+				},
+			});
+
+			if (!selectedContract) {
+				return { success: true, data: null };
+			}
+
+			contract = {
+				id: selectedContract.id,
+				clientId: selectedContract.clientId,
+				startDate: selectedContract.startDate,
+				endDate: selectedContract.endDate,
+				smallGroupCreditsPerMonth: selectedContract.smallGroupCreditsPerMonth,
+				offerDuration: selectedContract.offer.duration,
+			};
+		} else {
+			const contractResult = await getClientContractsAction(clientId);
+
+			if (!contractResult.success || !contractResult.data) {
+				return { success: true, data: null };
+			}
+
+			contract = {
+				id: contractResult.data.id,
+				clientId: contractResult.data.clientId,
+				startDate: contractResult.data.startDate,
+				endDate: contractResult.data.endDate,
+				smallGroupCreditsPerMonth:
+					contractResult.data.smallGroupCreditsPerMonth,
+				offerDuration: contractResult.data.offer.duration,
+			};
 		}
 
-		const contract = contractResult.data;
-
-		if (contract.smallGroupCreditsPerMonth <= 0) {
-			return { success: true, data: null };
-		}
-
-		const now = new Date();
-		const year = now.getFullYear();
-		const month = now.getMonth() + 1;
-		const contractStart = new Date(contract.startDate);
-		const contractEnd = new Date(contract.endDate);
-		const isContractActive = contractStart <= now && contractEnd >= now;
-
-		let period = await getCurrentCreditPeriod(contract.id);
-
-		if (isContractActive && !period) {
-			period = await getOrCreateCurrentCreditPeriod(
-				contract.id,
-				contract.smallGroupCreditsPerMonth,
-			);
-		}
-
-		const allocatedThisMonth =
-			period?.allocated ?? contract.smallGroupCreditsPerMonth;
-		const consumed = await syncCreditPeriodConsumed(contract.id, year, month);
-		const expired = period?.expired ?? 0;
-		const remaining = Math.max(0, allocatedThisMonth - consumed - expired);
-
-		return {
-			success: true,
-			data: {
-				allocatedPerMonth: contract.smallGroupCreditsPerMonth,
-				consumed,
-				remaining,
-			},
-		};
+		const data = await buildCreditStatusForContract(contract);
+		return { success: true, data };
 	} catch (error) {
 		console.error(
 			"Erreur lors de la récupération des crédits Small Group:",

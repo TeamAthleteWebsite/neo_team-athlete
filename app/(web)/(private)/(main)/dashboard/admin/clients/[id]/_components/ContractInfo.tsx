@@ -11,6 +11,11 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import {
+	calculateMonthlyQuotaBalance,
+	calculateTotalMonthlyQuotaAllocation,
+	getContractMonthsFromDates,
+} from "@/lib/utils/contract-monthly-quota.utils";
+import {
 	type ClientContractListItem,
 	getClientContractsListAction,
 } from "@/src/actions/contract.actions";
@@ -128,6 +133,15 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 		[contracts],
 	);
 
+	const selectedContractMeta = useMemo(
+		() =>
+			selectedContractId
+				? (contracts.find((contract) => contract.id === selectedContractId) ??
+					null)
+				: null,
+		[contracts, selectedContractId],
+	);
+
 	const handleOpenOfferPopup = () => {
 		onOpenOfferPopup?.();
 	};
@@ -168,17 +182,28 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 		}
 	};
 
-	const loadSmallGroupCreditStatus = async () => {
+	const loadSmallGroupCreditStatus = async (contractId: string | null) => {
+		if (!contractId) {
+			setSmallGroupCreditStatus(null);
+			return;
+		}
+
 		try {
-			const result = await getSmallGroupCreditStatusAction(clientId);
+			const result = await getSmallGroupCreditStatusAction(
+				clientId,
+				contractId,
+			);
 			if (result.success) {
 				setSmallGroupCreditStatus(result.data);
+			} else {
+				setSmallGroupCreditStatus(null);
 			}
 		} catch (loadError) {
 			console.error(
 				"Erreur lors du chargement des crédits Small Group:",
 				loadError,
 			);
+			setSmallGroupCreditStatus(null);
 		}
 	};
 
@@ -230,9 +255,13 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 	useEffect(() => {
 		void loadContracts();
 		void loadPayments();
-		void loadSmallGroupCreditStatus();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [clientId, refreshKey]);
+
+	useEffect(() => {
+		void loadSmallGroupCreditStatus(selectedContractId);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [clientId, selectedContractId, refreshKey]);
 
 	useEffect(() => {
 		if (isLoading || contracts.length === 0) return;
@@ -277,7 +306,6 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 				onSelectedContractIdChange(null);
 				await loadContracts();
 				await loadPayments();
-				await loadSmallGroupCreditStatus();
 			} else {
 				toast.error(
 					result.error || "Erreur lors de la suppression de l'abonnement",
@@ -317,17 +345,8 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 	};
 
 	const calculateTotalSessions = (data: ContractData) => {
-		const diffTime = Math.abs(
-			data.endDate.getTime() - data.startDate.getTime(),
-		);
-		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-		const months = Math.floor(diffDays / 30);
-
-		if (months === 0) {
-			return data.totalSessions;
-		}
-
-		return data.totalSessions * months;
+		const months = getContractMonthsFromDates(data.startDate, data.endDate);
+		return calculateTotalMonthlyQuotaAllocation(data.totalSessions, months);
 	};
 
 	const calculateRemainingSessions = (data: ContractData) => {
@@ -336,65 +355,14 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 			(planning) => planning.contract.id === data.id,
 		);
 
-		const now = new Date();
-		const contractStartDate = new Date(data.startDate);
-		const monthlyMap = new Map<
-			string,
-			{
-				totalSessions: number;
-				contractTotalSessions: number;
-				isMonthCompleted: boolean;
-			}
-		>();
-
-		const startMonth = contractStartDate.getMonth();
-		const startYear = contractStartDate.getFullYear();
-		const currentMonth = now.getMonth();
-		const currentYear = now.getFullYear();
-
-		for (let year = startYear; year <= currentYear; year++) {
-			const monthStart = year === startYear ? startMonth : 0;
-			const monthEnd = year === currentYear ? currentMonth : 11;
-
-			for (let month = monthStart; month <= monthEnd; month++) {
-				const key = `${year}-${month}`;
-				monthlyMap.set(key, {
-					totalSessions: 0,
-					contractTotalSessions: data.totalSessions,
-					isMonthCompleted:
-						year < currentYear ||
-						(year === currentYear && month < currentMonth),
-				});
-			}
-		}
-
-		contractPlannings.forEach((planning) => {
-			const sessionDate = new Date(planning.date);
-			const year = sessionDate.getFullYear();
-			const month = sessionDate.getMonth();
-			const key = `${year}-${month}`;
-
-			const monthlyData = monthlyMap.get(key);
-			if (monthlyData) {
-				monthlyData.totalSessions++;
-			}
+		const balance = calculateMonthlyQuotaBalance({
+			contractStartDate: data.startDate,
+			monthlyQuota: data.totalSessions,
+			totalAllocated: totalSessions,
+			usageDates: contractPlannings.map((planning) => new Date(planning.date)),
 		});
 
-		let totalDisplayedSessions = 0;
-		Array.from(monthlyMap.values()).forEach((monthData) => {
-			const { totalSessions, contractTotalSessions, isMonthCompleted } =
-				monthData;
-
-			if (!isMonthCompleted) {
-				totalDisplayedSessions += totalSessions;
-			} else if (totalSessions < contractTotalSessions) {
-				totalDisplayedSessions += contractTotalSessions;
-			} else {
-				totalDisplayedSessions += totalSessions;
-			}
-		});
-
-		return Math.max(0, totalSessions - totalDisplayedSessions);
+		return balance.remaining;
 	};
 
 	const calculateRemainingAmount = (data: ContractData) => {
@@ -591,6 +559,8 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 				{smallGroupCreditStatus && (
 					<ContractSmallGroupCreditsInfo
 						creditStatus={smallGroupCreditStatus}
+						temporalStatus={selectedContractMeta?.temporalStatus}
+						contractStartDate={contractData.startDate}
 					/>
 				)}
 

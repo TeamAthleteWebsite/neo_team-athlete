@@ -1,4 +1,51 @@
 import { prisma } from "@/lib/prisma";
+import {
+	type SmallGroupCreditBalance,
+	calculateSmallGroupCreditBalance,
+} from "@/lib/utils/small-group-credit.utils";
+
+export const getSmallGroupRegistrationSessionDates = async (
+	contractId: string,
+): Promise<Date[]> => {
+	const registrations = await prisma.smallGroupRegistration.findMany({
+		where: { contractId },
+		select: {
+			session: {
+				select: {
+					startAt: true,
+				},
+			},
+		},
+	});
+
+	return registrations.map((registration) => registration.session.startAt);
+};
+
+type ContractCreditInput = {
+	id: string;
+	startDate: Date;
+	endDate: Date;
+	smallGroupCreditsPerMonth: number;
+	offerDuration: number;
+};
+
+export const getContractSmallGroupCreditBalance = async (
+	contract: ContractCreditInput,
+): Promise<SmallGroupCreditBalance | null> => {
+	if (contract.smallGroupCreditsPerMonth <= 0) {
+		return null;
+	}
+
+	const usageDates = await getSmallGroupRegistrationSessionDates(contract.id);
+
+	return calculateSmallGroupCreditBalance({
+		creditsPerMonth: contract.smallGroupCreditsPerMonth,
+		startDate: contract.startDate,
+		endDate: contract.endDate,
+		offerDuration: contract.offerDuration,
+		usageDates,
+	});
+};
 
 export const getOrCreateCurrentCreditPeriod = async (
 	contractId: string,

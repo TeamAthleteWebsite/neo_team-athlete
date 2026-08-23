@@ -3,11 +3,11 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { SESSION_CANCELLATION_MIN_HOURS } from "@/lib/utils/session-cancellation.utils";
+import { calculateSmallGroupCreditBalance } from "@/lib/utils/small-group-credit.utils";
 import {
 	registerSmallGroupSessionSchema,
 	unregisterSmallGroupSessionSchema,
 } from "@/lib/validations/small-group-registration.schema";
-import { getCreditPeriodDateRange } from "@/src/repositories/small-group-credit.repository";
 import { headers } from "next/headers";
 
 const getAuthenticatedClient = async () => {
@@ -44,11 +44,64 @@ const getActiveContractWithCredits = async (clientId: string) => {
 		},
 		select: {
 			id: true,
+			startDate: true,
+			endDate: true,
 			smallGroupCreditsPerMonth: true,
+			offer: {
+				select: {
+					duration: true,
+				},
+			},
 		},
 		orderBy: {
 			startDate: "desc",
 		},
+	});
+};
+
+type TransactionClient = Parameters<
+	Parameters<typeof prisma.$transaction>[0]
+>[0];
+
+const getRegistrationSessionDatesInTransaction = async (
+	tx: TransactionClient,
+	contractId: string,
+): Promise<Date[]> => {
+	const registrations = await tx.smallGroupRegistration.findMany({
+		where: { contractId },
+		select: {
+			session: {
+				select: {
+					startAt: true,
+				},
+			},
+		},
+	});
+
+	return registrations.map((registration) => registration.session.startAt);
+};
+
+const getContractCreditBalanceInTransaction = async (
+	tx: TransactionClient,
+	contract: {
+		id: string;
+		startDate: Date;
+		endDate: Date;
+		smallGroupCreditsPerMonth: number;
+		offerDuration: number;
+	},
+) => {
+	const usageDates = await getRegistrationSessionDatesInTransaction(
+		tx,
+		contract.id,
+	);
+
+	return calculateSmallGroupCreditBalance({
+		creditsPerMonth: contract.smallGroupCreditsPerMonth,
+		startDate: contract.startDate,
+		endDate: contract.endDate,
+		offerDuration: contract.offerDuration,
+		usageDates,
 	});
 };
 
@@ -115,47 +168,15 @@ export async function registerToSmallGroupSessionAction(sessionId: string) {
 				};
 			}
 
-			const currentYear = now.getFullYear();
-			const currentMonth = now.getMonth() + 1;
-			const period =
-				(await tx.smallGroupCreditPeriod.findUnique({
-					where: {
-						contractId_year_month: {
-							contractId: contract.id,
-							year: currentYear,
-							month: currentMonth,
-						},
-					},
-				})) ??
-				(await tx.smallGroupCreditPeriod.create({
-					data: {
-						contractId: contract.id,
-						year: currentYear,
-						month: currentMonth,
-						allocated: contract.smallGroupCreditsPerMonth,
-					},
-				}));
-
-			const { start, end } = getCreditPeriodDateRange(
-				currentYear,
-				currentMonth,
-			);
-			const consumedCount = await tx.smallGroupRegistration.count({
-				where: {
-					contractId: contract.id,
-					createdAt: {
-						gte: start,
-						lte: end,
-					},
-				},
+			const creditBalance = await getContractCreditBalanceInTransaction(tx, {
+				id: contract.id,
+				startDate: contract.startDate,
+				endDate: contract.endDate,
+				smallGroupCreditsPerMonth: contract.smallGroupCreditsPerMonth,
+				offerDuration: contract.offer.duration,
 			});
 
-			const remainingCredits = Math.max(
-				0,
-				period.allocated - consumedCount - period.expired,
-			);
-
-			if (remainingCredits < 1) {
+			if (creditBalance.remaining < 1) {
 				return {
 					success: false as const,
 					error: "Vous n'avez plus de crédit Small Group disponible",
@@ -170,15 +191,14 @@ export async function registerToSmallGroupSessionAction(sessionId: string) {
 				},
 			});
 
-			const updatedConsumedCount = consumedCount + 1;
-			const updatedPeriod = await tx.smallGroupCreditPeriod.update({
-				where: { id: period.id },
-				data: {
-					consumed: updatedConsumedCount,
-				},
-			});
-
 			const registrationCount = session._count.registrations + 1;
+			const updatedBalance = await getContractCreditBalanceInTransaction(tx, {
+				id: contract.id,
+				startDate: contract.startDate,
+				endDate: contract.endDate,
+				smallGroupCreditsPerMonth: contract.smallGroupCreditsPerMonth,
+				offerDuration: contract.offer.duration,
+			});
 
 			return {
 				success: true as const,
@@ -186,12 +206,7 @@ export async function registerToSmallGroupSessionAction(sessionId: string) {
 					sessionId: data.sessionId,
 					registrationCount,
 					remainingSeats: Math.max(0, session.maxCapacity - registrationCount),
-					remainingCredits: Math.max(
-						0,
-						updatedPeriod.allocated -
-							updatedPeriod.consumed -
-							updatedPeriod.expired,
-					),
+					remainingCredits: updatedBalance.remaining,
 				},
 			};
 		});
@@ -212,43 +227,6 @@ export async function registerToSmallGroupSessionAction(sessionId: string) {
 		};
 	}
 }
-
-const syncCreditPeriodConsumedInTransaction = async (
-	tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
-	contractId: string,
-	year: number,
-	month: number,
-) => {
-	const { start, end } = getCreditPeriodDateRange(year, month);
-	const consumedCount = await tx.smallGroupRegistration.count({
-		where: {
-			contractId,
-			createdAt: {
-				gte: start,
-				lte: end,
-			},
-		},
-	});
-
-	const period = await tx.smallGroupCreditPeriod.findUnique({
-		where: {
-			contractId_year_month: {
-				contractId,
-				year,
-				month,
-			},
-		},
-	});
-
-	if (period && period.consumed !== consumedCount) {
-		await tx.smallGroupCreditPeriod.update({
-			where: { id: period.id },
-			data: { consumed: consumedCount },
-		});
-	}
-
-	return consumedCount;
-};
 
 export async function unregisterFromSmallGroupSessionAction(sessionId: string) {
 	try {
@@ -299,6 +277,21 @@ export async function unregisterFromSmallGroupSessionAction(sessionId: string) {
 						clientId: user.id,
 					},
 				},
+				include: {
+					contract: {
+						select: {
+							id: true,
+							startDate: true,
+							endDate: true,
+							smallGroupCreditsPerMonth: true,
+							offer: {
+								select: {
+									duration: true,
+								},
+							},
+						},
+					},
+				},
 			});
 
 			if (!registration) {
@@ -308,48 +301,18 @@ export async function unregisterFromSmallGroupSessionAction(sessionId: string) {
 				};
 			}
 
-			const contractId = registration.contractId;
-			const registrationDate = registration.createdAt ?? now;
-			const regYear = registrationDate.getFullYear();
-			const regMonth = registrationDate.getMonth() + 1;
-
 			await tx.smallGroupRegistration.delete({
 				where: { id: registration.id },
 			});
 
-			await syncCreditPeriodConsumedInTransaction(
-				tx,
-				contractId,
-				regYear,
-				regMonth,
-			);
-
-			const currentYear = now.getFullYear();
-			const currentMonth = now.getMonth() + 1;
-			const currentPeriod = await tx.smallGroupCreditPeriod.findUnique({
-				where: {
-					contractId_year_month: {
-						contractId,
-						year: currentYear,
-						month: currentMonth,
-					},
-				},
+			const creditBalance = await getContractCreditBalanceInTransaction(tx, {
+				id: registration.contract.id,
+				startDate: registration.contract.startDate,
+				endDate: registration.contract.endDate,
+				smallGroupCreditsPerMonth:
+					registration.contract.smallGroupCreditsPerMonth,
+				offerDuration: registration.contract.offer.duration,
 			});
-
-			let remainingCredits = 0;
-
-			if (currentPeriod) {
-				const currentConsumed = await syncCreditPeriodConsumedInTransaction(
-					tx,
-					contractId,
-					currentYear,
-					currentMonth,
-				);
-				remainingCredits = Math.max(
-					0,
-					currentPeriod.allocated - currentConsumed - currentPeriod.expired,
-				);
-			}
 
 			const registrationCount = session._count.registrations - 1;
 
@@ -359,7 +322,7 @@ export async function unregisterFromSmallGroupSessionAction(sessionId: string) {
 					sessionId: data.sessionId,
 					registrationCount,
 					remainingSeats: Math.max(0, session.maxCapacity - registrationCount),
-					remainingCredits,
+					remainingCredits: creditBalance.remaining,
 				},
 			};
 		});
