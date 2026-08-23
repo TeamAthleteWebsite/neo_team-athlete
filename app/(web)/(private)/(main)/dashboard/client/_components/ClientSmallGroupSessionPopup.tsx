@@ -74,10 +74,10 @@ export const ClientSmallGroupSessionPopup: FC<
 		if (session.isRegistered && canUnregister) {
 			return showUnregisterConfirm
 				? "Confirmez votre désinscription. 1 crédit Small Group vous sera recrédité."
-				: "Vous êtes inscrit à cette séance. Vous pouvez vous désinscrire jusqu'à 48h avant le début.";
+				: "Vous êtes inscrit à cette séance. Vous pouvez vous désinscrire jusqu'à 24h avant le début.";
 		}
 		if (session.isRegistered) {
-			return "Vous êtes inscrit à cette séance. La désinscription n'est plus possible moins de 48h avant le début.";
+			return "Vous êtes inscrit à cette séance. La désinscription n'est plus possible moins de 24h avant le début.";
 		}
 		if (isFull) {
 			return "Cette séance est complète.";

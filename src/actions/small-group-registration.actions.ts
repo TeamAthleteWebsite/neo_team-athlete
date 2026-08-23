@@ -266,7 +266,7 @@ export async function unregisterFromSmallGroupSessionAction(sessionId: string) {
 			if (hoursUntilSession < SESSION_CANCELLATION_MIN_HOURS) {
 				return {
 					success: false as const,
-					error: "La désinscription n'est possible que 48h avant la séance",
+					error: "La désinscription n'est possible que 24h avant la séance",
 				};
 			}
 

@@ -1,4 +1,4 @@
-export const SESSION_CANCELLATION_MIN_HOURS = 48;
+export const SESSION_CANCELLATION_MIN_HOURS = 24;
 
 export const getHoursUntilSession = (sessionDate: Date): number => {
 	const now = new Date();
