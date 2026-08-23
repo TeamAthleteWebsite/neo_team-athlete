@@ -340,17 +340,20 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
 			</div>
 
 			{/* Popup d'ajout de séance */}
-			<AddSessionPopup
-				isOpen={isAddSessionPopupOpen}
-				onClose={handleCloseAddSessionPopup}
-				clientId={client.id}
-				onSessionAdded={async () => {
-					// Rafraîchir la liste des plannings après l'ajout d'une séance
-					await refreshPlannings();
-					// Rafraîchir la page pour mettre à jour les données serveur
-					router.refresh();
-				}}
-			/>
+			{displayContract && (
+				<AddSessionPopup
+					isOpen={isAddSessionPopupOpen}
+					onClose={handleCloseAddSessionPopup}
+					clientId={client.id}
+					contractId={displayContract.id}
+					onSessionAdded={async () => {
+						// Rafraîchir la liste des plannings après l'ajout d'une séance
+						await refreshPlannings();
+						// Rafraîchir la page pour mettre à jour les données serveur
+						router.refresh();
+					}}
+				/>
+			)}
 
 			{/* Popup de sélection d'offres */}
 			{isOfferPopupOpen && coachId && (

@@ -6,6 +6,7 @@ import {
 } from "@/lib/utils/contract-monthly-quota.utils";
 import { getContractTemporalStatus } from "@/lib/utils/contract-temporal.utils";
 import { generateRecurringSessionDates } from "@/lib/utils/recurrence.utils";
+import { SESSION_CANCELLATION_MIN_HOURS } from "@/lib/utils/session-cancellation.utils";
 
 /** Durée par défaut d'une séance (1 h), alignée sur l'affichage du planning admin */
 const PLANNING_SESSION_DURATION_MS = 60 * 60 * 1000;
@@ -120,35 +121,92 @@ export const getPlanningsByClientId = async (
 	}
 };
 
-export const addPlanningSession = async (
+const resolveContractForSessionCreation = async (
 	clientId: string,
-	dateTime: Date,
-): Promise<void> => {
-	try {
-		// Trouver le contrat actif du client
-		const activeContract = await prisma.contract.findFirst({
+	contractId?: string | null,
+) => {
+	if (contractId) {
+		const contract = await prisma.contract.findFirst({
 			where: {
-				clientId: clientId,
-				status: "ACTIVE",
+				id: contractId,
+				clientId,
+				status: { not: "CANCELLED" },
+			},
+			select: {
+				id: true,
+				startDate: true,
+				endDate: true,
 			},
 		});
 
-		if (!activeContract) {
-			throw new Error("Aucun contrat actif trouvé pour ce client");
+		if (!contract) {
+			throw new Error("Contrat introuvable pour ce client");
 		}
+
+		const temporalStatus = getContractTemporalStatus(
+			contract.startDate,
+			contract.endDate,
+		);
+
+		if (temporalStatus !== "active") {
+			throw new Error(
+				"Les séances ne peuvent être créées que sur un contrat en cours",
+			);
+		}
+
+		return contract;
+	}
+
+	const now = new Date();
+	const activeContract = await prisma.contract.findFirst({
+		where: {
+			clientId,
+			status: { not: "CANCELLED" },
+			startDate: { lte: now },
+			endDate: { gte: now },
+		},
+		select: {
+			id: true,
+			startDate: true,
+			endDate: true,
+		},
+		orderBy: {
+			startDate: "desc",
+		},
+	});
+
+	if (!activeContract) {
+		throw new Error("Aucun contrat en cours trouvé pour ce client");
+	}
+
+	return activeContract;
+};
+
+export const addPlanningSession = async (
+	clientId: string,
+	dateTime: Date,
+	contractId?: string | null,
+): Promise<void> => {
+	try {
+		const contract = await resolveContractForSessionCreation(
+			clientId,
+			contractId,
+		);
 
 		const status = getPlanningStatusForSessionStart(dateTime);
 
-		// Créer la nouvelle séance
 		await prisma.planning.create({
 			data: {
-				contractId: activeContract.id,
+				contractId: contract.id,
 				date: dateTime,
 				status: status,
 			},
 		});
 	} catch (error) {
 		console.error("Erreur lors de l'ajout de la séance:", error);
+		if (error instanceof Error) {
+			throw error;
+		}
 		throw new Error("Impossible d'ajouter la séance");
 	}
 };
@@ -160,21 +218,20 @@ export const addRecurringPlanningSessions = async (
 	endTime: string | null,
 	numberOfWeeks: number,
 	selectedDays: number[],
+	contractId: string,
 ): Promise<{ success: boolean; count: number; error?: string }> => {
 	try {
-		// Trouver le contrat actif du client
-		const activeContract = await prisma.contract.findFirst({
-			where: {
-				clientId: clientId,
-				status: "ACTIVE",
-			},
-		});
-
-		if (!activeContract) {
+		let contract;
+		try {
+			contract = await resolveContractForSessionCreation(clientId, contractId);
+		} catch (error) {
 			return {
 				success: false,
 				count: 0,
-				error: "Aucun contrat actif trouvé pour ce client",
+				error:
+					error instanceof Error
+						? error.message
+						: "Contrat invalide pour la création de séances",
 			};
 		}
 
@@ -213,7 +270,7 @@ export const addRecurringPlanningSessions = async (
 				const status = getPlanningStatusForSessionStart(sessionDateTime, now);
 				return prisma.planning.create({
 					data: {
-						contractId: activeContract.id,
+						contractId: contract.id,
 						date: sessionDateTime,
 						status: status,
 					},
@@ -417,16 +474,16 @@ export const cancelPlanningSession = async (planningId: string) => {
 			};
 		}
 
-		// Vérifier que la séance est dans 48h ou plus
+		// Vérifier que la séance est dans 24h ou plus
 		const now = new Date();
 		const sessionDate = new Date(planning.date);
 		const hoursUntilSession =
 			(sessionDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
-		if (hoursUntilSession < 48) {
+		if (hoursUntilSession < SESSION_CANCELLATION_MIN_HOURS) {
 			return {
 				success: false,
-				error: "L'annulation n'est possible que 48h avant la séance",
+				error: "L'annulation n'est possible que 24h avant la séance",
 			};
 		}
 
