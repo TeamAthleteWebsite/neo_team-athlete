@@ -31,6 +31,8 @@ interface ContractInfoClientProps {
 	clientId: string;
 	plannings: PlanningWithContract[];
 	onContractUpdate?: (contract: ClientDisplayContract | null) => void;
+	/** Incrémenté après inscription/désinscription SG dans le planning */
+	smallGroupCreditRefreshKey?: number;
 }
 
 interface ContractData {
@@ -94,6 +96,7 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 	clientId,
 	plannings,
 	onContractUpdate,
+	smallGroupCreditRefreshKey = 0,
 }) => {
 	const [contracts, setContracts] = useState<ClientContractListItem[]>([]);
 	const [selectedContractId, setSelectedContractId] = useState<string | null>(
@@ -218,7 +221,7 @@ export const ContractInfoClient: React.FC<ContractInfoClientProps> = ({
 	useEffect(() => {
 		void loadSmallGroupCreditStatus(selectedContractId);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [clientId, selectedContractId]);
+	}, [clientId, selectedContractId, smallGroupCreditRefreshKey]);
 
 	useEffect(() => {
 		if (isLoading || contracts.length === 0) return;

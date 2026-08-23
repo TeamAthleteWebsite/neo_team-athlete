@@ -47,6 +47,8 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 	const router = useRouter();
 	const [activeTab, setActiveTab] = useState("planning");
 	const [refreshKey, setRefreshKey] = useState(0);
+	const [smallGroupCreditRefreshKey, setSmallGroupCreditRefreshKey] =
+		useState(0);
 	const [displayContract, setDisplayContract] =
 		useState<ClientDisplayContract | null>(null);
 	const [smallGroupSessions, setSmallGroupSessions] = useState<
@@ -97,6 +99,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 
 	const handlePlanningUpdate = () => {
 		setRefreshKey((prev) => prev + 1);
+		setSmallGroupCreditRefreshKey((prev) => prev + 1);
 		void loadSmallGroupSessions();
 		router.refresh();
 	};
@@ -228,6 +231,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 											clientId={client.id}
 											plannings={plannings}
 											onContractUpdate={setDisplayContract}
+											smallGroupCreditRefreshKey={smallGroupCreditRefreshKey}
 										/>
 									</div>
 								</div>
