@@ -1,11 +1,13 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { ClientDisplayContract } from "@/lib/types/client-display-contract.types";
 import type { ClientSmallGroupPlanningSession } from "@/lib/types/client-planning.types";
+import { getClientSmallGroupPlanningSessions } from "@/src/actions/client-small-group-planning.actions";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ClientAvailabilitiesList } from "./ClientAvailabilitiesList";
 import { ClientPaymentTab } from "./ClientPaymentTab";
 import { ClientPlanningList } from "./ClientPlanningList";
@@ -34,26 +36,68 @@ interface Availability {
 interface ClientProfileProps {
 	client: Client;
 	plannings: PlanningWithContract[];
-	smallGroupSessions: ClientSmallGroupPlanningSession[];
-	remainingSmallGroupCredits: number;
 	availabilities: Availability[];
 }
 
 export const ClientProfile: React.FC<ClientProfileProps> = ({
 	client,
 	plannings,
-	smallGroupSessions,
-	remainingSmallGroupCredits,
 	availabilities,
 }) => {
 	const router = useRouter();
 	const [activeTab, setActiveTab] = useState("planning");
 	const [refreshKey, setRefreshKey] = useState(0);
+	const [displayContract, setDisplayContract] =
+		useState<ClientDisplayContract | null>(null);
+	const [smallGroupSessions, setSmallGroupSessions] = useState<
+		ClientSmallGroupPlanningSession[]
+	>([]);
+	const [remainingSmallGroupCredits, setRemainingSmallGroupCredits] =
+		useState(0);
+
+	const tabPlannings = useMemo(() => {
+		if (!displayContract) {
+			return [];
+		}
+
+		return plannings.filter(
+			(planning) => planning.contract.id === displayContract.id,
+		);
+	}, [plannings, displayContract]);
+
+	const canManageSmallGroupRegistration =
+		displayContract?.temporalStatus === "active";
+
+	const loadSmallGroupSessions = useCallback(async () => {
+		if (!displayContract) {
+			setSmallGroupSessions([]);
+			setRemainingSmallGroupCredits(0);
+			return;
+		}
+
+		const result = await getClientSmallGroupPlanningSessions(
+			client.id,
+			displayContract.id,
+			displayContract.temporalStatus,
+		);
+
+		if (result.success) {
+			setSmallGroupSessions(result.sessions);
+			setRemainingSmallGroupCredits(result.remainingCredits);
+			return;
+		}
+
+		setSmallGroupSessions([]);
+		setRemainingSmallGroupCredits(0);
+	}, [client.id, displayContract]);
+
+	useEffect(() => {
+		void loadSmallGroupSessions();
+	}, [loadSmallGroupSessions]);
 
 	const handlePlanningUpdate = () => {
-		// Forcer le rafraîchissement en changeant la clé
 		setRefreshKey((prev) => prev + 1);
-		// Rafraîchir les données serveur sans perdre l'état client (onglet actif)
+		void loadSmallGroupSessions();
 		router.refresh();
 	};
 
@@ -183,6 +227,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 										<ContractInfoClient
 											clientId={client.id}
 											plannings={plannings}
+											onContractUpdate={setDisplayContract}
 										/>
 									</div>
 								</div>
@@ -221,9 +266,13 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 									<TabsContent value="planning" className="mt-4 sm:mt-6">
 										<ClientPlanningList
 											key={refreshKey}
-											plannings={plannings}
+											plannings={tabPlannings}
+											hasDisplayContract={Boolean(displayContract)}
 											smallGroupSessions={smallGroupSessions}
 											remainingSmallGroupCredits={remainingSmallGroupCredits}
+											allowSmallGroupRegistration={
+												canManageSmallGroupRegistration
+											}
 											onPlanningUpdate={handlePlanningUpdate}
 										/>
 									</TabsContent>
@@ -237,7 +286,10 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 									</TabsContent>
 
 									<TabsContent value="paiement" className="mt-4 sm:mt-6">
-										<ClientPaymentTab plannings={plannings} />
+										<ClientPaymentTab
+											clientId={client.id}
+											displayContract={displayContract}
+										/>
 									</TabsContent>
 								</Tabs>
 							</div>

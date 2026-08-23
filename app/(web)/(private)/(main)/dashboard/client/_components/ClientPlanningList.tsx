@@ -37,15 +37,19 @@ enum PlanningStatus {
 
 interface ClientPlanningListProps {
 	plannings: PlanningWithContract[];
+	hasDisplayContract?: boolean;
 	smallGroupSessions?: ClientSmallGroupPlanningSession[];
 	remainingSmallGroupCredits?: number;
+	allowSmallGroupRegistration?: boolean;
 	onPlanningUpdate?: () => void;
 }
 
 export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 	plannings,
+	hasDisplayContract = true,
 	smallGroupSessions = [],
 	remainingSmallGroupCredits = 0,
+	allowSmallGroupRegistration = false,
 	onPlanningUpdate,
 }) => {
 	const [selectedStatus, setSelectedStatus] = useState<string>(
@@ -374,6 +378,16 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 		}
 	};
 
+	if (!hasDisplayContract) {
+		return (
+			<div className="text-center py-8 sm:py-12">
+				<div className="text-white/60 text-base sm:text-lg px-4">
+					Aucun abonnement en cours...
+				</div>
+			</div>
+		);
+	}
+
 	if (allPlanningItems.length === 0) {
 		return (
 			<div className="text-center py-8 sm:py-12">
@@ -487,6 +501,7 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 				isOpen={isSmallGroupPopupOpen}
 				session={selectedSmallGroupSession}
 				remainingCredits={localRemainingCredits}
+				allowRegistration={allowSmallGroupRegistration}
 				isSubmitting={isRegistering || isUnregistering}
 				onClose={handleCloseSmallGroupPopup}
 				onRegister={handleRegisterToSmallGroupSession}

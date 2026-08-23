@@ -19,6 +19,7 @@ interface ClientSmallGroupSessionPopupProps {
 	isOpen: boolean;
 	session: ClientSmallGroupPlanningSession | null;
 	remainingCredits: number;
+	allowRegistration?: boolean;
 	isSubmitting: boolean;
 	onClose: () => void;
 	onRegister: () => void;
@@ -31,6 +32,7 @@ export const ClientSmallGroupSessionPopup: FC<
 	isOpen,
 	session,
 	remainingCredits,
+	allowRegistration = false,
 	isSubmitting,
 	onClose,
 	onRegister,
@@ -44,10 +46,12 @@ export const ClientSmallGroupSessionPopup: FC<
 
 	const isFull = session.remainingSeats === 0;
 	const canUnregister =
+		allowRegistration &&
 		session.isRegistered &&
 		!session.isPast &&
 		canCancelSessionBeforeStart(session.date);
 	const canRegister =
+		allowRegistration &&
 		!session.isPast &&
 		!session.isRegistered &&
 		!isFull &&
@@ -63,6 +67,9 @@ export const ClientSmallGroupSessionPopup: FC<
 	const getActionMessage = () => {
 		if (session.isPast) {
 			return "Cette séance est terminée.";
+		}
+		if (!allowRegistration) {
+			return "Les inscriptions Small Group ne sont disponibles que sur un contrat en cours.";
 		}
 		if (session.isRegistered && canUnregister) {
 			return showUnregisterConfirm

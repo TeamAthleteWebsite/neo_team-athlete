@@ -1,5 +1,6 @@
 "use client";
 
+import { ContractSelector } from "@/components/features/contract/ContractSelector";
 import { ContractSmallGroupCreditsInfo } from "@/components/features/small-group/ContractSmallGroupCreditsInfo";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,7 +38,6 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { type ClientDisplayContract } from "../../_components/types";
-import { ContractSelector } from "./ContractSelector";
 
 interface ContractInfoProps {
 	clientId: string;

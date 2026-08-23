@@ -1,5 +1,5 @@
 export { ContractInfo } from "./ContractInfo";
-export { ContractSelector } from "./ContractSelector";
+export { ContractSelector } from "@/components/features/contract/ContractSelector";
 export { OfferSelectionPopup } from "./OfferSelectionPopup";
 export { PlanningList } from "./PlanningList";
 export { AddSessionPopup } from "./AddSessionPopup";

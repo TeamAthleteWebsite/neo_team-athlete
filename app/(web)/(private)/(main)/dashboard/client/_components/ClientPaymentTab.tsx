@@ -1,11 +1,14 @@
 "use client";
 
-import { type PlanningWithContract } from "@/src/actions/planning.actions";
+import type { ClientDisplayContract } from "@/lib/types/client-display-contract.types";
+import { getContractPaymentMonths } from "@/lib/utils/contract-payment.utils";
 import { BanknoteArrowUp, BanknoteX, HandCoins } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface ClientPaymentTabProps {
-	plannings: PlanningWithContract[];
+	clientId: string;
+	/** Contrat affiché dans Abonnement — seule source pour la grille de paiements */
+	displayContract: ClientDisplayContract | null;
 }
 
 interface Payment {
@@ -38,12 +41,12 @@ interface MonthlyPaymentData {
 }
 
 export const ClientPaymentTab: React.FC<ClientPaymentTabProps> = ({
-	plannings,
+	clientId,
+	displayContract,
 }) => {
 	const [payments, setPayments] = useState<Payment[]>([]);
 	const [loading, setLoading] = useState(true);
 
-	// Fonction pour obtenir le nom du mois en français
 	const getMonthName = (monthIndex: number): string => {
 		const months = [
 			"Janvier",
@@ -62,19 +65,12 @@ export const ClientPaymentTab: React.FC<ClientPaymentTabProps> = ({
 		return months[monthIndex];
 	};
 
-	// Charger les paiements au montage du composant
 	useEffect(() => {
 		const fetchPayments = async () => {
 			try {
 				setLoading(true);
-				if (plannings.length === 0) {
-					setPayments([]);
-					return;
-				}
 
-				const clientId = plannings[0]?.contract.clientId;
-				if (!clientId) {
-					console.error("ClientId manquant dans le contrat");
+				if (!displayContract) {
 					setPayments([]);
 					return;
 				}
@@ -83,66 +79,71 @@ export const ClientPaymentTab: React.FC<ClientPaymentTabProps> = ({
 				if (response.ok) {
 					const result = await response.json();
 					if (result.success) {
-						setPayments(result.data);
+						const contractPayments = (result.data as Payment[]).filter(
+							(payment) => payment.contractId === displayContract.id,
+						);
+						setPayments(contractPayments);
 					} else {
 						console.error("Erreur dans la réponse API:", result.error);
+						setPayments([]);
 					}
 				} else {
 					const errorData = await response.json();
 					console.error("Erreur HTTP:", errorData);
+					setPayments([]);
 				}
 			} catch (err) {
 				console.error("Erreur lors du chargement des paiements:", err);
+				setPayments([]);
 			} finally {
 				setLoading(false);
 			}
 		};
-		fetchPayments();
-	}, [plannings]);
 
-	// Fonction pour calculer les données mensuelles de paiement
+		void fetchPayments();
+	}, [clientId, displayContract]);
+
 	const calculateMonthlyPaymentData = (): MonthlyPaymentData[] => {
-		if (plannings.length === 0) return [];
+		if (!displayContract || !displayContract.amount) return [];
 
-		// Récupérer les informations du contrat
-		const contract = plannings[0]?.contract;
-		if (!contract || !contract.amount) return [];
+		if (displayContract.offerDuration <= 0) {
+			return [];
+		}
 
-		const contractStartDate = new Date(contract.startDate);
+		const contractStartDate =
+			displayContract.startDate instanceof Date
+				? displayContract.startDate
+				: new Date(displayContract.startDate);
 		const now = new Date();
-
-		// Créer un Map pour regrouper les paiements par mois
-		const monthlyMap = new Map<string, MonthlyPaymentData>();
-
-		// Initialiser tous les mois du contrat jusqu'au mois en cours
-		const startMonth = contractStartDate.getMonth();
-		const startYear = contractStartDate.getFullYear();
 		const currentMonth = now.getMonth();
 		const currentYear = now.getFullYear();
 
-		for (let year = startYear; year <= currentYear; year++) {
-			const monthStart = year === startYear ? startMonth : 0;
-			const monthEnd = year === currentYear ? currentMonth : 11;
+		const paymentMonths = getContractPaymentMonths(
+			contractStartDate,
+			displayContract.offerDuration,
+			now,
+		);
 
-			for (let month = monthStart; month <= monthEnd; month++) {
-				const key = `${year}-${month}`;
-				const isPastMonth =
-					year < currentYear || (year === currentYear && month < currentMonth);
-				const isCurrentMonth = year === currentYear && month === currentMonth;
+		const monthlyMap = new Map<string, MonthlyPaymentData>();
 
-				monthlyMap.set(key, {
-					month: getMonthName(month),
-					year,
-					monthIndex: month,
-					amount: contract.amount || 0,
-					isPaid: false,
-					isPastMonth,
-					isCurrentMonth,
-				});
-			}
+		for (const { year, monthIndex, key } of paymentMonths) {
+			const isPastMonth =
+				year < currentYear ||
+				(year === currentYear && monthIndex < currentMonth);
+			const isCurrentMonth =
+				year === currentYear && monthIndex === currentMonth;
+
+			monthlyMap.set(key, {
+				month: getMonthName(monthIndex),
+				year,
+				monthIndex,
+				amount: displayContract.amount || 0,
+				isPaid: false,
+				isPastMonth,
+				isCurrentMonth,
+			});
 		}
 
-		// Marquer les mois payés
 		payments.forEach((payment) => {
 			const paymentDate = new Date(payment.paymentDate);
 			const year = paymentDate.getFullYear();
@@ -158,12 +159,11 @@ export const ClientPaymentTab: React.FC<ClientPaymentTabProps> = ({
 		});
 
 		return Array.from(monthlyMap.values()).sort((a, b) => {
-			if (a.year !== b.year) return b.year - a.year; // Tri décroissant par année
-			return b.monthIndex - a.monthIndex; // Tri décroissant par mois
+			if (a.year !== b.year) return b.year - a.year;
+			return b.monthIndex - a.monthIndex;
 		});
 	};
 
-	// Fonction pour obtenir l'icône appropriée
 	const getPaymentIcon = (monthData: MonthlyPaymentData) => {
 		if (monthData.isPaid) {
 			return (
@@ -178,7 +178,6 @@ export const ClientPaymentTab: React.FC<ClientPaymentTabProps> = ({
 		return <HandCoins className="w-5 h-5 sm:w-7 sm:h-7 text-white/60" />;
 	};
 
-	// Fonction pour obtenir la classe CSS du conteneur
 	const getContainerClass = (monthData: MonthlyPaymentData) => {
 		if (monthData.isPaid) {
 			return "bg-white/5 backdrop-blur-sm rounded-xl border border-green-500/30 overflow-hidden";
@@ -191,17 +190,16 @@ export const ClientPaymentTab: React.FC<ClientPaymentTabProps> = ({
 		return "bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden";
 	};
 
-	// Fonction pour obtenir la classe CSS du header
 	const getHeaderClass = (monthData: MonthlyPaymentData) => {
 		if (monthData.isPaid) {
-			return "p-4 flex items-center justify-between hover:bg-green-500/10 transition-colors cursor-pointer";
+			return "p-4 flex items-center justify-between";
 		}
 
 		if (monthData.isPastMonth) {
-			return "p-4 flex items-center justify-between hover:bg-red-500/10 transition-colors cursor-pointer";
+			return "p-4 flex items-center justify-between";
 		}
 
-		return "p-4 flex items-center justify-between hover:bg-white/10 transition-colors cursor-pointer";
+		return "p-4 flex items-center justify-between";
 	};
 
 	const monthlyData = calculateMonthlyPaymentData();
@@ -216,11 +214,21 @@ export const ClientPaymentTab: React.FC<ClientPaymentTabProps> = ({
 		);
 	}
 
+	if (!displayContract) {
+		return (
+			<div className="text-center py-8 sm:py-12">
+				<div className="text-white/60 text-base sm:text-lg px-4">
+					Aucune donnée pour cet abonnement
+				</div>
+			</div>
+		);
+	}
+
 	if (monthlyData.length === 0) {
 		return (
 			<div className="text-center py-8 sm:py-12">
 				<div className="text-white/60 text-base sm:text-lg px-4">
-					Aucun contrat trouvé
+					Aucune échéance de paiement pour le moment
 				</div>
 			</div>
 		);
@@ -233,7 +241,6 @@ export const ClientPaymentTab: React.FC<ClientPaymentTabProps> = ({
 
 				return (
 					<div key={monthKey} className={getContainerClass(monthData)}>
-						{/* En-tête du mois */}
 						<div className={getHeaderClass(monthData)}>
 							<div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 flex-1 min-w-[1px]">
 								<div className="text-white font-medium text-base sm:text-lg">
@@ -257,7 +264,6 @@ export const ClientPaymentTab: React.FC<ClientPaymentTabProps> = ({
 									})()}
 							</div>
 
-							{/* Icône de paiement */}
 							<div className="flex items-center gap-2 flex-shrink-0">
 								{getPaymentIcon(monthData)}
 							</div>

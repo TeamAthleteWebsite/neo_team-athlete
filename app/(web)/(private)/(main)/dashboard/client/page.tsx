@@ -1,12 +1,10 @@
 import { ServerAccessControl } from "@/components/features/ServerAccessControl";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getClientSmallGroupPlanningSessions } from "@/src/actions/client-small-group-planning.actions";
 import {
 	getAvailabilitiesByClientId,
 	getPlanningsByClientId,
 } from "@/src/actions/planning.actions";
-import { getSmallGroupCreditStatusAction } from "@/src/actions/small-group-credit.actions";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -56,13 +54,10 @@ async function ClientProfileWrapper() {
 		}
 
 		// Récupérer les plannings et disponibilités du client
-		const [plannings, availabilities, smallGroupSessions, creditStatus] =
-			await Promise.all([
-				getPlanningsByClientId(client.id),
-				getAvailabilitiesByClientId(client.id),
-				getClientSmallGroupPlanningSessions(client.id),
-				getSmallGroupCreditStatusAction(client.id),
-			]);
+		const [plannings, availabilities] = await Promise.all([
+			getPlanningsByClientId(client.id),
+			getAvailabilitiesByClientId(client.id),
+		]);
 
 		return (
 			<ClientProfile
@@ -77,8 +72,6 @@ async function ClientProfileWrapper() {
 					goal: client.goal,
 				}}
 				plannings={plannings}
-				smallGroupSessions={smallGroupSessions}
-				remainingSmallGroupCredits={creditStatus.data?.remaining ?? 0}
 				availabilities={availabilities}
 			/>
 		);

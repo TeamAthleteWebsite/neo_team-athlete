@@ -12,6 +12,7 @@ import {
 	getContractTemporalTextClass,
 } from "@/lib/utils/contract-temporal.utils";
 import type { ClientContractListItem } from "@/src/actions/contract.actions";
+import { type FC } from "react";
 
 interface ContractSelectorProps {
 	contracts: ClientContractListItem[];
@@ -37,7 +38,7 @@ const getAriaLabel = (contract: ClientContractListItem): string => {
 	return `Contrat du ${formatDate(contract.startDate)} au ${formatDate(contract.endDate)}, ${contract.programName}, ${statusLabel}`;
 };
 
-export const ContractSelector: React.FC<ContractSelectorProps> = ({
+export const ContractSelector: FC<ContractSelectorProps> = ({
 	contracts,
 	selectedContractId,
 	onSelect,
