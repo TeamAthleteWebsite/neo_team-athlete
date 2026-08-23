@@ -30,6 +30,8 @@ export interface ClientDisplayContract {
 	endDate: Date | string;
 	totalSessions: number;
 	amount: number;
+	/** Nombre de mensualités (offer.duration) */
+	offerDuration: number;
 	temporalStatus: ContractTemporalStatus;
 	programName?: string;
 }

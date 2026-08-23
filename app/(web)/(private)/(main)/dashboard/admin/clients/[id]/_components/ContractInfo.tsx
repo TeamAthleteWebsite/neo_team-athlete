@@ -105,6 +105,7 @@ const toDisplayContract = (
 	endDate: item.endDate,
 	totalSessions: item.totalSessions,
 	amount: item.amount,
+	offerDuration: item.offer.duration,
 	temporalStatus: item.temporalStatus,
 	programName: item.programName,
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { getContractPaymentMonths } from "@/lib/utils/contract-payment.utils";
 import { type PlanningWithContract } from "@/src/actions/planning.actions";
 import { BanknoteArrowUp, BanknoteX, HandCoins } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -122,46 +123,42 @@ export const PaymentTab: React.FC<PaymentTabProps> = ({
 	const calculateMonthlyPaymentData = (): MonthlyPaymentData[] => {
 		if (!displayContract || !displayContract.amount) return [];
 
+		if (displayContract.offerDuration <= 0) {
+			return [];
+		}
+
 		const contractStartDate =
 			displayContract.startDate instanceof Date
 				? displayContract.startDate
 				: new Date(displayContract.startDate);
-		const contractEndDate =
-			displayContract.endDate instanceof Date
-				? displayContract.endDate
-				: new Date(displayContract.endDate);
 		const now = new Date();
-		const rangeEnd = contractEndDate < now ? contractEndDate : now;
-
-		const monthlyMap = new Map<string, MonthlyPaymentData>();
-
-		const startMonth = contractStartDate.getMonth();
-		const startYear = contractStartDate.getFullYear();
-		const endMonth = rangeEnd.getMonth();
-		const endYear = rangeEnd.getFullYear();
 		const currentMonth = now.getMonth();
 		const currentYear = now.getFullYear();
 
-		for (let year = startYear; year <= endYear; year++) {
-			const monthStart = year === startYear ? startMonth : 0;
-			const monthEnd = year === endYear ? endMonth : 11;
+		const paymentMonths = getContractPaymentMonths(
+			contractStartDate,
+			displayContract.offerDuration,
+			now,
+		);
 
-			for (let month = monthStart; month <= monthEnd; month++) {
-				const key = `${year}-${month}`;
-				const isPastMonth =
-					year < currentYear || (year === currentYear && month < currentMonth);
-				const isCurrentMonth = year === currentYear && month === currentMonth;
+		const monthlyMap = new Map<string, MonthlyPaymentData>();
 
-				monthlyMap.set(key, {
-					month: getMonthName(month),
-					year,
-					monthIndex: month,
-					amount: displayContract.amount || 0,
-					isPaid: false,
-					isPastMonth,
-					isCurrentMonth,
-				});
-			}
+		for (const { year, monthIndex, key } of paymentMonths) {
+			const isPastMonth =
+				year < currentYear ||
+				(year === currentYear && monthIndex < currentMonth);
+			const isCurrentMonth =
+				year === currentYear && monthIndex === currentMonth;
+
+			monthlyMap.set(key, {
+				month: getMonthName(monthIndex),
+				year,
+				monthIndex,
+				amount: displayContract.amount || 0,
+				isPaid: false,
+				isPastMonth,
+				isCurrentMonth,
+			});
 		}
 
 		payments.forEach((payment) => {
