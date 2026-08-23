@@ -1,7 +1,7 @@
 "use client";
 
 import { Calendar, Clock, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
@@ -9,6 +9,7 @@ interface AddAvailabilityPopupProps {
 	isOpen: boolean;
 	onClose: () => void;
 	clientId: string;
+	contractId: string;
 	onAvailabilityAdded?: () => void;
 }
 
@@ -16,6 +17,7 @@ export const AddAvailabilityPopup: React.FC<AddAvailabilityPopupProps> = ({
 	isOpen,
 	onClose,
 	clientId,
+	contractId,
 	onAvailabilityAdded,
 }) => {
 	const [selectedDate, setSelectedDate] = useState("");
@@ -60,6 +62,7 @@ export const AddAvailabilityPopup: React.FC<AddAvailabilityPopupProps> = ({
 				},
 				body: JSON.stringify({
 					clientId,
+					contractId,
 					date: date.toISOString(),
 					startTime: startTimeDate.toISOString(),
 					endTime: endTimeDate.toISOString(),
@@ -82,8 +85,12 @@ export const AddAvailabilityPopup: React.FC<AddAvailabilityPopupProps> = ({
 					onAvailabilityAdded();
 				}
 			} else {
-				setError(result.error || "Erreur lors de la création de la disponibilité");
-				toast.error(result.error || "Erreur lors de la création de la disponibilité");
+				setError(
+					result.error || "Erreur lors de la création de la disponibilité",
+				);
+				toast.error(
+					result.error || "Erreur lors de la création de la disponibilité",
+				);
 			}
 		} catch (error) {
 			console.error("Erreur lors de l'ajout de la disponibilité:", error);
@@ -202,4 +209,3 @@ export const AddAvailabilityPopup: React.FC<AddAvailabilityPopupProps> = ({
 
 	return createPortal(popupContent, document.body);
 };
-

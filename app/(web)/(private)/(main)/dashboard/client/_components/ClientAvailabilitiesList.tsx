@@ -9,6 +9,11 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import type { ClientDisplayContract } from "@/lib/types/client-display-contract.types";
+import {
+	type ClientAvailabilityEligibility,
+	canClientDeclareAvailabilityAction,
+} from "@/src/actions/availability-eligibility.actions";
 import { CalendarCheck, Clock, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -25,12 +30,40 @@ interface Availability {
 interface ClientAvailabilitiesListProps {
 	availabilities: Availability[];
 	clientId: string;
+	displayContract: ClientDisplayContract | null;
 	onAvailabilityAdded?: () => void;
 }
 
+const getEligibilityMessage = (
+	displayContract: ClientDisplayContract | null,
+	eligibility: ClientAvailabilityEligibility | null,
+): string | null => {
+	if (!displayContract) {
+		return "Aucune donnée pour cet abonnement";
+	}
+
+	if (displayContract.temporalStatus === "past") {
+		return "Les disponibilités ne peuvent pas être déclarées pour un contrat passé";
+	}
+
+	if (!eligibility || eligibility.canAdd) {
+		return null;
+	}
+
+	if (eligibility.reason === "no_remaining_sessions") {
+		return "Vous n'avez plus de séances restantes sur cet abonnement";
+	}
+
+	if (eligibility.reason === "past_contract") {
+		return "Les disponibilités ne peuvent pas être déclarées pour un contrat passé";
+	}
+
+	return "Sélectionnez un abonnement en cours ou à venir pour déclarer une disponibilité";
+};
+
 export const ClientAvailabilitiesList: React.FC<
 	ClientAvailabilitiesListProps
-> = ({ availabilities, clientId, onAvailabilityAdded }) => {
+> = ({ availabilities, clientId, displayContract, onAvailabilityAdded }) => {
 	const [sessionsExist, setSessionsExist] = useState<Record<string, boolean>>(
 		{},
 	);
@@ -39,8 +72,39 @@ export const ClientAvailabilitiesList: React.FC<
 		useState<Availability | null>(null);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
+	const [eligibility, setEligibility] =
+		useState<ClientAvailabilityEligibility | null>(null);
 
-	// Vérifier l'existence de séances pour chaque disponibilité
+	useEffect(() => {
+		const loadEligibility = async () => {
+			if (!displayContract) {
+				setEligibility(null);
+				return;
+			}
+
+			if (displayContract.temporalStatus === "past") {
+				setEligibility({ canAdd: false, reason: "past_contract" });
+				return;
+			}
+
+			try {
+				const result = await canClientDeclareAvailabilityAction(
+					clientId,
+					displayContract.id,
+				);
+				setEligibility(result);
+			} catch (error) {
+				console.error(
+					"Erreur lors de la vérification des disponibilités:",
+					error,
+				);
+				setEligibility({ canAdd: false, reason: "no_eligible_contract" });
+			}
+		};
+
+		void loadEligibility();
+	}, [clientId, displayContract, availabilities]);
+
 	useEffect(() => {
 		const checkSessions = async () => {
 			const sessionChecks: Record<string, boolean> = {};
@@ -75,7 +139,7 @@ export const ClientAvailabilitiesList: React.FC<
 		};
 
 		if (availabilities.length > 0) {
-			checkSessions();
+			void checkSessions();
 		}
 	}, [availabilities]);
 
@@ -95,7 +159,6 @@ export const ClientAvailabilitiesList: React.FC<
 		});
 	};
 
-	// Grouper les disponibilités par date
 	const groupedAvailabilities = availabilities.reduce(
 		(acc, availability) => {
 			const dateKey = new Date(availability.startTime).toDateString();
@@ -108,12 +171,26 @@ export const ClientAvailabilitiesList: React.FC<
 		{} as Record<string, Availability[]>,
 	);
 
-	// Trier les dates
 	const sortedDates = Object.keys(groupedAvailabilities).sort((a, b) => {
 		return new Date(a).getTime() - new Date(b).getTime();
 	});
 
+	const canAddAvailability =
+		Boolean(displayContract) && eligibility?.canAdd === true;
+	const eligibilityMessage = getEligibilityMessage(
+		displayContract,
+		eligibility,
+	);
+
 	const handleAddAvailability = () => {
+		if (!canAddAvailability) {
+			toast.error(
+				eligibilityMessage ||
+					"Vous ne pouvez pas déclarer de disponibilité pour le moment",
+			);
+			return;
+		}
+
 		setIsAddPopupOpen(true);
 	};
 
@@ -154,7 +231,6 @@ export const ClientAvailabilitiesList: React.FC<
 				setIsDeleteDialogOpen(false);
 				setSelectedAvailability(null);
 
-				// Notifier le parent pour rafraîchir les données
 				if (onAvailabilityAdded) {
 					onAvailabilityAdded();
 				}
@@ -172,16 +248,39 @@ export const ClientAvailabilitiesList: React.FC<
 	return (
 		<>
 			<div className="space-y-4 sm:space-y-6">
-				{/* Header with Add Button */}
-				<div className="flex justify-end">
-					<button
-						onClick={handleAddAvailability}
-						className="flex items-center gap-2 bg-blue-600/50 hover:bg-blue-700/100 text-white px-3 sm:px-4 py-2 rounded-lg shadow-lg transition-all duration-200 hover:scale-105 text-sm sm:text-base"
-					>
-						<Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-						<span className="hidden sm:inline">Ajouter une disponibilité</span>
-						<span className="sm:hidden">Ajouter</span>
-					</button>
+				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+					{eligibilityMessage && (
+						<p
+							className="text-white/50 text-xs sm:text-sm flex-1"
+							role="status"
+						>
+							{eligibilityMessage}
+						</p>
+					)}
+					<div className="flex justify-end sm:ml-auto">
+						<button
+							type="button"
+							onClick={handleAddAvailability}
+							disabled={!canAddAvailability}
+							aria-disabled={!canAddAvailability}
+							aria-label={
+								canAddAvailability
+									? "Ajouter une disponibilité"
+									: eligibilityMessage || "Ajout de disponibilité indisponible"
+							}
+							className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg shadow-lg text-sm sm:text-base transition-all duration-200 ${
+								canAddAvailability
+									? "bg-blue-600/50 hover:bg-blue-700 text-white hover:scale-105"
+									: "bg-white/10 text-white/40 cursor-not-allowed"
+							}`}
+						>
+							<Plus className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
+							<span className="hidden sm:inline">
+								Ajouter une disponibilité
+							</span>
+							<span className="sm:hidden">Ajouter</span>
+						</button>
+					</div>
 				</div>
 
 				{availabilities.length === 0 ? (
@@ -220,6 +319,15 @@ export const ClientAvailabilitiesList: React.FC<
 												<div
 													key={availability.id}
 													onClick={() => handleAvailabilityClick(availability)}
+													onKeyDown={(e) => {
+														if (e.key === "Enter" || e.key === " ") {
+															e.preventDefault();
+															handleAvailabilityClick(availability);
+														}
+													}}
+													role="button"
+													tabIndex={0}
+													aria-label={`Supprimer la disponibilité de ${formatTime(availability.startTime)} à ${formatTime(availability.endTime)}`}
 													className={`flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white/5 rounded-lg border ${
 														hasExistingSession
 															? "border-green-500/30 bg-green-500/5"
@@ -259,15 +367,16 @@ export const ClientAvailabilitiesList: React.FC<
 				)}
 			</div>
 
-			{/* Add Availability Popup */}
-			<AddAvailabilityPopup
-				isOpen={isAddPopupOpen}
-				onClose={handleClosePopup}
-				clientId={clientId}
-				onAvailabilityAdded={handleAvailabilityAdded}
-			/>
+			{canAddAvailability && displayContract && (
+				<AddAvailabilityPopup
+					isOpen={isAddPopupOpen}
+					onClose={handleClosePopup}
+					clientId={clientId}
+					contractId={displayContract.id}
+					onAvailabilityAdded={handleAvailabilityAdded}
+				/>
+			)}
 
-			{/* Delete Confirmation Dialog */}
 			<Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
 				<DialogContent className="bg-gray-900 border-white/20 text-white">
 					<DialogHeader>

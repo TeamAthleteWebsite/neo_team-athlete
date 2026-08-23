@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
 import { createAvailability } from "@/src/actions/planning.actions";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 const createAvailabilitySchema = z.object({
 	clientId: z.string().min(1, "L'ID du client est requis"),
+	contractId: z.string().min(1, "L'ID du contrat est requis"),
 	date: z.string().datetime("Date invalide"),
 	startTime: z.string().datetime("Heure de début invalide"),
 	endTime: z.string().datetime("Heure de fin invalide"),
@@ -12,7 +13,7 @@ const createAvailabilitySchema = z.object({
 export async function POST(request: NextRequest) {
 	try {
 		const body = await request.json();
-		const { clientId, date, startTime, endTime } =
+		const { clientId, contractId, date, startTime, endTime } =
 			createAvailabilitySchema.parse(body);
 
 		const result = await createAvailability(
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest) {
 			new Date(date),
 			new Date(startTime),
 			new Date(endTime),
+			contractId,
 		);
 
 		if (result.success) {
@@ -32,7 +34,8 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json(
 				{
 					success: false,
-					error: result.error || "Erreur lors de la création de la disponibilité",
+					error:
+						result.error || "Erreur lors de la création de la disponibilité",
 				},
 				{ status: 400 },
 			);
@@ -60,4 +63,3 @@ export async function POST(request: NextRequest) {
 		);
 	}
 }
-

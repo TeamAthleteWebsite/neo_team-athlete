@@ -285,6 +285,7 @@ export const ClientProfile: React.FC<ClientProfileProps> = ({
 										<ClientAvailabilitiesList
 											availabilities={availabilities}
 											clientId={client.id}
+											displayContract={displayContract}
 											onAvailabilityAdded={handleAvailabilityUpdate}
 										/>
 									</TabsContent>

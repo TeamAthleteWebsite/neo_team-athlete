@@ -1,4 +1,10 @@
 import { prisma } from "@/lib/prisma";
+import {
+	calculateMonthlyQuotaBalance,
+	calculateTotalMonthlyQuotaAllocation,
+	getContractMonthsFromDates,
+} from "@/lib/utils/contract-monthly-quota.utils";
+import { getContractTemporalStatus } from "@/lib/utils/contract-temporal.utils";
 import { generateRecurringSessionDates } from "@/lib/utils/recurrence.utils";
 
 /** Durée par défaut d'une séance (1 h), alignée sur l'affichage du planning admin */
@@ -445,13 +451,153 @@ export const cancelPlanningSession = async (planningId: string) => {
 	}
 };
 
+export type ClientAvailabilityEligibilityReason =
+	| "no_eligible_contract"
+	| "past_contract"
+	| "no_remaining_sessions";
+
+export interface ClientAvailabilityEligibility {
+	canAdd: boolean;
+	reason?: ClientAvailabilityEligibilityReason;
+	remainingSessions?: number;
+}
+
+type ContractQuotaInput = {
+	id: string;
+	startDate: Date;
+	endDate: Date;
+	totalSessions: number;
+};
+
+const getRemainingSessionsForContract = async (
+	contract: ContractQuotaInput,
+	now: Date,
+): Promise<number> => {
+	const contractPlannings = await prisma.planning.findMany({
+		where: { contractId: contract.id },
+		select: { date: true },
+	});
+
+	const months = getContractMonthsFromDates(
+		contract.startDate,
+		contract.endDate,
+	);
+	const totalAllocated = calculateTotalMonthlyQuotaAllocation(
+		contract.totalSessions,
+		months,
+	);
+	const balance = calculateMonthlyQuotaBalance({
+		contractStartDate: contract.startDate,
+		monthlyQuota: contract.totalSessions,
+		totalAllocated,
+		usageDates: contractPlannings.map((planning) => new Date(planning.date)),
+		now,
+	});
+
+	return balance.remaining;
+};
+
+/**
+ * Éligibilité basée sur le contrat sélectionné dans Abonnement :
+ * actif ou futur avec séances restantes > 0.
+ */
+export const canClientDeclareAvailability = async (
+	clientId: string,
+	contractId?: string | null,
+	now: Date = new Date(),
+): Promise<ClientAvailabilityEligibility> => {
+	if (!contractId) {
+		return {
+			canAdd: false,
+			reason: "no_eligible_contract",
+		};
+	}
+
+	const contract = await prisma.contract.findFirst({
+		where: {
+			id: contractId,
+			clientId,
+			status: { not: "CANCELLED" },
+		},
+		select: {
+			id: true,
+			startDate: true,
+			endDate: true,
+			totalSessions: true,
+		},
+	});
+
+	if (!contract) {
+		return {
+			canAdd: false,
+			reason: "no_eligible_contract",
+		};
+	}
+
+	const temporalStatus = getContractTemporalStatus(
+		contract.startDate,
+		contract.endDate,
+		now,
+	);
+
+	if (temporalStatus === "past") {
+		return {
+			canAdd: false,
+			reason: "past_contract",
+		};
+	}
+
+	const remaining = await getRemainingSessionsForContract(contract, now);
+
+	if (remaining <= 0) {
+		return {
+			canAdd: false,
+			reason: "no_remaining_sessions",
+			remainingSessions: 0,
+		};
+	}
+
+	return {
+		canAdd: true,
+		remainingSessions: remaining,
+	};
+};
+
 export const createAvailability = async (
 	clientId: string,
 	date: Date,
 	startTime: Date,
 	endTime: Date,
+	contractId?: string | null,
 ) => {
 	try {
+		const eligibility = await canClientDeclareAvailability(
+			clientId,
+			contractId,
+		);
+		if (!eligibility.canAdd) {
+			if (eligibility.reason === "no_remaining_sessions") {
+				return {
+					success: false,
+					error: "Vous n'avez plus de séances restantes sur cet abonnement",
+				};
+			}
+
+			if (eligibility.reason === "past_contract") {
+				return {
+					success: false,
+					error:
+						"Les disponibilités ne peuvent pas être déclarées pour un contrat passé",
+				};
+			}
+
+			return {
+				success: false,
+				error:
+					"Sélectionnez un abonnement en cours ou à venir pour déclarer une disponibilité",
+			};
+		}
+
 		// Vérifier que l'heure de fin est postérieure à l'heure de début
 		if (endTime <= startTime) {
 			return {
