@@ -142,6 +142,8 @@ export const SmallGroupSessionDetailPopup: FC<
 				...detail!,
 				...result.data,
 				startAt: new Date(result.data.startAt),
+				registrationCount:
+					result.data.registrationCount ?? detail?.registrationCount ?? 0,
 				participants: detail?.participants ?? [],
 			};
 

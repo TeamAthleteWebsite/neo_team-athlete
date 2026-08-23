@@ -242,6 +242,17 @@ export async function updateSmallGroupSessionAction(
 			};
 		}
 
+		const currentRegistrationCount = await prisma.smallGroupRegistration.count({
+			where: { sessionId: data.sessionId },
+		});
+
+		if (data.maxCapacity < currentRegistrationCount) {
+			return {
+				success: false as const,
+				error: `La capacité ne peut pas être inférieure au nombre d'inscrits (${currentRegistrationCount})`,
+			};
+		}
+
 		const session = await prisma.smallGroupSession.update({
 			where: { id: data.sessionId },
 			data: {
@@ -249,6 +260,13 @@ export async function updateSmallGroupSessionAction(
 				location: data.location.trim(),
 				description: data.description.trim(),
 				maxCapacity: data.maxCapacity,
+			},
+			include: {
+				_count: {
+					select: {
+						registrations: true,
+					},
+				},
 			},
 		});
 
