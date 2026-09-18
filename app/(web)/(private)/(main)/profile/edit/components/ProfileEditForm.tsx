@@ -172,7 +172,6 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 					: null,
 			});
 
-			toast.success("Profil mis à jour avec succès");
 			router.push("/profile");
 		} catch (error) {
 			console.error("Erreur lors de la mise à jour du profil:", error);
@@ -444,11 +443,6 @@ const ProfileEditForm = ({ user }: ProfileEditFormProps) => {
 							initialSmallGroupCredits={user.selectedSmallGroupCredits}
 							onSelectionChange={handleSelectionChange}
 							onClose={() => setIsCoachPopupOpen(false)}
-							onOfferSelect={() => {
-								toast.success(
-									"Offre sélectionnée ! Cliquez sur 'Confirmer la sélection' pour valider.",
-								);
-							}}
 						/>
 					</CoachOfferSelectionPanel>
 				</div>

@@ -264,7 +264,6 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 			});
 			setSelectedSmallGroupSession(updatedSession);
 			setLocalRemainingCredits(result.data.remainingCredits);
-			toast.success("Inscription confirmée avec succès");
 			handleCloseSmallGroupPopup();
 
 			if (onPlanningUpdate) {
@@ -318,7 +317,6 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 				),
 			);
 			setLocalRemainingCredits(result.data.remainingCredits);
-			toast.success("Désinscription confirmée, votre crédit a été recrédité");
 			handleCloseSmallGroupPopup();
 
 			if (onPlanningUpdate) {
@@ -360,7 +358,6 @@ export const ClientPlanningList: React.FC<ClientPlanningListProps> = ({
 					),
 				);
 
-				toast.success(result.message || "Séance annulée avec succès");
 				setIsCancelDialogOpen(false);
 				setSelectedPlanning(null);
 

@@ -47,7 +47,6 @@ export default function CoachOfferBlock({ user }: CoachOfferBlockProps) {
 						: null,
 				},
 			});
-			toast.success("Offre enregistrée avec succès");
 			return true;
 		} catch (error) {
 			console.error("Erreur lors de l'enregistrement de l'offre:", error);
@@ -83,9 +82,6 @@ export default function CoachOfferBlock({ user }: CoachOfferBlockProps) {
 						setSelectedOfferId={setSelectedOfferId}
 						initialSmallGroupCredits={user.selectedSmallGroupCredits}
 						onSelectionChange={handleSelectionChange}
-						onOfferSelect={() => {
-							toast.success("Offre sélectionnée, vous pouvez continuer.");
-						}}
 					/>
 				</CoachOfferSelectionPanel>
 			</div>

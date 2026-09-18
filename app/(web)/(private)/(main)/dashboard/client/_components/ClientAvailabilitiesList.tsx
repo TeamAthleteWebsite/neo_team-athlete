@@ -227,7 +227,6 @@ export const ClientAvailabilitiesList: React.FC<
 			const result = await response.json();
 
 			if (result.success) {
-				toast.success(result.message || "Disponibilité supprimée avec succès");
 				setIsDeleteDialogOpen(false);
 				setSelectedAvailability(null);
 

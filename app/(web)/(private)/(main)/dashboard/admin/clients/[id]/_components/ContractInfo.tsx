@@ -299,10 +299,6 @@ export const ContractInfo: React.FC<ContractInfoProps> = ({
 			const result = await response.json();
 
 			if (result.success) {
-				toast.success(
-					result.message ||
-						"L'abonnement et toutes les données associées ont été supprimés avec succès.",
-				);
 				setIsDeleteDialogOpen(false);
 				onSelectedContractIdChange(null);
 				await loadContracts();

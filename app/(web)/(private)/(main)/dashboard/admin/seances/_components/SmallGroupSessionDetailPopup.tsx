@@ -150,7 +150,6 @@ export const SmallGroupSessionDetailPopup: FC<
 			setDetail(updatedDetail);
 			setIsEditing(false);
 			onSessionUpdated(updatedDetail);
-			toast.success("Séance Small Group modifiée avec succès");
 		} catch (error) {
 			console.error("Erreur modification séance Small Group:", error);
 			toast.error("Une erreur inattendue est survenue");
@@ -183,7 +182,6 @@ export const SmallGroupSessionDetailPopup: FC<
 				return;
 			}
 
-			toast.success(result.message || "Séance supprimée avec succès");
 			onSessionDeleted(sessionId);
 			onClose();
 		} catch (error) {

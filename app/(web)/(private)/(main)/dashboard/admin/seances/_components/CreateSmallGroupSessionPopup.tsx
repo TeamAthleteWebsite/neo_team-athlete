@@ -112,14 +112,6 @@ export const CreateSmallGroupSessionPopup: FC<
 				}),
 			);
 
-			if (createdSessions.length > 1) {
-				toast.success(
-					`${createdSessions.length} séances Small Group créées avec succès`,
-				);
-			} else {
-				toast.success("Séance Small Group créée avec succès");
-			}
-
 			onSessionsCreated(createdSessions);
 			onClose();
 		} catch (error) {

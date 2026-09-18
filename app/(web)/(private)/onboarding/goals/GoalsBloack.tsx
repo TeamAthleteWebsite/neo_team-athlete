@@ -59,7 +59,6 @@ export default function GoalsBlock({
 				await saveOnboarding({
 					data: { goal: `${goalObject.title} : ${goalObject.description}` },
 				});
-				toast.success("Objectif enregistré avec succès");
 				router.push("/onboarding/measurements");
 			} catch (error) {
 				toast.error("Erreur lors de l'enregistrement de l'objectif");

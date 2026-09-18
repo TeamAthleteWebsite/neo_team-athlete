@@ -26,7 +26,6 @@ export default function GenderBlock({ user }: { user: User }) {
 				await saveOnboarding({
 					data: { gender: selectedGender },
 				});
-				toast.success("Genre enregistré avec succès");
 				router.push("/onboarding/goals");
 			} catch (error) {
 				console.error(error);

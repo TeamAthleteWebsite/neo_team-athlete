@@ -72,7 +72,6 @@ export const AddAvailabilityPopup: React.FC<AddAvailabilityPopupProps> = ({
 			const result = await response.json();
 
 			if (result.success) {
-				toast.success(result.message || "Disponibilité créée avec succès");
 				// Réinitialiser le formulaire
 				setSelectedDate("");
 				setStartTime("");

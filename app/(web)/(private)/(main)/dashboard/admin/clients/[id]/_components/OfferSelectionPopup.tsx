@@ -82,10 +82,7 @@ export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 	const [smallGroupCredits, setSmallGroupCredits] = useState<number>(0);
 	const [isFlexibleContract, setIsFlexibleContract] = useState<boolean>(false);
 	const [isCreatingContract, setIsCreatingContract] = useState<boolean>(false);
-	const [contractMessage, setContractMessage] = useState<{
-		type: "success" | "error";
-		text: string;
-	} | null>(null);
+	const [contractMessage, setContractMessage] = useState<string | null>(null);
 
 	useEffect(() => {
 		const fetchOffers = async () => {
@@ -203,30 +200,16 @@ export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 			});
 
 			if (result.success && result.data) {
-				setContractMessage({
-					type: "success",
-					text: "Contrat créé avec succès !",
-				});
-
-				// Appeler le callback avec l'ID de l'offre
 				onOfferSelect(selectedOfferId);
-
-				// Fermer la popup après un délai pour montrer le message de succès
-				setTimeout(() => {
-					onClose();
-				}, 2000);
+				onClose();
 			} else {
-				setContractMessage({
-					type: "error",
-					text: result.error || "Erreur lors de la création du contrat",
-				});
+				setContractMessage(
+					result.error || "Erreur lors de la création du contrat",
+				);
 			}
 		} catch (error) {
 			console.error("Erreur lors de la création du contrat:", error);
-			setContractMessage({
-				type: "error",
-				text: "Une erreur inattendue est survenue",
-			});
+			setContractMessage("Une erreur inattendue est survenue");
 		} finally {
 			setIsCreatingContract(false);
 		}
@@ -771,18 +754,12 @@ export const OfferSelectionPopup: FC<OfferSelectionPopupProps> = ({
 					</div>
 				</div>
 
-				{/* Messages de feedback */}
+				{/* Messages d'erreur */}
 				{contractMessage && (
-					<div
-						className={`mb-3 sm:mb-4 p-3 sm:p-4 rounded-lg ${
-							contractMessage.type === "success"
-								? "bg-green-600 text-white"
-								: "bg-red-600 text-white"
-						}`}
-					>
+					<div className="mb-3 sm:mb-4 p-3 sm:p-4 rounded-lg bg-red-600 text-white">
 						<div className="flex items-center gap-2">
 							<span className="text-xs sm:text-sm font-medium">
-								{contractMessage.text}
+								{contractMessage}
 							</span>
 						</div>
 					</div>

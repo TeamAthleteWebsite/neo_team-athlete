@@ -117,10 +117,6 @@ export const AddSessionPopup: React.FC<AddSessionPopupProps> = ({
 					);
 				}
 
-				toast.success(
-					result.message || "Séances récurrentes créées avec succès.",
-				);
-
 				// Notifier le parent que les séances ont été ajoutées
 				if (onSessionAdded) {
 					onSessionAdded();
@@ -147,8 +143,6 @@ export const AddSessionPopup: React.FC<AddSessionPopupProps> = ({
 						errorData.error || "Erreur lors de l'ajout de la séance",
 					);
 				}
-
-				toast.success("Séance créée avec succès");
 
 				// Notifier le parent que la séance a été ajoutée
 				if (onSessionAdded) {
