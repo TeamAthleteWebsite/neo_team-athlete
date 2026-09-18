@@ -65,7 +65,7 @@ export default function CoachOfferBlock({ user }: CoachOfferBlockProps) {
 		>
 			<div
 				className="
-					max-sm:fixed max-sm:left-3 max-sm:right-3 max-sm:top-[5.75rem] max-sm:bottom-[11.5rem]
+					max-sm:fixed max-sm:inset-x-1.5 max-sm:top-[4.5rem] max-sm:bottom-[9.75rem]
 					max-sm:z-30 max-sm:flex max-sm:flex-col max-sm:min-h-0
 					sm:static
 				"
@@ -74,6 +74,7 @@ export default function CoachOfferBlock({ user }: CoachOfferBlockProps) {
 					variant="embedded"
 					className="
 						max-sm:flex-1 max-sm:min-h-0 max-sm:h-full max-sm:max-h-none
+						max-sm:rounded-xl max-sm:p-3
 						max-sm:shadow-2xl max-sm:ring-1 max-sm:ring-zinc-600/80
 					"
 				>

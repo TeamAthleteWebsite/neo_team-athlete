@@ -66,6 +66,9 @@ export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 	const initialOfferIdRef = useRef(selectedOfferId);
 	const onSelectionChangeRef = useRef(onSelectionChange);
 	onSelectionChangeRef.current = onSelectionChange;
+	const offersSectionRef = useRef<HTMLDivElement>(null);
+	const creditsSectionRef = useRef<HTMLDivElement>(null);
+	const shouldScrollToCreditsRef = useRef(false);
 
 	const selectedOffer = offers.find((offer) => offer.id === selectedOfferId);
 	const isCreditsEligible = selectedOffer
@@ -187,8 +190,10 @@ export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 						: null,
 				),
 			);
+			shouldScrollToCreditsRef.current = true;
 		} else {
 			setSmallGroupCredits(null);
+			shouldScrollToCreditsRef.current = false;
 		}
 
 		onOfferSelect?.(offerId);
@@ -198,10 +203,48 @@ export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 		setSmallGroupCredits(credits);
 	};
 
+	const handleScrollToOffers = () => {
+		offersSectionRef.current?.scrollIntoView({
+			behavior: "smooth",
+			block: "start",
+		});
+	};
+
 	const handleBackToCoaches = () => {
 		setSelectedCoach(null);
 		setOffers([]);
+		shouldScrollToCreditsRef.current = false;
 	};
+
+	useEffect(() => {
+		if (!shouldScrollToCreditsRef.current) {
+			return;
+		}
+
+		if (!isCreditsEligible || smallGroupCredits == null) {
+			if (!isCreditsEligible) {
+				shouldScrollToCreditsRef.current = false;
+			}
+			return;
+		}
+
+		const isMobileViewport = window.matchMedia("(max-width: 639px)").matches;
+		if (!isMobileViewport) {
+			shouldScrollToCreditsRef.current = false;
+			return;
+		}
+
+		shouldScrollToCreditsRef.current = false;
+
+		const frameId = window.requestAnimationFrame(() => {
+			creditsSectionRef.current?.scrollIntoView({
+				behavior: "smooth",
+				block: "start",
+			});
+		});
+
+		return () => window.cancelAnimationFrame(frameId);
+	}, [selectedOfferId, isCreditsEligible, smallGroupCredits]);
 
 	const handleHeaderAction = () => {
 		if (selectedCoach) {
@@ -371,7 +414,10 @@ export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 						</div>
 					</div>
 
-					<div className="bg-zinc-800 rounded-lg p-3 sm:p-4">
+					<div
+						ref={offersSectionRef}
+						className="bg-zinc-800 rounded-lg p-3 sm:p-4 scroll-mt-3"
+					>
 						<h4 className="text-base sm:text-lg font-medium text-white mb-3 sm:mb-4">
 							Tarifs des offres
 						</h4>
@@ -639,7 +685,18 @@ export const CoachOfferSelectionFlow: FC<CoachOfferSelectionFlowProps> = ({
 					{selectedOffer && (
 						<div className="space-y-4 sm:space-y-6">
 							{isCreditsEligible && smallGroupCredits != null && (
-								<div className="bg-zinc-800 rounded-lg p-3 sm:p-4">
+								<div
+									ref={creditsSectionRef}
+									className="bg-zinc-800 rounded-lg p-3 sm:p-4 scroll-mt-3 space-y-3"
+								>
+									<button
+										type="button"
+										onClick={handleScrollToOffers}
+										className="sm:hidden text-xs text-zinc-400 hover:text-white transition-colors"
+										aria-label="Revenir à la sélection de l'offre"
+									>
+										↑ Modifier l&apos;offre sélectionnée
+									</button>
 									<SmallGroupCreditsSelector
 										selectedCredits={smallGroupCredits}
 										onCreditsChange={handleSmallGroupCreditsChange}

@@ -144,14 +144,20 @@ export function OnboardingLayout({
 			<div
 				className={`flex-1 w-full ${contentMaxWidth} mx-auto space-y-8 pt-20 px-3 sm:px-4`}
 			>
-				<div className="text-center shadow-lg rounded-lg p-4 bg-black/50">
+				<div
+					className={`text-center shadow-lg rounded-lg p-4 bg-black/50 ${
+						wideContent ? "max-sm:hidden" : ""
+					}`}
+				>
 					<h1 className="text-3xl font-bold tracking-tigh text-white">
 						{title}
 					</h1>
 					{subtitle && <p className="mt-2 text-sm text-gray-100">{subtitle}</p>}
 				</div>
 
-				<div className={wideContent ? "mt-6 sm:mt-8 min-h-0" : "mt-12"}>
+				<div
+					className={wideContent ? "mt-0 sm:mt-8 min-h-0 max-sm:mt-0" : "mt-12"}
+				>
 					{children}
 				</div>
 			</div>

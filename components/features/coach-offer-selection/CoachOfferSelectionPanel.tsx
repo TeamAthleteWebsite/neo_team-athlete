@@ -19,7 +19,7 @@ const panelBase =
 const heightByVariant = {
 	modal: "max-h-[90vh]",
 	embedded:
-		"max-h-[min(90vh,calc(100dvh-15rem))] sm:max-h-[min(90vh,calc(100dvh-12rem))]",
+		"max-h-[min(90vh,calc(100dvh-13.5rem))] sm:max-h-[min(90vh,calc(100dvh-12rem))]",
 } as const;
 
 export const CoachOfferSelectionPanel: FC<CoachOfferSelectionPanelProps> = ({
